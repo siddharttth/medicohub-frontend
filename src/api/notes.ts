@@ -20,10 +20,13 @@ interface NoteSearchResponse {
   pagination: Pagination;
 }
 
+// Backend accepts: "PDF" | "Diagram" | "Summary"
+export type RequestNoteType = 'PDF' | 'Diagram' | 'Summary';
+
 interface NoteRequestData {
   subject: Subject;
-  description: string;
-  noteType: NoteType;
+  topic: string;
+  noteType: RequestNoteType;
 }
 
 export const notesApi = {
@@ -46,7 +49,7 @@ export const notesApi = {
     apiClient.post(`/notes/${id}/download`).then((r) => r.data.data),
 
   requestNote: (data: NoteRequestData): Promise<void> =>
-    apiClient.post('/notes/request', data).then((r) => r.data),
+    apiClient.post('/notes/request', { subject: data.subject, topic: data.topic, noteType: data.noteType }).then((r) => r.data),
 
   rate: (id: string, rating: number): Promise<Note> =>
     apiClient.post(`/notes/${id}/rate`, { rating }).then((r) => r.data.data),

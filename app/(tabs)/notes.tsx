@@ -6,7 +6,6 @@ import {
   FlatList,
   TouchableOpacity,
   TextInput,
-  Alert,
   Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -31,6 +30,13 @@ const NOTE_TYPES: { label: string; value: NoteType }[] = [
   { label: 'PYQs', value: 'pyq' },
 ];
 
+// Backend accepts only these 3 values for note requests
+const REQUEST_NOTE_TYPES: { label: string; value: 'PDF' | 'Diagram' | 'Summary' }[] = [
+  { label: 'PDF', value: 'PDF' },
+  { label: 'Diagram', value: 'Diagram' },
+  { label: 'Summary', value: 'Summary' },
+];
+
 const NOTE_TYPE_ICONS: Record<NoteType, string> = {
   pdf: '📄',
   handwritten: '✍️',
@@ -43,7 +49,8 @@ export default function NotesScreen() {
   const [selectedType, setSelectedType] = useState<NoteType | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showRequestForm, setShowRequestForm] = useState(false);
-  const [requestDesc, setRequestDesc] = useState('');
+  const [requestTopic, setRequestTopic] = useState('');
+  const [requestNoteType, setRequestNoteType] = useState<'PDF' | 'Diagram' | 'Summary'>('PDF');
 
   const { data, isLoading } = useQuery({
     queryKey: ['notes', selectedSubject, selectedType, searchQuery],
@@ -57,24 +64,31 @@ export default function NotesScreen() {
 
   const downloadMutation = useMutation({
     mutationFn: (id: string) => notesApi.download(id),
-    onSuccess: (data) => {
-      Linking.openURL(data.url);
+    onSuccess: (res) => {
+      Linking.openURL(res.url);
       Toast.show({ type: 'success', text1: 'Download started!' });
     },
     onError: () => Toast.show({ type: 'error', text1: 'Download failed' }),
   });
 
   const requestMutation = useMutation({
-    mutationFn: () =>
-      notesApi.requestNote({
+    mutationFn: () => {
+      if (!requestTopic.trim()) return Promise.reject(new Error('Topic required'));
+      return notesApi.requestNote({
         subject: selectedSubject ?? 'Anatomy',
-        description: requestDesc,
-        noteType: selectedType ?? 'pdf',
-      }),
+        topic: requestTopic.trim(),
+        noteType: requestNoteType,
+      });
+    },
     onSuccess: () => {
       Toast.show({ type: 'success', text1: 'Request sent!', text2: 'Seniors will upload soon.' });
       setShowRequestForm(false);
-      setRequestDesc('');
+      setRequestTopic('');
+      setRequestNoteType('PDF');
+    },
+    onError: (e: any) => {
+      const msg = e?.response?.data?.message ?? e?.message ?? 'Request failed';
+      Toast.show({ type: 'error', text1: msg });
     },
   });
 
@@ -91,7 +105,7 @@ export default function NotesScreen() {
           <Text className="text-on-surface font-inter-semibold text-base" numberOfLines={2}>
             {item.title}
           </Text>
-          <Text className="text-on-surface-variant font-inter text-sm mt-1">by {item.author.name}</Text>
+          <Text className="text-on-surface-variant font-inter text-sm mt-1">by {item.author?.name ?? 'Senior'}</Text>
         </View>
         <TouchableOpacity
           onPress={() => downloadMutation.mutate(item.id)}
@@ -103,7 +117,7 @@ export default function NotesScreen() {
       </View>
 
       <View className="flex-row flex-wrap gap-1 mb-2">
-        {item.tags.map((tag) => (
+        {(item.tags ?? []).map((tag) => (
           <View key={tag} className="bg-surface-container-high rounded-full px-2 py-0.5">
             <Text className="text-on-surface-variant text-xs font-inter">#{tag}</Text>
           </View>
@@ -111,8 +125,8 @@ export default function NotesScreen() {
       </View>
 
       <View className="flex-row items-center">
-        <Text style={{ color: '#cfbcff', fontSize: 12 }}>★ {item.rating.toFixed(1)}</Text>
-        <Text className="text-outline text-xs ml-3">↓ {item.downloads} downloads</Text>
+        <Text style={{ color: '#cfbcff', fontSize: 12 }}>★ {(item.rating ?? 0).toFixed(1)}</Text>
+        <Text className="text-outline text-xs ml-3">↓ {item.downloads ?? 0} downloads</Text>
       </View>
     </GlassCard>
   );
@@ -143,11 +157,7 @@ export default function NotesScreen() {
 
         {/* Subject chips */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-3">
-          <Chip
-            label="All"
-            selected={!selectedSubject}
-            onPress={() => setSelectedSubject(null)}
-          />
+          <Chip label="All" selected={!selectedSubject} onPress={() => setSelectedSubject(null)} />
           {SUBJECTS.map((s) => (
             <Chip
               key={s}
@@ -160,11 +170,7 @@ export default function NotesScreen() {
 
         {/* Note type tabs */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <Chip
-            label="All Types"
-            selected={!selectedType}
-            onPress={() => setSelectedType(null)}
-          />
+          <Chip label="All Types" selected={!selectedType} onPress={() => setSelectedType(null)} />
           {NOTE_TYPES.map((t) => (
             <Chip
               key={t.value}
@@ -184,18 +190,14 @@ export default function NotesScreen() {
         <FlatList
           data={data?.notes ?? []}
           renderItem={renderNote}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item, index) => item.id ?? index.toString()}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingTop: 8, paddingBottom: 100 }}
           ListEmptyComponent={
             <View className="items-center justify-center py-20">
               <Text style={{ fontSize: 40 }}>📭</Text>
-              <Text className="text-on-surface-variant font-inter-medium text-base mt-3">
-                No notes found
-              </Text>
-              <Text className="text-outline font-inter text-sm mt-1">
-                Try different filters or request one below
-              </Text>
+              <Text className="text-on-surface-variant font-inter-medium text-base mt-3">No notes found</Text>
+              <Text className="text-outline font-inter text-sm mt-1">Try different filters or request one below</Text>
             </View>
           }
           ListFooterComponent={
@@ -207,30 +209,65 @@ export default function NotesScreen() {
                 <Text className="text-on-surface-variant font-inter text-sm mb-3">
                   Request a custom note from our senior contributors.
                 </Text>
+
                 {showRequestForm ? (
                   <>
+                    {/* Topic input */}
+                    <Text className="text-on-surface-variant font-inter-medium text-sm mb-1">Topic</Text>
                     <TextInput
-                      value={requestDesc}
-                      onChangeText={setRequestDesc}
-                      placeholder="Describe what you need..."
+                      value={requestTopic}
+                      onChangeText={setRequestTopic}
+                      placeholder="e.g. Brachial Plexus, Krebs Cycle..."
                       placeholderTextColor="#494551"
-                      multiline
-                      numberOfLines={3}
                       className="bg-surface-container border border-outline-variant rounded-xl px-4 py-3 text-on-surface font-inter mb-3"
-                      style={{ fontSize: 14, textAlignVertical: 'top' }}
+                      style={{ fontSize: 14 }}
                     />
+
+                    {/* Note type selector */}
+                    <Text className="text-on-surface-variant font-inter-medium text-sm mb-2">Note Type</Text>
+                    <View className="flex-row gap-2 mb-4">
+                      {REQUEST_NOTE_TYPES.map((t) => (
+                        <TouchableOpacity
+                          key={t.value}
+                          onPress={() => setRequestNoteType(t.value)}
+                          className="flex-1 py-2 rounded-xl items-center border"
+                          style={{
+                            backgroundColor: requestNoteType === t.value ? '#cfbcff' : 'transparent',
+                            borderColor: requestNoteType === t.value ? '#cfbcff' : '#494551',
+                          }}
+                        >
+                          <Text style={{
+                            color: requestNoteType === t.value ? '#39197c' : '#948e9d',
+                            fontSize: 12,
+                            fontWeight: '500',
+                          }}>
+                            {t.label}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+
+                    {/* Subject context */}
+                    <Text className="text-outline font-inter text-xs mb-3">
+                      Subject: {selectedSubject ?? 'Anatomy (select a subject above to change)'}
+                    </Text>
+
                     <View className="flex-row gap-2">
                       <TouchableOpacity
-                        onPress={() => setShowRequestForm(false)}
+                        onPress={() => { setShowRequestForm(false); setRequestTopic(''); }}
                         className="flex-1 border border-outline rounded-xl py-3 items-center"
                       >
                         <Text className="text-on-surface-variant font-inter-medium text-sm">Cancel</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
                         onPress={() => requestMutation.mutate()}
+                        disabled={requestMutation.isPending || !requestTopic.trim()}
                         className="flex-1 bg-primary rounded-xl py-3 items-center"
+                        style={{ opacity: requestTopic.trim() ? 1 : 0.5 }}
                       >
-                        <Text className="text-on-primary font-inter-medium text-sm">Send Request</Text>
+                        <Text className="text-on-primary font-inter-medium text-sm">
+                          {requestMutation.isPending ? 'Sending...' : 'Send Request'}
+                        </Text>
                       </TouchableOpacity>
                     </View>
                   </>

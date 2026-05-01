@@ -76,6 +76,12 @@ export default function DropsScreen() {
   const user = useAuthStore((s) => s.user);
   const { socket } = useSocket();
 
+  // Clear messages immediately on subject change so old subject's messages don't flash
+  const handleSubjectChange = (subject: Subject) => {
+    setMessages([]);
+    setSelectedSubject(subject);
+  };
+
   const { isLoading } = useQuery({
     queryKey: ['drops', 'messages', selectedSubject],
     queryFn: async () => {
@@ -83,6 +89,8 @@ export default function DropsScreen() {
       setMessages(res.messages);
       return res;
     },
+    // Keep previous data in cache so switching back restores instantly
+    staleTime: 30_000,
   });
 
   const sendMutation = useMutation({
@@ -163,7 +171,7 @@ export default function DropsScreen() {
           {SUBJECTS.map((s) => (
             <TouchableOpacity
               key={s}
-              onPress={() => setSelectedSubject(s)}
+              onPress={() => handleSubjectChange(s)}
               className="mr-2 px-3 py-1.5 rounded-full"
               style={{
                 backgroundColor: selectedSubject === s ? '#7c3aed' : 'rgba(255,255,255,0.06)',

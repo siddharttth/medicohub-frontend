@@ -174,7 +174,7 @@ export default function Onboarding() {
           <TouchableOpacity
             onPress={handleSubmit}
             disabled={isLoading}
-            className="bg-primary rounded-2xl py-4 items-center"
+            className="bg-primary rounded-2xl py-4 items-center mb-4"
             activeOpacity={0.8}
           >
             {isLoading ? (
@@ -182,6 +182,13 @@ export default function Onboarding() {
             ) : (
               <Text className="text-on-primary font-inter-bold text-base">Join MedicoHub →</Text>
             )}
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => router.push('/(auth)/login')} activeOpacity={0.7}>
+            <Text className="text-on-surface-variant text-center font-inter text-sm">
+              Already have an account?{' '}
+              <Text className="text-primary font-inter-semibold">Sign In</Text>
+            </Text>
           </TouchableOpacity>
         </View>
       ),
@@ -194,8 +201,11 @@ export default function Onboarding() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         className="flex-1"
       >
-        {/* Skip button */}
-        <View className="flex-row justify-end px-4 pt-2">
+        {/* Header row: Sign In link + Skip */}
+        <View className="flex-row justify-between items-center px-4 pt-2">
+          <TouchableOpacity onPress={() => router.push('/(auth)/login')} activeOpacity={0.7}>
+            <Text className="text-primary font-inter-semibold text-sm">Sign In</Text>
+          </TouchableOpacity>
           {currentSlide < 2 && (
             <TouchableOpacity onPress={() => goToSlide(2)}>
               <Text className="text-on-surface-variant font-inter text-sm">Skip</Text>

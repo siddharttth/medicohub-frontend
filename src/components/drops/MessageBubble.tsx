@@ -9,9 +9,12 @@ interface MessageBubbleProps {
 }
 
 export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, currentUserId }) => {
-  const isCurrentUser = message.sender.id === currentUserId;
+  const senderId = message.sender?.id ?? '';
+  const senderName = message.sender?.name ?? 'Unknown';
+  const isCurrentUser = senderId === currentUserId;
   const isAI = message.type === 'ai';
-  const time = format(new Date(message.createdAt), 'HH:mm');
+  const body = message.content || message.text || '';
+  const time = message.createdAt ? format(new Date(message.createdAt), 'HH:mm') : '';
 
   if (isCurrentUser) {
     return (
@@ -26,7 +29,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, currentUs
             borderBottomRightRadius: 24,
           }}
         >
-          <Text style={{ color: '#39197c', fontWeight: '500', fontSize: 14 }}>{message.content}</Text>
+          <Text style={{ color: '#39197c', fontWeight: '500', fontSize: 14 }}>{body}</Text>
         </View>
         <Text className="text-outline text-xs mt-1">{time}</Text>
       </View>
@@ -54,7 +57,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, currentUs
             borderBottomLeftRadius: 24,
           }}
         >
-          <Text className="text-on-surface text-sm font-inter">{message.content}</Text>
+          <Text className="text-on-surface text-sm font-inter">{body}</Text>
         </View>
         <Text className="text-outline text-xs mt-1">{time}</Text>
       </View>
@@ -67,7 +70,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, currentUs
         <View className="w-5 h-5 rounded-full bg-surface-container-high items-center justify-center mr-2">
           <Text style={{ fontSize: 10 }}>👤</Text>
         </View>
-        <Text className="text-xs text-on-surface-variant font-inter-medium">{message.sender.name}</Text>
+        <Text className="text-xs text-on-surface-variant font-inter-medium">{senderName}</Text>
       </View>
       <View
         className="max-w-[75%] px-4 py-3 bg-surface-container-high"
@@ -78,7 +81,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, currentUs
           borderBottomLeftRadius: 24,
         }}
       >
-        <Text className="text-on-surface text-sm font-inter">{message.content}</Text>
+        <Text className="text-on-surface text-sm font-inter">{body}</Text>
       </View>
       <Text className="text-outline text-xs mt-1">{time}</Text>
     </View>

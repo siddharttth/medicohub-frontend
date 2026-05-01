@@ -59,7 +59,6 @@ export default function Onboarding() {
     } catch (e: any) {
       const msg = e?.response?.data?.message ?? e?.message ?? 'Registration failed. Try again.';
       Alert.alert('Error', msg);
-      console.error('Register error:', JSON.stringify(e?.response?.data ?? e?.message));
     } finally {
       setIsLoading(false);
     }

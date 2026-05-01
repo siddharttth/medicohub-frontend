@@ -194,7 +194,7 @@ export default function DropsScreen() {
             renderItem={({ item }: { item: Message }) => (
               <MessageBubble message={item} currentUserId={user?.id ?? ''} />
             )}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item, index) => item.id ?? index.toString()}
             inverted
             contentContainerStyle={{ paddingVertical: 12 }}
             showsVerticalScrollIndicator={false}

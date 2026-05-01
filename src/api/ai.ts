@@ -6,6 +6,6 @@ interface AskAIResponse {
 }
 
 export const aiApi = {
-  ask: (question: string, context?: string): Promise<AskAIResponse> =>
-    apiClient.post('/ai/ask', { question, context }).then((r) => r.data),
+  ask: (question: string, subject?: string): Promise<AskAIResponse> =>
+    apiClient.post('/ai/ask', { question, subject }).then((r) => r.data.data),
 };

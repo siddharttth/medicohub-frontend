@@ -1,25 +1,31 @@
 import apiClient from './axios';
-import { Message } from '../types';
+import { Message, Subject } from '../types';
 
 interface SendMessageData {
-  content: string;
+  subject: Subject;
+  text: string;
+}
+
+interface Pagination {
+  total: number;
+  limit: number;
+  skip: number;
 }
 
 interface MessagesResponse {
   messages: Message[];
-  total: number;
+  pagination: Pagination;
 }
 
 export const dropsApi = {
-  getMessages: (page = 1, limit = 50): Promise<MessagesResponse> =>
-    apiClient.get('/drops/messages', { params: { page, limit } }).then((r) => r.data),
+  getMessages: (subject: Subject, limit = 50, skip = 0): Promise<MessagesResponse> =>
+    apiClient
+      .get('/drops/messages', { params: { subject, limit, skip } })
+      .then((r) => ({
+        messages: r.data.data ?? [],
+        pagination: r.data.pagination ?? { total: 0, limit, skip },
+      })),
 
   sendMessage: (data: SendMessageData): Promise<Message> =>
-    apiClient.post('/drops/messages', data).then((r) => r.data),
-
-  getPinnedMessages: (): Promise<Message[]> =>
-    apiClient.get('/drops/messages/pinned').then((r) => r.data),
-
-  pinMessage: (id: string): Promise<Message> =>
-    apiClient.post(`/drops/messages/${id}/pin`).then((r) => r.data),
+    apiClient.post('/drops/messages', data).then((r) => r.data.data),
 };

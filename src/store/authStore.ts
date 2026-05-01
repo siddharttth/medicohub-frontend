@@ -31,9 +31,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isHydrated: false,
 
   login: async (tokens, user) => {
-    const stored: StoredAuth = { user, ...tokens };
+    // normalize _id to id in case backend returns _id
+    const normalizedUser: User = { ...user, id: user.id || (user as any)._id };
+    const stored: StoredAuth = { user: normalizedUser, ...tokens };
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
-    set({ user, accessToken: tokens.accessToken, refreshToken: tokens.refreshToken });
+    set({ user: normalizedUser, accessToken: tokens.accessToken, refreshToken: tokens.refreshToken });
   },
 
   logout: async () => {

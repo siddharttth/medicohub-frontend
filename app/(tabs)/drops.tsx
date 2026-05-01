@@ -9,6 +9,7 @@ import {
   Platform,
   ActivityIndicator,
   Animated,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -20,8 +21,12 @@ import { dropsApi } from '../../src/api/drops';
 import { aiApi } from '../../src/api/ai';
 import { useSocket } from '../../src/hooks/useSocket';
 import { MessageBubble } from '../../src/components/drops/MessageBubble';
-import { GlassCard } from '../../src/components/ui/GlassCard';
-import { Message } from '../../src/types';
+import { Message, Subject } from '../../src/types';
+
+const SUBJECTS: Subject[] = [
+  'Anatomy', 'Physiology', 'Biochemistry', 'Pathology',
+  'Pharmacology', 'Microbiology', 'Surgery', 'Medicine',
+];
 
 const TypingIndicator = () => {
   const dot1 = useRef(new Animated.Value(0)).current;
@@ -65,26 +70,24 @@ const TypingIndicator = () => {
 
 export default function DropsScreen() {
   const [inputText, setInputText] = useState('');
+  const [selectedSubject, setSelectedSubject] = useState<Subject>('Anatomy');
   const flatListRef = useRef<FlatList>(null);
-  const { messages, pinnedMessages, isTyping, onlineCount, addMessage, setMessages, setPinnedMessages } = useDropsStore();
+  const { messages, isTyping, onlineCount, addMessage, setMessages } = useDropsStore();
   const user = useAuthStore((s) => s.user);
   const { socket } = useSocket();
 
   const { isLoading } = useQuery({
-    queryKey: ['drops', 'messages'],
+    queryKey: ['drops', 'messages', selectedSubject],
     queryFn: async () => {
-      const [messagesRes, pinned] = await Promise.all([
-        dropsApi.getMessages(1, 50),
-        dropsApi.getPinnedMessages(),
-      ]);
-      setMessages(messagesRes.messages);
-      setPinnedMessages(pinned);
-      return messagesRes;
+      const res = await dropsApi.getMessages(selectedSubject, 50, 0);
+      setMessages(res.messages);
+      return res;
     },
   });
 
   const sendMutation = useMutation({
-    mutationFn: (content: string) => dropsApi.sendMessage({ content }),
+    mutationFn: (text: string) =>
+      dropsApi.sendMessage({ subject: selectedSubject, text }),
     onSuccess: (newMsg) => {
       addMessage(newMsg);
     },
@@ -92,7 +95,7 @@ export default function DropsScreen() {
   });
 
   const aiMutation = useMutation({
-    mutationFn: (question: string) => aiApi.ask(question),
+    mutationFn: (question: string) => aiApi.ask(question, selectedSubject),
     onSuccess: (res) => {
       const aiMessage: Message = {
         id: Date.now().toString(),
@@ -150,23 +153,34 @@ export default function DropsScreen() {
           </View>
         </View>
 
-        {/* Pinned Messages */}
-        {pinnedMessages.length > 0 && (
-          <View className="border-b border-outline-variant">
-            {pinnedMessages.slice(0, 2).map((msg) => (
-              <View
-                key={msg.id}
-                className="flex-row items-center px-4 py-2"
-                style={{ borderLeftWidth: 3, borderLeftColor: '#b599ff', backgroundColor: 'rgba(181,153,255,0.05)' }}
+        {/* Subject Selector */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 8 }}
+          style={{ flexGrow: 0 }}
+        >
+          {SUBJECTS.map((s) => (
+            <TouchableOpacity
+              key={s}
+              onPress={() => setSelectedSubject(s)}
+              className="mr-2 px-3 py-1.5 rounded-full"
+              style={{
+                backgroundColor: selectedSubject === s ? '#7c3aed' : 'rgba(255,255,255,0.06)',
+                borderWidth: 1,
+                borderColor: selectedSubject === s ? '#b599ff' : 'rgba(255,255,255,0.1)',
+              }}
+              activeOpacity={0.8}
+            >
+              <Text
+                className="font-inter-medium text-xs"
+                style={{ color: selectedSubject === s ? '#fff' : '#948e9d' }}
               >
-                <Ionicons name="pin" size={12} color="#cfbcff" style={{ marginRight: 6 }} />
-                <Text className="text-on-surface-variant font-inter text-xs flex-1" numberOfLines={1}>
-                  {msg.sender.name}: {msg.content}
-                </Text>
-              </View>
-            ))}
-          </View>
-        )}
+                {s}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
 
         {/* Messages */}
         {isLoading ? (
@@ -208,7 +222,7 @@ export default function DropsScreen() {
             <TextInput
               value={inputText}
               onChangeText={handleInputChange}
-              placeholder="Share with your batch..."
+              placeholder={`Ask about ${selectedSubject}...`}
               placeholderTextColor="#494551"
               multiline
               maxLength={500}

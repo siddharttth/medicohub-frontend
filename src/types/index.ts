@@ -1,16 +1,15 @@
 export interface User {
   id: string;
+  _id?: string;
   name: string;
   email: string;
   college: string;
-  year: number;
+  year: string;
   avatar?: string;
-  streak: number;
+  role: string;
+  streakDays: number;
   notesShared: number;
-  studyHours: number;
-  survivalRate: number;
-  isPro: boolean;
-  createdAt: string;
+  createdAt?: string;
 }
 
 export interface AuthTokens {
@@ -42,24 +41,21 @@ export interface ExamPack {
 }
 
 export interface VivaQ {
-  id: string;
   question: string;
   answer: string;
-  subject: string;
-  difficulty: 'easy' | 'medium' | 'hard';
 }
 
 export interface Topic {
   id: string;
   title: string;
-  subject: string;
-  isCompleted: boolean;
-  isHighYield: boolean;
+  yield: 'high' | 'medium' | 'low';
+  completed: boolean;
 }
 
 export interface Message {
   id: string;
   content: string;
+  text?: string;
   sender: {
     id: string;
     name: string;
@@ -71,12 +67,14 @@ export interface Message {
 }
 
 export interface Achievement {
-  id: string;
+  _id: string;
+  type: string;
   title: string;
   description: string;
   icon: string;
-  unlockedAt?: string;
-  isUnlocked: boolean;
+  unlockedAt: string | null;
+  progress: { current: number; target: number };
+  requirements: Record<string, number>;
 }
 
 export interface Notification {
@@ -90,14 +88,16 @@ export interface Notification {
 
 export interface StreakDay {
   date: string;
-  count: number;
+  isActive: boolean;
+  minutesSpent: number;
 }
 
 export interface Stats {
   streakDays: number;
   notesShared: number;
-  survivalRate: number;
-  studyHours: number;
+  totalStudyHours: number;
+  notesDownloaded: number;
+  messagesPosted: number;
 }
 
 export interface OnboardingData {
@@ -119,3 +119,5 @@ export type Subject =
   | 'Medicine';
 
 export type NoteType = 'pdf' | 'handwritten' | 'diagram' | 'pyq';
+
+export type ExamType = 'full-pack' | 'viva-only' | 'quick-review';

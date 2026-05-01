@@ -1,19 +1,19 @@
 import apiClient from './axios';
-import { ExamPack, VivaQ, Topic, Subject } from '../types';
+import { ExamPack, VivaQ, Topic, Subject, ExamType } from '../types';
 
 export const examApi = {
-  generatePack: (subject: Subject): Promise<ExamPack> =>
-    apiClient.post('/exam/generate', { subject }).then((r) => r.data),
+  generate: (subject: Subject, type: ExamType): Promise<ExamPack> =>
+    apiClient.post('/exam/generate', { subject, type }).then((r) => r.data.data),
 
-  askViva: (subject: Subject): Promise<VivaQ> =>
-    apiClient.post('/exam/viva', { subject }).then((r) => r.data),
+  getViva: (subject: Subject): Promise<VivaQ> =>
+    apiClient.post('/exam/viva', { subject }).then((r) => r.data.data.viva),
 
   getTopics: (subject: Subject): Promise<Topic[]> =>
-    apiClient.get('/exam/topics', { params: { subject } }).then((r) => r.data),
+    apiClient.get(`/topics/${subject}`).then((r) => r.data.data.topics),
 
-  completeTopic: (topicId: string, isCompleted: boolean): Promise<Topic> =>
-    apiClient.patch(`/topics/${topicId}/complete`, { isCompleted }).then((r) => r.data),
+  completeTopic: (topicId: string): Promise<Topic> =>
+    apiClient.patch(`/topics/${topicId}/complete`).then((r) => r.data.data),
 
-  getSavedPacks: (): Promise<ExamPack[]> =>
-    apiClient.get('/exam/saved').then((r) => r.data),
+  getPacks: (subject: Subject): Promise<ExamPack[]> =>
+    apiClient.get('/exam/packs', { params: { subject } }).then((r) => r.data.data),
 };

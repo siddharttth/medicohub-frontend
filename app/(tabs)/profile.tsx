@@ -14,40 +14,36 @@ import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuthStore } from '../../src/store/authStore';
 import { usersApi } from '../../src/api/users';
-import { notesApi } from '../../src/api/notes';
-import { examApi } from '../../src/api/exam';
+import { achievementsApi } from '../../src/api/achievements';
+import { authApi } from '../../src/api/auth';
 import { useAuth } from '../../src/hooks/useAuth';
 import { GlassCard } from '../../src/components/ui/GlassCard';
-import { Achievement, Note, ExamPack } from '../../src/types';
-
-const DEFAULT_ACHIEVEMENTS = [
-  { id: '1', title: 'Night Owl', description: 'Studied past midnight 5 times', icon: '🦉', isUnlocked: false },
-  { id: '2', title: 'Verified Senior', description: 'Shared 10+ notes', icon: '⭐', isUnlocked: false },
-  { id: '3', title: 'Top Contributor', description: 'Notes downloaded 100+ times', icon: '🏆', isUnlocked: false },
-  { id: '4', title: '30-Day Streak', description: 'Studied for 30 consecutive days', icon: '🔥', isUnlocked: false },
-];
+import { Achievement } from '../../src/types';
 
 export default function ProfileScreen() {
-  const user = useAuthStore((s) => s.user);
+  const storeUser = useAuthStore((s) => s.user);
   const { signOut } = useAuth();
 
-  const { data: achievements = DEFAULT_ACHIEVEMENTS } = useQuery({
-    queryKey: ['achievements', user?.id],
-    queryFn: () => usersApi.getAchievements(user!.id),
-    enabled: !!user,
-    placeholderData: DEFAULT_ACHIEVEMENTS,
+  // Fetch fresh user data from /auth/me
+  const { data: user = storeUser } = useQuery({
+    queryKey: ['me'],
+    queryFn: authApi.me,
+    enabled: !!storeUser,
+    placeholderData: storeUser ?? undefined,
   });
 
-  const { data: myNotes = [] } = useQuery<Note[]>({
-    queryKey: ['notes', 'me'],
-    queryFn: () => notesApi.getMyNotes(),
-    enabled: !!user,
+  const userId = user?.id || user?._id;
+
+  const { data: stats } = useQuery({
+    queryKey: ['stats', userId],
+    queryFn: () => usersApi.getStats(userId!),
+    enabled: !!userId,
   });
 
-  const { data: savedPacks = [] } = useQuery<ExamPack[]>({
-    queryKey: ['exam', 'saved'],
-    queryFn: () => examApi.getSavedPacks(),
-    enabled: !!user,
+  const { data: achievements = [] } = useQuery<Achievement[]>({
+    queryKey: ['achievements', userId],
+    queryFn: () => achievementsApi.getAchievements(userId!),
+    enabled: !!userId,
   });
 
   const handleLogout = () => {
@@ -95,16 +91,17 @@ export default function ProfileScreen() {
             </LinearGradient>
           </View>
           <Text className="text-on-surface font-inter-bold text-xl">{user?.name ?? 'MedicoHub User'}</Text>
+          <Text className="text-on-surface-variant font-inter text-sm mt-0.5">{user?.email ?? ''}</Text>
           <Text className="text-on-surface-variant font-inter text-sm mt-0.5">{user?.college ?? 'Medical College'}</Text>
-          <Text className="text-outline font-inter text-xs mt-0.5">Year {user?.year ?? 1} • MBBS</Text>
+          <Text className="text-outline font-inter text-xs mt-0.5">Year {user?.year ?? '1st'} • MBBS</Text>
         </View>
 
         {/* Stats */}
         <View className="flex-row px-5 gap-2 mb-5">
           {[
-            { label: '7-Day Streak', value: `${user?.streak ?? 0}🔥`, },
-            { label: 'Notes Shared', value: `${user?.notesShared ?? 0}📚` },
-            { label: 'Survival Rate', value: `${Math.round(user?.survivalRate ?? 0)}%💪` },
+            { label: 'Streak Days', value: `${stats?.streakDays ?? user?.streakDays ?? 0}🔥` },
+            { label: 'Notes Shared', value: `${stats?.notesShared ?? user?.notesShared ?? 0}📚` },
+            { label: 'Study Hours', value: `${stats?.totalStudyHours ?? 0}⏱️` },
           ].map((s) => (
             <GlassCard key={s.label} className="flex-1 items-center py-3">
               <Text className="text-on-surface font-inter-bold text-lg">{s.value}</Text>
@@ -116,89 +113,46 @@ export default function ProfileScreen() {
         {/* Achievements */}
         <View className="px-5 mb-5">
           <Text className="text-on-surface font-inter-semibold text-base mb-3">Achievements 🏅</Text>
-          <View className="flex-row flex-wrap gap-3">
-            {achievements.slice(0, 4).map((achievement: Achievement) => (
-              <GlassCard
-                key={achievement.id}
-                className="p-3 items-center"
-                style={{
-                  width: '47%',
-                  opacity: achievement.isUnlocked ? 1 : 0.5,
-                }}
-              >
-                <Text style={{ fontSize: 28 }}>{achievement.icon}</Text>
-                <Text className="text-on-surface font-inter-semibold text-sm mt-2 text-center">
-                  {achievement.title}
-                </Text>
-                <Text className="text-on-surface-variant font-inter text-xs text-center mt-1" numberOfLines={2}>
-                  {achievement.description}
-                </Text>
-                {achievement.isUnlocked && (
-                  <View className="bg-primary rounded-full px-2 py-0.5 mt-2">
-                    <Text className="text-on-primary text-xs font-inter-medium">Unlocked</Text>
-                  </View>
-                )}
-              </GlassCard>
-            ))}
-          </View>
+          {achievements.length === 0 ? (
+            <GlassCard className="p-4 items-center">
+              <Text className="text-on-surface-variant font-inter text-sm">No achievements yet. Keep studying!</Text>
+            </GlassCard>
+          ) : (
+            <View className="flex-row flex-wrap gap-3">
+              {achievements.slice(0, 4).map((achievement: Achievement) => {
+                const isUnlocked = achievement.unlockedAt !== null;
+                return (
+                  <GlassCard
+                    key={achievement._id}
+                    className="p-3 items-center"
+                    style={{
+                      width: '47%',
+                      opacity: isUnlocked ? 1 : 0.5,
+                    }}
+                  >
+                    <Text style={{ fontSize: 28 }}>{achievement.icon}</Text>
+                    <Text className="text-on-surface font-inter-semibold text-sm mt-2 text-center">
+                      {achievement.title}
+                    </Text>
+                    <Text className="text-on-surface-variant font-inter text-xs text-center mt-1" numberOfLines={2}>
+                      {achievement.description}
+                    </Text>
+                    {achievement.progress && (
+                      <Text className="text-outline font-inter text-xs mt-1">
+                        {achievement.progress.current}/{achievement.progress.target}
+                      </Text>
+                    )}
+                    {isUnlocked && (
+                      <View className="bg-primary rounded-full px-2 py-0.5 mt-2">
+                        <Text className="text-on-primary text-xs font-inter-medium">Unlocked</Text>
+                      </View>
+                    )}
+                  </GlassCard>
+                );
+              })}
+            </View>
+          )}
         </View>
-
-        {/* My Notes */}
-        {myNotes.length > 0 && (
-          <View className="px-5 mb-5">
-            <Text className="text-on-surface font-inter-semibold text-base mb-3">My Shared Notes</Text>
-            {myNotes.slice(0, 3).map((note) => (
-              <GlassCard key={note.id} className="flex-row items-center p-3 mb-2">
-                <Text style={{ fontSize: 20, marginRight: 10 }}>📄</Text>
-                <View className="flex-1">
-                  <Text className="text-on-surface font-inter-medium text-sm" numberOfLines={1}>{note.title}</Text>
-                  <Text className="text-on-surface-variant font-inter text-xs">{note.subject} • {note.downloads} downloads</Text>
-                </View>
-                <Text style={{ color: '#cfbcff', fontSize: 12 }}>★ {note.rating.toFixed(1)}</Text>
-              </GlassCard>
-            ))}
-          </View>
-        )}
-
-        {/* Saved Packs */}
-        {savedPacks.length > 0 && (
-          <View className="px-5 mb-5">
-            <Text className="text-on-surface font-inter-semibold text-base mb-3">Saved Survival Packs</Text>
-            {savedPacks.slice(0, 3).map((pack) => (
-              <GlassCard key={pack.id} className="flex-row items-center p-3 mb-2">
-                <Text style={{ fontSize: 20, marginRight: 10 }}>⚡</Text>
-                <View className="flex-1">
-                  <Text className="text-on-surface font-inter-medium text-sm">{pack.subject} Pack</Text>
-                  <Text className="text-on-surface-variant font-inter text-xs">
-                    {pack.highYieldTopics.length} topics
-                  </Text>
-                </View>
-              </GlassCard>
-            ))}
-          </View>
-        )}
-
-        {/* Go Pro CTA */}
-        {!user?.isPro && (
-          <TouchableOpacity className="mx-5 mb-5 rounded-3xl overflow-hidden" activeOpacity={0.85}>
-            <LinearGradient
-              colors={['#4a2a8a', '#7c3aed', '#b599ff']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={{ padding: 20, borderRadius: 24 }}
-            >
-              <Text className="text-white font-inter-bold text-lg mb-1">⚡ Go Pro</Text>
-              <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13, fontFamily: 'Inter_400Regular' }}>
-                Unlimited AI generations, exclusive senior notes, and priority support.
-              </Text>
-              <View className="bg-white rounded-xl py-2 px-4 self-start mt-3">
-                <Text style={{ color: '#39197c', fontFamily: 'Inter_700Bold', fontSize: 13 }}>
-                  Upgrade Now →
-                </Text>
-              </View>
-            </LinearGradient>
-          </TouchableOpacity>
-        )}
 
         {/* Settings */}
         <View className="px-5 mb-5">

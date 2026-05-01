@@ -1,10 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
-  FlatList,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,7 +14,7 @@ import { examApi } from '../../src/api/exam';
 import { GlassCard } from '../../src/components/ui/GlassCard';
 import { Chip } from '../../src/components/ui/Chip';
 import { TopicChecklist } from '../../src/components/exam/TopicChecklist';
-import { Subject } from '../../src/types';
+import { Subject, ExamType } from '../../src/types';
 import { useQuery, useMutation } from '@tanstack/react-query';
 
 const SUBJECTS: Subject[] = [
@@ -23,7 +22,15 @@ const SUBJECTS: Subject[] = [
   'Pharmacology', 'Microbiology', 'Surgery', 'Medicine',
 ];
 
+const EXAM_TYPES: { label: string; value: ExamType }[] = [
+  { label: 'Full Pack', value: 'full-pack' },
+  { label: 'Quick Review', value: 'quick-review' },
+  { label: 'Viva Only', value: 'viva-only' },
+];
+
 export default function ExamScreen() {
+  const [selectedExamType, setSelectedExamType] = useState<ExamType>('full-pack');
+
   const {
     selectedSubject,
     generatedPack,
@@ -54,18 +61,18 @@ export default function ExamScreen() {
   }, [fetchedTopics]);
 
   const generateMutation = useMutation({
-    mutationFn: () => examApi.generatePack(selectedSubject!),
+    mutationFn: () => examApi.generate(selectedSubject!, selectedExamType),
     onMutate: () => setIsGenerating(true),
     onSuccess: (data) => {
       setPack(data);
       Toast.show({ type: 'success', text1: 'Survival pack ready! 💪' });
     },
-    onError: () => Toast.show({ type: 'error', text1: 'Generation failed. Try again.' }),
+    onError: () => Toast.show({ type: 'error', text1: 'Generation failed. Please try again.' }),
     onSettled: () => setIsGenerating(false),
   });
 
   const vivaMutation = useMutation({
-    mutationFn: () => examApi.askViva(selectedSubject!),
+    mutationFn: () => examApi.getViva(selectedSubject!),
     onMutate: () => setIsAskingViva(true),
     onSuccess: (data) => setVivaQuestion(data),
     onError: () => Toast.show({ type: 'error', text1: 'Failed to get viva question.' }),
@@ -77,13 +84,13 @@ export default function ExamScreen() {
     if (!topic) return;
     toggleTopic(id);
     try {
-      await examApi.completeTopic(id, !topic.isCompleted);
+      await examApi.completeTopic(id);
     } catch {
       toggleTopic(id); // revert on error
     }
   };
 
-  const completedCount = topics.filter((t) => t.isCompleted).length;
+  const completedCount = topics.filter((t) => t.completed).length;
 
   return (
     <SafeAreaView className="flex-1 bg-background">
@@ -120,6 +127,33 @@ export default function ExamScreen() {
 
         {selectedSubject ? (
           <>
+            {/* Exam Type Selector */}
+            <View className="px-5 mb-3">
+              <Text className="text-on-surface-variant font-inter text-xs mb-2">Exam Type</Text>
+              <View className="flex-row gap-2">
+                {EXAM_TYPES.map((t) => (
+                  <TouchableOpacity
+                    key={t.value}
+                    onPress={() => setSelectedExamType(t.value)}
+                    className="flex-1 py-2 rounded-xl items-center"
+                    style={{
+                      backgroundColor: selectedExamType === t.value ? '#7c3aed' : 'rgba(255,255,255,0.06)',
+                      borderWidth: 1,
+                      borderColor: selectedExamType === t.value ? '#b599ff' : 'rgba(255,255,255,0.1)',
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Text
+                      className="font-inter-medium text-xs"
+                      style={{ color: selectedExamType === t.value ? '#fff' : '#948e9d' }}
+                    >
+                      {t.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
             {/* Generate Button */}
             <TouchableOpacity
               onPress={() => generateMutation.mutate()}
@@ -153,15 +187,31 @@ export default function ExamScreen() {
                   ✨ {generatedPack.subject} Survival Pack
                 </Text>
 
-                <Text className="text-on-surface font-inter-semibold text-sm mb-2">High-Yield Topics</Text>
-                {generatedPack.highYieldTopics.map((t, i) => (
-                  <View key={i} className="flex-row items-start mb-1">
-                    <Text className="text-primary mr-2">•</Text>
-                    <Text className="text-on-surface-variant font-inter text-sm flex-1">{t}</Text>
-                  </View>
-                ))}
+                {generatedPack.highYieldTopics && generatedPack.highYieldTopics.length > 0 && (
+                  <>
+                    <Text className="text-on-surface font-inter-semibold text-sm mb-2">High-Yield Topics</Text>
+                    {generatedPack.highYieldTopics.map((t, i) => (
+                      <View key={i} className="flex-row items-start mb-1">
+                        <Text className="text-primary mr-2">•</Text>
+                        <Text className="text-on-surface-variant font-inter text-sm flex-1">{t}</Text>
+                      </View>
+                    ))}
+                  </>
+                )}
 
-                {generatedPack.mnemonics.length > 0 && (
+                {generatedPack.keyPoints && generatedPack.keyPoints.length > 0 && (
+                  <>
+                    <Text className="text-on-surface font-inter-semibold text-sm mt-3 mb-2">Key Points</Text>
+                    {generatedPack.keyPoints.map((kp, i) => (
+                      <View key={i} className="flex-row items-start mb-1">
+                        <Text className="text-primary mr-2">→</Text>
+                        <Text className="text-on-surface-variant font-inter text-sm flex-1">{kp}</Text>
+                      </View>
+                    ))}
+                  </>
+                )}
+
+                {generatedPack.mnemonics && generatedPack.mnemonics.length > 0 && (
                   <>
                     <Text className="text-on-surface font-inter-semibold text-sm mt-3 mb-2">Mnemonics</Text>
                     {generatedPack.mnemonics.map((m, i) => (
@@ -196,9 +246,6 @@ export default function ExamScreen() {
                   <GlassCard className="p-3 mb-2" style={{ borderColor: 'rgba(207,188,255,0.15)' }}>
                     <Text className="text-on-surface-variant text-xs font-inter-medium mb-1">QUESTION</Text>
                     <Text className="text-on-surface font-inter-semibold text-sm">{vivaQuestion.question}</Text>
-                    <View className="bg-surface-container-highest rounded-full px-2 py-0.5 self-start mt-2">
-                      <Text className="text-outline text-xs">{vivaQuestion.difficulty}</Text>
-                    </View>
                   </GlassCard>
                   <GlassCard className="p-3">
                     <Text className="text-on-surface-variant text-xs font-inter-medium mb-1">ANSWER</Text>

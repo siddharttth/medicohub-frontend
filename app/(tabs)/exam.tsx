@@ -45,6 +45,9 @@ export default function ExamScreen() {
     setIsGenerating,
     setIsAskingViva,
     toggleTopic,
+    addTopic,
+    editTopic,
+    deleteTopic,
     reset,
   } = useExamStore();
 
@@ -287,7 +290,13 @@ export default function ExamScreen() {
                   </Text>
                 )}
               </View>
-              <TopicChecklist topics={topics} onToggle={handleTopicToggle} />
+              <TopicChecklist
+                topics={topics}
+                onToggle={handleTopicToggle}
+                onAdd={addTopic}
+                onEdit={editTopic}
+                onDelete={deleteTopic}
+              />
             </GlassCard>
           </>
         ) : (

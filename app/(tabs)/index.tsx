@@ -135,6 +135,7 @@ export default function HomeScreen() {
             data={notesData?.notes ?? []}
             horizontal
             showsHorizontalScrollIndicator={false}
+            scrollEnabled={false}
             contentContainerStyle={{ paddingHorizontal: 20 }}
             keyExtractor={(item) => item.id}
             ListEmptyComponent={
@@ -150,10 +151,10 @@ export default function HomeScreen() {
                 <Text className="text-on-surface font-inter-semibold text-sm mb-1" numberOfLines={2}>
                   {item.title}
                 </Text>
-                <Text className="text-on-surface-variant text-xs font-inter">{item.author.name}</Text>
+                <Text className="text-on-surface-variant text-xs font-inter">{item.author?.name ?? 'Senior'}</Text>
                 <View className="flex-row items-center mt-2">
-                  <Text style={{ color: '#cfbcff', fontSize: 12 }}>★ {item.rating.toFixed(1)}</Text>
-                  <Text className="text-outline text-xs ml-2">↓ {item.downloads}</Text>
+                  <Text style={{ color: '#cfbcff', fontSize: 12 }}>★ {Number(item.rating ?? 0).toFixed(1)}</Text>
+                  <Text className="text-outline text-xs ml-2">↓ {item.downloads ?? 0}</Text>
                 </View>
               </GlassCard>
             )}

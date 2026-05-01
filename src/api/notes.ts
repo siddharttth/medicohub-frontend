@@ -1,9 +1,23 @@
 import apiClient from './axios';
 import { Note, Subject, NoteType } from '../types';
 
+export type UploadNoteType = 'PDF' | 'Handwritten' | 'Diagram' | 'PYQ' | 'DOC' | 'CSV' | 'Image' | 'Other';
+
+export interface UploadNoteData {
+  title: string;
+  subject: Subject;
+  noteType: UploadNoteType;
+  description?: string;
+  tags?: string;
+  fileUri: string;
+  fileName: string;
+  fileType: string;
+}
+
 interface NoteSearchParams {
   subject?: Subject;
   noteType?: NoteType;
+  query?: string;
   sortBy?: string;
   limit?: number;
   skip?: number;
@@ -50,6 +64,20 @@ export const notesApi = {
 
   requestNote: (data: NoteRequestData): Promise<void> =>
     apiClient.post('/notes/request', { subject: data.subject, topic: data.topic, noteType: data.noteType }).then((r) => r.data),
+
+  upload: (data: UploadNoteData): Promise<Note> => {
+    const form = new FormData();
+    form.append('title', data.title);
+    form.append('subject', data.subject);
+    form.append('noteType', data.noteType);
+    if (data.description) form.append('description', data.description);
+    if (data.tags) form.append('tags', data.tags);
+    // React Native FormData file object
+    form.append('file', { uri: data.fileUri, name: data.fileName, type: data.fileType } as any);
+    return apiClient.post('/notes/upload', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then((r) => r.data.data.note);
+  },
 
   rate: (id: string, rating: number): Promise<Note> =>
     apiClient.post(`/notes/${id}/rate`, { rating }).then((r) => r.data.data),

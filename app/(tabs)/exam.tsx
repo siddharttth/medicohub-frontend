@@ -183,42 +183,64 @@ export default function ExamScreen() {
             {/* Generated Pack */}
             {generatedPack && (
               <GlassCard className="mx-5 mb-4 p-4" purpleGlow>
-                <Text className="text-primary font-inter-semibold text-base mb-3">
+                <Text className="text-primary font-inter-semibold text-base mb-4">
                   ✨ {generatedPack.subject} Survival Pack
                 </Text>
 
-                {generatedPack.highYieldTopics && generatedPack.highYieldTopics.length > 0 && (
+                {/* Topics by yield */}
+                {(generatedPack.topics ?? []).length > 0 && (
                   <>
                     <Text className="text-on-surface font-inter-semibold text-sm mb-2">High-Yield Topics</Text>
-                    {generatedPack.highYieldTopics.map((t, i) => (
-                      <View key={i} className="flex-row items-start mb-1">
-                        <Text className="text-primary mr-2">•</Text>
-                        <Text className="text-on-surface-variant font-inter text-sm flex-1">{t}</Text>
+                    {(generatedPack.topics ?? []).map((t) => (
+                      <View key={t.id} className="flex-row items-center mb-1.5">
+                        <View
+                          style={{
+                            width: 8, height: 8, borderRadius: 4, marginRight: 8,
+                            backgroundColor: t.yield === 'high' ? '#cfbcff' : t.yield === 'medium' ? '#948e9d' : '#494551',
+                          }}
+                        />
+                        <Text className="text-on-surface-variant font-inter text-sm flex-1">{t.title}</Text>
+                        <Text style={{ fontSize: 10, color: t.yield === 'high' ? '#cfbcff' : '#948e9d' }}>
+                          {t.yield}
+                        </Text>
                       </View>
                     ))}
                   </>
                 )}
 
-                {generatedPack.keyPoints && generatedPack.keyPoints.length > 0 && (
+                {/* Mnemonics */}
+                {(generatedPack.mnemonics ?? []).length > 0 && (
                   <>
-                    <Text className="text-on-surface font-inter-semibold text-sm mt-3 mb-2">Key Points</Text>
-                    {generatedPack.keyPoints.map((kp, i) => (
-                      <View key={i} className="flex-row items-start mb-1">
-                        <Text className="text-primary mr-2">→</Text>
-                        <Text className="text-on-surface-variant font-inter text-sm flex-1">{kp}</Text>
+                    <Text className="text-on-surface font-inter-semibold text-sm mt-4 mb-2">Mnemonics 🧠</Text>
+                    {(generatedPack.mnemonics ?? []).map((m, i) => (
+                      <View key={i} className="flex-row items-start mb-2 bg-surface-container-high rounded-xl p-3">
+                        <Text className="text-primary mr-2 font-inter-bold">{i + 1}.</Text>
+                        <Text className="text-on-surface-variant font-inter text-sm flex-1">{m}</Text>
                       </View>
                     ))}
                   </>
                 )}
 
-                {generatedPack.mnemonics && generatedPack.mnemonics.length > 0 && (
+                {/* PYQs */}
+                {(generatedPack.pyqs ?? []).length > 0 && (
                   <>
-                    <Text className="text-on-surface font-inter-semibold text-sm mt-3 mb-2">Mnemonics</Text>
-                    {generatedPack.mnemonics.map((m, i) => (
-                      <GlassCard key={i} className="p-3 mb-2">
-                        <Text className="text-on-surface-variant font-inter text-sm">{m}</Text>
-                      </GlassCard>
+                    <Text className="text-on-surface font-inter-semibold text-sm mt-4 mb-2">Previous Year Questions 📝</Text>
+                    {(generatedPack.pyqs ?? []).map((q, i) => (
+                      <View key={i} className="flex-row items-center justify-between mb-1.5 bg-surface-container rounded-xl px-3 py-2">
+                        <Text className="text-on-surface-variant font-inter text-sm">{q.year} — {q.type}</Text>
+                        <Text className="text-primary font-inter-medium text-xs">{q.marks}M</Text>
+                      </View>
                     ))}
+                  </>
+                )}
+
+                {/* Tips */}
+                {generatedPack.tips && (
+                  <>
+                    <Text className="text-on-surface font-inter-semibold text-sm mt-4 mb-2">Study Tip 💡</Text>
+                    <View className="bg-surface-container-high rounded-xl p-3">
+                      <Text className="text-on-surface-variant font-inter text-sm leading-5">{generatedPack.tips}</Text>
+                    </View>
                   </>
                 )}
               </GlassCard>

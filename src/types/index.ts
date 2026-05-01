@@ -31,13 +31,26 @@ export interface Note {
   createdAt: string;
 }
 
-export interface ExamPack {
+export interface ExamPackTopic {
   id: string;
+  title: string;
+  yield: 'high' | 'medium' | 'low';
+}
+
+export interface ExamPackPYQ {
+  year: number;
+  marks: number;
+  type: string;
+}
+
+export interface ExamPack {
   subject: string;
-  highYieldTopics: string[];
-  keyPoints: string[];
-  mnemonics: string[];
-  generatedAt: string;
+  packType?: string;
+  topics?: ExamPackTopic[];
+  mnemonics?: string[];
+  pyqs?: ExamPackPYQ[];
+  tips?: string;
+  generatedAt?: string;
 }
 
 export interface VivaQ {

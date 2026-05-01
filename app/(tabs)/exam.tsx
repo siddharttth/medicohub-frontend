@@ -82,14 +82,12 @@ export default function ExamScreen() {
     onSettled: () => setIsAskingViva(false),
   });
 
-  const handleTopicToggle = async (id: string) => {
-    const topic = topics.find((t) => t.id === id);
-    if (!topic) return;
+  const handleTopicToggle = (id: string) => {
+    // Optimistically toggle in local store — no revert
     toggleTopic(id);
-    try {
-      await examApi.completeTopic(id);
-    } catch {
-      toggleTopic(id); // revert on error
+    // Best-effort sync to backend (only for non-local topics)
+    if (!id.startsWith('local-')) {
+      examApi.completeTopic(id).catch(() => {/* silent — local state already updated */});
     }
   };
 

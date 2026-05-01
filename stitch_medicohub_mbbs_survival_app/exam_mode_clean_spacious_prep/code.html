@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Caveat:wght@400;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .clean-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .halo-glow {
+            background: radial-gradient(circle at 50% 0%, rgba(181, 153, 255, 0.05) 0%, rgba(8, 10, 20, 0) 70%);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#cfbcff",
+                        "on-error-container": "#ffdad6",
+                        "surface-variant": "#2c344f",
+                        "inverse-surface": "#dce1ff",
+                        "error-container": "#93000a",
+                        "primary-container": "#b599ff",
+                        "on-primary-fixed-variant": "#503493",
+                        "on-secondary-container": "#b3b4c5",
+                        "surface-bright": "#313853",
+                        "tertiary-fixed-dim": "#c5c5d6",
+                        "secondary-container": "#444654",
+                        "on-error": "#690005",
+                        "tertiary-fixed": "#e1e1f3",
+                        "on-secondary-fixed": "#191b27",
+                        "tertiary-container": "#a8a8b9",
+                        "on-primary": "#39197c",
+                        "surface-container": "#171e38",
+                        "on-primary-container": "#472a8a",
+                        "surface-tint": "#cfbcff",
+                        "surface-container-highest": "#2c344f",
+                        "on-tertiary-container": "#3c3d4b",
+                        "on-secondary-fixed-variant": "#444654",
+                        "primary-fixed-dim": "#cfbcff",
+                        "outline-variant": "#494551",
+                        "secondary-fixed": "#e1e1f3",
+                        "on-tertiary-fixed": "#191b27",
+                        "on-background": "#dce1ff",
+                        "surface-container-low": "#131a34",
+                        "on-surface-variant": "#cbc4d3",
+                        "on-primary-fixed": "#22005c",
+                        "on-tertiary-fixed-variant": "#444654",
+                        "background": "#0a122b",
+                        "on-secondary": "#2e303d",
+                        "inverse-primary": "#684dad",
+                        "surface-container-high": "#212943",
+                        "primary-fixed": "#e9ddff",
+                        "secondary-fixed-dim": "#c5c5d6",
+                        "surface": "#0a122b",
+                        "surface-dim": "#0a122b",
+                        "on-tertiary": "#2e303d",
+                        "tertiary": "#c5c5d6",
+                        "inverse-on-surface": "#282f4a",
+                        "on-surface": "#dce1ff",
+                        "secondary": "#c5c5d6",
+                        "surface-container-lowest": "#050c26",
+                        "outline": "#948e9d",
+                        "error": "#ffb4ab"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "1.5rem",
+                        "xl": "2.5rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xl": "64px",
+                        "container-max": "1280px",
+                        "base": "8px",
+                        "gutter": "24px",
+                        "md": "32px",
+                        "sm": "16px",
+                        "xs": "8px",
+                        "lg": "56px"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "display": ["Inter"],
+                        "accent-note": ["Caveat"]
+                    },
+                    "fontSize": {
+                        "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.08em", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "1.8", "fontWeight": "400"}],
+                        "headline-lg": ["36px", {"lineHeight": "1.1", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "1.8", "fontWeight": "400"}],
+                        "headline-md": ["22px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                        "display": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "accent-note": ["22px", {"lineHeight": "1.3", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md selection:bg-primary-container/30">
+<div class="fixed inset-0 halo-glow pointer-events-none"></div>
+<header class="bg-background/80 backdrop-blur-xl border-b border-white/[0.04] sticky top-0 z-40">
+<div class="max-w-container-max mx-auto flex justify-between items-center w-full px-6 py-5">
+<div class="flex items-center gap-4">
+<div class="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-lg">person</span>
+</div>
+<h1 class="text-xl font-bold text-on-surface tracking-tight font-headline-md">MedicoHub</h1>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-outline">search</span>
+</div>
+</div>
+</header>
+<main class="relative z-10 max-w-container-max mx-auto px-gutter pt-12 pb-40">
+<!-- Hero Section -->
+<div class="mb-lg space-y-sm">
+<div class="flex items-center gap-2 text-primary/80">
+<span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<span class="font-label-caps text-[11px] uppercase tracking-[0.15em]">Anatomy Survival Pack</span>
+</div>
+<div class="flex flex-col gap-sm md:flex-row md:justify-between md:items-end">
+<h2 class="font-headline-lg text-headline-lg text-on-surface leading-none">Final Revision Mode</h2>
+<div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.08] w-fit">
+<span class="material-symbols-outlined text-primary text-base">timer</span>
+<span class="font-label-caps text-[11px] text-primary/90">~2 HOUR SESSION</span>
+</div>
+</div>
+</div>
+<!-- Main Content Area -->
+<div class="space-y-lg">
+<!-- Top Topics -->
+<section class="space-y-sm">
+<div class="flex items-center gap-3 px-2">
+<span class="text-xl opacity-80">🔥</span>
+<h3 class="font-headline-md text-headline-md text-on-surface/90">Top 20 High-Yield Topics</h3>
+</div>
+<div class="clean-card rounded-2xl overflow-hidden p-2">
+<ul class="space-y-1">
+<li class="p-6 bg-transparent hover:bg-white/[0.02] rounded-xl flex justify-between items-center transition-all group cursor-pointer">
+<span class="font-body-lg text-on-surface/90">Circle of Willis &amp; Clinical Correlates</span>
+<span class="material-symbols-outlined text-primary fill-1">check_circle</span>
+</li>
+<li class="p-6 bg-transparent hover:bg-white/[0.02] rounded-xl flex justify-between items-center transition-all group cursor-pointer">
+<span class="font-body-lg text-on-surface-variant group-hover:text-on-surface transition-colors">Brachial Plexus: Roots to Branches</span>
+<span class="material-symbols-outlined text-outline/30 group-hover:text-outline transition-colors">radio_button_unchecked</span>
+</li>
+<li class="p-6 bg-transparent hover:bg-white/[0.02] rounded-xl flex justify-between items-center transition-all group cursor-pointer">
+<span class="font-body-lg text-on-surface-variant group-hover:text-on-surface transition-colors">Mediastinum Boundaries &amp; Contents</span>
+<span class="material-symbols-outlined text-outline/30 group-hover:text-outline transition-colors">radio_button_unchecked</span>
+</li>
+</ul>
+</div>
+</section>
+<!-- Viva Questions -->
+<section class="space-y-sm">
+<div class="flex items-center gap-3 px-2">
+<span class="text-xl opacity-80">📝</span>
+<h3 class="font-headline-md text-headline-md text-on-surface/90">Viva Questions to Expect</h3>
+</div>
+<div class="space-y-md">
+<div class="p-md bg-white/[0.02] border border-white/[0.04] rounded-2xl space-y-4">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<p class="font-label-caps text-primary text-[10px] uppercase tracking-wider">DRAINAGE • PRO TIP</p>
+</div>
+<div class="space-y-3 pl-3">
+<p class="font-body-lg text-on-surface italic leading-relaxed">"Where does the thoracic duct drain exactly?"</p>
+<p class="font-body-md text-on-surface-variant border-l-2 border-white/5 pl-4 ml-1">Answer: At the junction of the left internal jugular and left subclavian veins.</p>
+</div>
+</div>
+<div class="p-md bg-white/[0.02] border border-white/[0.04] rounded-2xl space-y-4">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<p class="font-label-caps text-secondary text-[10px] uppercase tracking-wider">CLINICAL VIVA</p>
+</div>
+<div class="space-y-3 pl-3">
+<p class="font-body-lg text-on-surface italic leading-relaxed">"Identify the nerve responsible for 'Winged Scapula'."</p>
+<p class="font-body-md text-on-surface-variant border-l-2 border-white/5 pl-4 ml-1">Answer: Long thoracic nerve of Bell (C5-C7).</p>
+</div>
+</div>
+</div>
+</section>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
+<!-- Mnemonics -->
+<section class="space-y-sm">
+<div class="flex items-center gap-3 px-2">
+<span class="text-xl opacity-80">⚡</span>
+<h3 class="font-headline-md text-headline-md text-on-surface/90">Must-Know Mnemonics</h3>
+</div>
+<div class="space-y-md">
+<div class="p-10 bg-[#161d36]/40 border border-white/[0.03] rounded-2xl relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-20">
+<span class="material-symbols-outlined text-4xl">psychology</span>
+</div>
+<p class="font-label-caps text-[10px] text-primary/60 mb-6 uppercase">Cranial Nerves (Sensory/Motor/Both)</p>
+<p class="font-accent-note text-on-surface text-[26px] leading-snug">"Some Say Marry Money But My Brother Says Big Brains Matter More"</p>
+</div>
+<div class="p-10 bg-white/[0.02] border border-white/[0.03] rounded-2xl relative overflow-hidden group">
+<p class="font-label-caps text-[10px] text-on-surface-variant mb-6 uppercase">Carpal Bones</p>
+<p class="font-accent-note text-on-surface/80 text-[26px] leading-snug">"She Looks Too Pretty, Try To Catch Her"</p>
+</div>
+</div>
+</section>
+<!-- PYQs -->
+<section class="space-y-sm">
+<div class="flex items-center gap-3 px-2">
+<span class="text-xl opacity-80">📄</span>
+<h3 class="font-headline-md text-headline-md text-on-surface/90">PYQs (Last 5 Years)</h3>
+</div>
+<div class="clean-card rounded-2xl p-2 space-y-1">
+<div class="flex items-center justify-between p-6 bg-transparent hover:bg-white/[0.02] rounded-xl transition-all cursor-pointer">
+<div>
+<h4 class="font-body-lg text-on-surface font-medium">Abdominal Wall Layers</h4>
+<p class="text-[10px] uppercase tracking-wider text-outline mt-1">Short Note • 5 Marks</p>
+</div>
+<span class="text-primary text-[11px] font-bold bg-primary/10 px-3 py-1 rounded-full">2023</span>
+</div>
+<div class="flex items-center justify-between p-6 bg-transparent hover:bg-white/[0.02] rounded-xl transition-all cursor-pointer">
+<div>
+<h4 class="font-body-lg text-on-surface/90 font-medium">Extraocular Muscles</h4>
+<p class="text-[10px] uppercase tracking-wider text-outline mt-1">Diagram • 10 Marks</p>
+</div>
+<span class="text-outline/60 text-[11px] font-bold border border-white/10 px-3 py-1 rounded-full">2022</span>
+</div>
+<div class="flex items-center justify-between p-6 bg-transparent hover:bg-white/[0.02] rounded-xl transition-all cursor-pointer">
+<div>
+<h4 class="font-body-lg text-on-surface/90 font-medium">Circle of Willis</h4>
+<p class="text-[10px] uppercase tracking-wider text-outline mt-1">Essay • 15 Marks</p>
+</div>
+<span class="text-outline/60 text-[11px] font-bold border border-white/10 px-3 py-1 rounded-full">2021</span>
+</div>
+</div>
+</section>
+</div>
+<div class="pt-lg pb-12 flex justify-center">
+<button class="bg-primary text-on-primary px-12 py-5 rounded-full font-label-caps text-[13px] tracking-widest flex items-center gap-3 hover:scale-105 transition-transform shadow-xl shadow-primary/20">
+<span>LAUNCH FINAL SELF-TEST</span>
+<span class="material-symbols-outlined text-lg">rocket_launch</span>
+</button>
+</div>
+</div>
+</main>
+<nav class="bg-background/95 backdrop-blur-2xl border-t border-white/[0.04] fixed bottom-0 left-0 w-full z-50 px-4 pt-4 pb-10">
+<div class="max-w-md mx-auto flex justify-around items-center">
+<a class="flex flex-col items-center justify-center text-outline hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-['Inter'] text-[10px] font-semibold uppercase tracking-widest mt-2">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-outline hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="font-['Inter'] text-[10px] font-semibold uppercase tracking-widest mt-2">Notes</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary group" href="#">
+<div class="bg-primary/10 px-5 py-2.5 rounded-full flex flex-col items-center">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+<span class="font-['Inter'] text-[10px] font-bold uppercase tracking-widest mt-1">Exam</span>
+</div>
+</a>
+<a class="flex flex-col items-center justify-center text-outline hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">forum</span>
+<span class="font-['Inter'] text-[10px] font-semibold uppercase tracking-widest mt-2">Drops</span>
+</a>
+<a class="flex flex-col items-center justify-center text-outline hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-['Inter'] text-[10px] font-semibold uppercase tracking-widest mt-2">Profile</span>
+</a>
+</div>
+</nav>
+<div class="fixed bottom-32 right-8 z-40">
+<button class="w-14 h-14 bg-primary rounded-full shadow-2xl shadow-primary/40 flex items-center justify-center text-on-primary hover:scale-110 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+</div>
+</body></html>

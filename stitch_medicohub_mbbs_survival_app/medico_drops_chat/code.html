@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Caveat&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary": "#cfbcff",
+                    "on-error-container": "#ffdad6",
+                    "surface-variant": "#2c344f",
+                    "inverse-surface": "#dce1ff",
+                    "error-container": "#93000a",
+                    "primary-container": "#b599ff",
+                    "on-primary-fixed-variant": "#503493",
+                    "on-secondary-container": "#b3b4c5",
+                    "surface-bright": "#313853",
+                    "tertiary-fixed-dim": "#c5c5d6",
+                    "secondary-container": "#444654",
+                    "on-error": "#690005",
+                    "tertiary-fixed": "#e1e1f3",
+                    "on-secondary-fixed": "#191b27",
+                    "tertiary-container": "#a8a8b9",
+                    "on-primary": "#39197c",
+                    "surface-container": "#171e38",
+                    "on-primary-container": "#472a8a",
+                    "surface-tint": "#cfbcff",
+                    "surface-container-highest": "#2c344f",
+                    "on-tertiary-container": "#3c3d4b",
+                    "on-secondary-fixed-variant": "#444654",
+                    "primary-fixed-dim": "#cfbcff",
+                    "outline-variant": "#494551",
+                    "secondary-fixed": "#e1e1f3",
+                    "on-tertiary-fixed": "#191b27",
+                    "on-background": "#dce1ff",
+                    "surface-container-low": "#131a34",
+                    "on-surface-variant": "#cbc4d3",
+                    "on-primary-fixed": "#22005c",
+                    "on-tertiary-fixed-variant": "#444654",
+                    "background": "#0a122b",
+                    "on-secondary": "#2e303d",
+                    "inverse-primary": "#684dad",
+                    "surface-container-high": "#212943",
+                    "primary-fixed": "#e9ddff",
+                    "secondary-fixed-dim": "#c5c5d6",
+                    "surface": "#0a122b",
+                    "surface-dim": "#0a122b",
+                    "on-tertiary": "#2e303d",
+                    "tertiary": "#c5c5d6",
+                    "inverse-on-surface": "#282f4a",
+                    "on-surface": "#dce1ff",
+                    "secondary": "#c5c5d6",
+                    "surface-container-lowest": "#050c26",
+                    "outline": "#948e9d",
+                    "error": "#ffb4ab"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "label-caps": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "display": ["Inter"],
+                    "accent-note": ["Caveat"]
+            },
+            "fontSize": {
+                    "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "display": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "accent-note": ["20px", {"lineHeight": "1.2", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(16, 18, 30, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .purple-glow {
+            box-shadow: 0 0 20px rgba(181, 153, 255, 0.15);
+        }
+        .chat-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .chat-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .chat-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(181, 153, 255, 0.2);
+            border-radius: 10px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body-md min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#0C0E1A]/80 backdrop-blur-md border-b border-white/[0.06] flex justify-between items-center px-6 py-4">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full border-2 border-primary-container overflow-hidden">
+<img alt="Student Profile" class="w-full h-full object-cover" data-alt="A professional close-up portrait of a young medical student wearing a white lab coat and stethoscope around their neck. The lighting is soft and cinematic with a deep blue and purple background that matches the medical study app aesthetic. High-end digital photography style with sharp focus on the student's face." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDsTeSplUU2MNJjp7az8R-J8rtNRJmTApYAAdWojHWQmaZ3JlquqAelgnlMwxceiYZQ9g26thLEBLN4NRMBXCgdcfnqIqOI-FDSjd3RRsDGdAgX6y_POD454vq03A5iPkezuXd4G33XwlY7GAJ6BYoYi5vshgmeulYpiefdQLoy8VKEXdAhiXZU8d7de9M0tuZhQknmf6bJhGgV_qSMfA1Z6E9dCSDRO65ZGLYpqhoalZPXq44DpsBKnf6HfyhtvTQ5EJvcF6XDZA8"/>
+</div>
+<div>
+<h1 class="text-xl font-black text-[#B599FF] tracking-tighter font-['Inter']">MedicoHub</h1>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
+<span class="text-[10px] font-label-caps text-slate-400 uppercase tracking-widest">412 medicos online</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full hover:bg-white/5 transition-colors text-[#B599FF]">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+</button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 flex flex-col pt-20 pb-40 max-w-container-max mx-auto w-full px-4 md:px-gutter">
+<!-- Chat Header / Title Section -->
+<section class="py-6 flex flex-col items-center">
+<h2 class="font-headline-lg text-primary mb-2">Medico Drops 💬</h2>
+<p class="font-accent-note text-accent-note text-slate-400">Survival is better together.</p>
+</section>
+<!-- Pinned Message -->
+<div class="sticky top-[88px] z-40 mb-6">
+<div class="glass-panel rounded-lg px-4 py-3 flex items-center justify-between purple-glow">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary-container" data-icon="push_pin">push_pin</span>
+<span class="font-label-caps text-on-surface text-sm">📌 Anatomy Practical Viva List</span>
+</div>
+<button class="text-slate-500 hover:text-white">
+<span class="material-symbols-outlined text-sm" data-icon="close">close</span>
+</button>
+</div>
+</div>
+<!-- Date Divider -->
+<div class="flex items-center gap-4 mb-8">
+<div class="flex-1 h-[1px] bg-white/5"></div>
+<span class="font-label-caps text-slate-500 text-[10px] uppercase tracking-widest">Today</span>
+<div class="flex-1 h-[1px] bg-white/5"></div>
+</div>
+<!-- Chat Area -->
+<div class="flex-1 flex flex-col gap-6 overflow-y-auto chat-scrollbar">
+<!-- Peer Message -->
+<div class="flex items-end gap-3 max-w-[85%] md:max-w-[70%]">
+<div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border border-white/10">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="A stylized portrait of a female medical student in a modern study environment. The background features soft bokeh with warm and cool light tones, emphasizing a focused and academic atmosphere. The aesthetic is clean and high-value, suitable for a premium educational platform interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBlwSsIqJn_zTZ2j2pLq9Lm9V-t77scnBJo9DdsH1ni-xRVHLjI1jAVPe3fEif3JZFgVy3fVTRQswoKh72YqSkqzS9y88Z1-H7LSoJDnORpoQWoAd2YLJTPrxijBx6Xo9L8yWc8iojgy2Ap7XSWb3o8qq0oQNZ5qwYngCDkSqbkOFXUWWrxexado2IxkRlkADu2dcjAaQIfiQLCmROd8fu2yFzXUobQso5Qzb9IDXK-iHyLCWewZonlGqnubTq2YOeLg9Q_t40iu9o"/>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-[11px] font-label-caps text-slate-400 px-1">Dr. Rahul Sharma</span>
+<div class="bg-[#1e2238] border border-white/[0.04] rounded-2xl rounded-bl-none px-4 py-3">
+<p class="font-body-md text-on-surface">Anyone has the histology slides for the respiratory system? The practical exam is tomorrow morning and I'm freaking out slightly. 😅</p>
+</div>
+</div>
+</div>
+<!-- Peer Message -->
+<div class="flex items-end gap-3 max-w-[85%] md:max-w-[70%]">
+<div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border border-white/10">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="Close up profile of a male doctor in his 20s, looking professional and calm. The portrait has a shallow depth of field, with soft laboratory lighting in the background, creating a mood of expertise and reliability within a medical context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCm_6PKcW7ToME2rfR4EKPOqV1MAf0-zO97ScCPlfh_o8Ls8t5PhbsgZndybbK9GeExwwEN3Zau3RBkAz1HGofLrfgLU_xBYWMSDQbSjA_ZIwmfZ3YpHdBWBp5yb4-ypWg9kD_YrsMBbPcemB9s34GXITGjYAbflSDE50EnZ4kx-a-pRcMg28xV77nJENE1VyusyJyZwJz5nmI6y_DdeeaRobq5kU30a7Dv0G15m5uoqvmsVN3PDBwRSfhykiMVFQ0y0XP-BhnGsOw"/>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-[11px] font-label-caps text-slate-400 px-1">MedStudent_2024</span>
+<div class="bg-[#1e2238] border border-white/[0.04] rounded-2xl rounded-bl-none px-4 py-3">
+<p class="font-body-md text-on-surface">Check the "Notes" tab, someone uploaded a high-res PDF labeled 'Histology_Final_Review'. It saved my life last semester!</p>
+</div>
+</div>
+</div>
+<!-- Your Message -->
+<div class="flex flex-col items-end gap-1 self-end max-w-[85%] md:max-w-[70%]">
+<span class="text-[11px] font-label-caps text-primary px-1">You</span>
+<div class="relative bg-[#2a2444] border border-primary-container/30 rounded-2xl rounded-br-none px-4 py-3 purple-glow">
+<p class="font-body-md text-on-surface">Found it! Just shared the direct link to the folder in the notes section. Good luck Rahul, you've got this!</p>
+<!-- Heart Reaction Pill -->
+<div class="absolute -bottom-3 -left-2 bg-surface-container-high border border-white/10 rounded-full px-2 py-1 flex items-center gap-1 shadow-lg scale-90">
+<span class="text-xs">🤍</span>
+<span class="text-[10px] font-label-caps text-slate-300">12</span>
+</div>
+</div>
+</div>
+<!-- More Peer Messages -->
+<div class="flex items-end gap-3 max-w-[85%] md:max-w-[70%] mt-4">
+<div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border border-white/10">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="Medical professional with a friendly and encouraging expression. The photography style uses a dark studio background with purple and blue rim lighting, creating a sophisticated glassmorphism-friendly aesthetic for a high-end application." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCAW5Sk2TYvDQuPzHgRmvT74Vhz7jCQ8hywA7TohArFKcAsjHA_DHPXA6sCfAV5KvqzXKVscqLaeDfdL48K4Af2NXgTTQfuro7lKNJjjGVc4BQCf3oCZT9GiKWDlcgTPaNi7KZfwwnGtLjs3yXX5c0AhunDVQ4SPUFY6Npzw6mo_qOd9DwkkGXxeoWYsc6tGYwSVXoNjEwzNklzve0k1P3PmnKWF5q_SUWA0zv7dJptoaZmcOn4MAug4axEFeC-LsPZ2HKB74UdsP0"/>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-[11px] font-label-caps text-slate-400 px-1">Priya Patel</span>
+<div class="bg-[#1e2238] border border-white/[0.04] rounded-2xl rounded-bl-none px-4 py-3">
+<p class="font-body-md text-on-surface">Thanks for sharing! Also, remember the H&amp;E staining characteristics of the Clara cells, the examiner asked that in almost every viva session today.</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Input & Quick Actions Container -->
+<div class="fixed bottom-24 left-0 w-full px-4 md:px-gutter z-40">
+<div class="max-w-container-max mx-auto">
+<!-- Quick Action Chips -->
+<div class="flex gap-3 mb-4 overflow-x-auto pb-2 scrollbar-hide">
+<button class="bg-primary/10 border border-primary/20 text-primary-container font-label-caps text-[10px] px-4 py-2 rounded-full whitespace-nowrap hover:bg-primary/20 transition-all uppercase tracking-widest">Ask a doubt</button>
+<button class="bg-primary/10 border border-primary/20 text-primary-container font-label-caps text-[10px] px-4 py-2 rounded-full whitespace-nowrap hover:bg-primary/20 transition-all uppercase tracking-widest">Share notes</button>
+<button class="bg-primary/10 border border-primary/20 text-primary-container font-label-caps text-[10px] px-4 py-2 rounded-full whitespace-nowrap hover:bg-primary/20 transition-all uppercase tracking-widest">Viva help</button>
+</div>
+<!-- Input Bar -->
+<div class="glass-panel rounded-full p-2 flex items-center gap-2 purple-glow">
+<button class="p-3 text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="attachment">attachment</span>
+</button>
+<input class="flex-1 bg-transparent border-none focus:ring-0 text-on-surface placeholder-slate-500 font-body-md" placeholder="Ask anything…" type="text"/>
+<button class="bg-primary-container text-on-primary-container w-12 h-12 rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-transform shadow-[0_0_15px_rgba(181,153,255,0.4)]">
+<span class="material-symbols-outlined" data-icon="send" style="font-variation-settings: 'FILL' 1;">send</span>
+</button>
+</div>
+</div>
+</div>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 bg-[#10121E]/90 backdrop-blur-xl border-t border-white/[0.06] shadow-[0_-8px_30px_rgba(181,153,255,0.1)] rounded-t-[32px] flex justify-around items-center px-4 pt-3 pb-8">
+<a class="flex flex-col items-center justify-center text-slate-500 hover:text-[#B599FF] transition-all active:scale-90 duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-['Inter'] text-[10px] font-medium uppercase tracking-widest mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-500 hover:text-[#B599FF] transition-all active:scale-90 duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+<span class="font-['Inter'] text-[10px] font-medium uppercase tracking-widest mt-1">Notes</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-500 hover:text-[#B599FF] transition-all active:scale-90 duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="local_fire_department">local_fire_department</span>
+<span class="font-['Inter'] text-[10px] font-medium uppercase tracking-widest mt-1">Exam</span>
+</a>
+<!-- Active Tab: Drops -->
+<a class="flex flex-col items-center justify-center text-[#B599FF] bg-[#B599FF]/10 rounded-full px-4 py-2 transition-all active:scale-90 duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="forum" style="font-variation-settings: 'FILL' 1;">forum</span>
+<span class="font-['Inter'] text-[10px] font-medium uppercase tracking-widest mt-1">Drops</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-500 hover:text-[#B599FF] transition-all active:scale-90 duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-['Inter'] text-[10px] font-medium uppercase tracking-widest mt-1">Profile</span>
+</a>
+</nav>
+</body></html>

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Caveat&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary": "#cfbcff",
+                    "on-error-container": "#ffdad6",
+                    "surface-variant": "#2c344f",
+                    "inverse-surface": "#dce1ff",
+                    "error-container": "#93000a",
+                    "primary-container": "#b599ff",
+                    "on-primary-fixed-variant": "#503493",
+                    "on-secondary-container": "#b3b4c5",
+                    "surface-bright": "#313853",
+                    "tertiary-fixed-dim": "#c5c5d6",
+                    "secondary-container": "#444654",
+                    "on-error": "#690005",
+                    "tertiary-fixed": "#e1e1f3",
+                    "on-secondary-fixed": "#191b27",
+                    "tertiary-container": "#a8a8b9",
+                    "on-primary": "#39197c",
+                    "surface-container": "#171e38",
+                    "on-primary-container": "#472a8a",
+                    "surface-tint": "#cfbcff",
+                    "surface-container-highest": "#2c344f",
+                    "on-tertiary-container": "#3c3d4b",
+                    "on-secondary-fixed-variant": "#444654",
+                    "primary-fixed-dim": "#cfbcff",
+                    "outline-variant": "#494551",
+                    "secondary-fixed": "#e1e1f3",
+                    "on-tertiary-fixed": "#191b27",
+                    "on-background": "#dce1ff",
+                    "surface-container-low": "#131a34",
+                    "on-surface-variant": "#cbc4d3",
+                    "on-primary-fixed": "#22005c",
+                    "on-tertiary-fixed-variant": "#444654",
+                    "background": "#0a122b",
+                    "on-secondary": "#2e303d",
+                    "inverse-primary": "#684dad",
+                    "surface-container-high": "#212943",
+                    "primary-fixed": "#e9ddff",
+                    "secondary-fixed-dim": "#c5c5d6",
+                    "surface": "#0a122b",
+                    "surface-dim": "#0a122b",
+                    "on-tertiary": "#2e303d",
+                    "tertiary": "#c5c5d6",
+                    "inverse-on-surface": "#282f4a",
+                    "on-surface": "#dce1ff",
+                    "secondary": "#c5c5d6",
+                    "surface-container-lowest": "#050c26",
+                    "outline": "#948e9d",
+                    "error": "#ffb4ab"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "container-max": "1280px",
+                    "xl": "64px",
+                    "lg": "40px",
+                    "gutter": "24px",
+                    "md": "24px",
+                    "sm": "12px",
+                    "base": "8px",
+                    "xs": "4px"
+            },
+            "fontFamily": {
+                    "label-caps": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "display": ["Inter"],
+                    "accent-note": ["Caveat"]
+            },
+            "fontSize": {
+                    "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "display": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "accent-note": ["20px", {"lineHeight": "1.2", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .glass-card {
+        background: rgba(16, 18, 30, 0.4);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
+      .glow-primary {
+        box-shadow: 0 0 40px rgba(181, 153, 255, 0.15);
+      }
+      .liquid-gradient {
+        background: linear-gradient(135deg, #b599ff 0%, #684dad 100%);
+      }
+      .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body-md selection:bg-primary-container selection:text-on-primary-container">
+<main class="min-h-screen flex flex-col items-center justify-center p-md max-w-container-max mx-auto relative overflow-hidden">
+<!-- Background Halo Effects -->
+<div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 blur-[120px] rounded-full pointer-events-none"></div>
+<div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-secondary-container/10 blur-[150px] rounded-full pointer-events-none"></div>
+<!-- Onboarding Container -->
+<div class="w-full max-w-md space-y-lg z-10">
+<!-- Horizontal Scroll Area for Slides (Mocked layout) -->
+<div class="space-y-xl">
+<!-- Slide 1: Hero -->
+<div class="flex flex-col items-center text-center space-y-md">
+<div class="relative w-full aspect-[4/5] rounded-lg overflow-hidden glass-card glow-primary">
+<img class="w-full h-full object-cover opacity-80" data-alt="A cinematic portrait of a medical student deeply focused in a dimly lit library environment. The scene is bathed in a soft purple bioluminescent glow from a tablet screen, highlighting anatomical diagrams. The visual style is premium and nocturnal, with deep navy and soft violet tones creating an immersive atmosphere of intense academic focus. Soft bokeh lights in the background suggest a vast, quiet study sanctuary." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBUMtWbCt0S1FxiDinzFSbNOpIf0V8sw8pHBdOPUEHhGqSfgaN5XczwMat88ZbjvlDLuJJQnC85IRvDjO8xELddSAr40RXJont8mSkT5_mrc7vGKZmHvtIrG0M5_NMd7dkEQSN71LwAGif7VH9qEFYJKxFR_EJHXkCTF1QEzwcP5afgGyowC1zpQICf0Pux7c8YWm3fgTFP7ZtKyLwM34F5Vie-HraMWgkaFRF_90v_fr8CJpGr_rJqjWSSAdjLFI_VSH4SSv8xgek"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background to-transparent"></div>
+<div class="absolute bottom-md left-md">
+<span class="font-accent-note text-accent-note text-primary-container -rotate-6 block">You got this.</span>
+</div>
+</div>
+<div class="space-y-sm px-md">
+<h1 class="font-display text-display tracking-tight">
+<span class="text-on-surface">Survive MBBS.</span><br/>
+<span class="text-primary-container">Thrive Together.</span>
+</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-xs mx-auto">
+                            Your all-in-one survival kit for the med school trenches.
+                        </p>
+</div>
+</div>
+<!-- Pagination & Navigation Shell -->
+<div class="flex flex-col items-center space-y-md w-full">
+<!-- Dot Indicators -->
+<div class="flex space-x-base items-center">
+<div class="w-8 h-1.5 rounded-full bg-primary-container"></div>
+<div class="w-1.5 h-1.5 rounded-full bg-surface-container-highest"></div>
+<div class="w-1.5 h-1.5 rounded-full bg-surface-container-highest"></div>
+</div>
+<!-- Actions -->
+<div class="w-full flex flex-col items-center space-y-sm">
+<button class="w-full py-4 rounded-full liquid-gradient text-on-primary-container font-headline-md shadow-lg active:scale-95 transition-transform flex justify-center items-center gap-xs">
+                            Next
+                            <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+<button class="text-on-surface-variant font-label-caps uppercase tracking-widest hover:text-on-surface transition-colors">
+                            Skip
+                        </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Section 2: Features (Slide 2 & 3 Combined representation in a grid for high-end UI) -->
+<section class="hidden md:grid grid-cols-2 gap-gutter w-full mt-xl">
+<div class="glass-card p-lg rounded-lg space-y-md border-primary/20">
+<div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-4xl">description</span>
+</div>
+<h3 class="font-headline-lg text-headline-lg text-on-surface">Everything your seniors studied — organized for you.</h3>
+<p class="text-on-surface-variant">Curated notes, clinical pearls, and high-yield mnemonics gathered from those who made it through.</p>
+</div>
+<div class="glass-card p-lg rounded-lg space-y-md border-primary/20">
+<div class="flex -space-x-4 mb-base">
+<div class="w-12 h-12 rounded-full border-2 border-background overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Close-up portrait of a friendly female medical professional with a warm smile, professional lighting, modern healthcare aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjY4fXpXWwsrANXk2vFsD8DSEaz2wWD5CINM37Dv-vra8Inr1kCDVGua85N85GMr3FG55F384HdVbT7NPCTcMP6HJiBFMV6IAQfQbI54fngKRJM6L6_4d3cd-77igHNQR3tMhro00RCxoxda14A7YhK0QNU7jQYRKZ3biMnkUhbptIdG9Sljr_tquYrL6TS__m5laFzLZ6IHH7adF2mwxdXNRuKN4NFf1wvcJvMAi7gBFgeoc_VN6agTfLpfXlrozXk936BvRPPm8"/>
+</div>
+<div class="w-12 h-12 rounded-full border-2 border-background overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Portrait of a young medical resident in scrubs, confident expression, soft natural indoor lighting, healthcare professional aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCHmz-fHHgka6oqzKN4yjYoVChDv-EqEqYQc1mkeYV8fnwfYeSJqgHoVA1lvjuoQJR_Pg64zMXvpWKbTI0mVB5cJX3dzTVqum5vD1lq_0rOc_MWjyZJCyKmthVCiye5DwqThvgF2krczErMBfFcljtgGwBmdwEz_E9_bp0IvCxDt6nE6UJG7tGNXkRrgtnY_4aZ4bdeSKVI5kTXg3WX7t8obFxUs5R6SEGMo0knJlWXvIZy9HdkOqGYUmtGD-kmCsPEA_tx0WQORIA"/>
+</div>
+<div class="w-12 h-12 rounded-full border-2 border-background bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-xs">
+                        +400
+                    </div>
+</div>
+<h3 class="font-headline-lg text-headline-lg text-on-surface">Ask anything. Anytime.</h3>
+<p class="text-on-surface-variant">A thriving community of 400+ medicos online to help you with that one tricky pathology concept.</p>
+</div>
+</section>
+<!-- Final Screen: Early Access Form (Hidden by default or appearing as a modal/scroll target) -->
+<div class="mt-xl w-full max-w-md glass-card p-lg rounded-xl space-y-lg relative" id="join-form">
+<div class="absolute -top-4 -right-4 bg-primary-container text-on-primary-container font-accent-note text-accent-note px-sm py-xs rounded-lg rotate-12 shadow-xl">
+                Limited Slots
+            </div>
+<div class="space-y-xs">
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Join Early Access</h2>
+<p class="text-on-surface-variant text-body-md">Secure your spot in the next cohort of survivors.</p>
+</div>
+<form class="space-y-md" onsubmit="event.preventDefault()">
+<div class="space-y-base">
+<label class="font-label-caps text-on-surface-variant uppercase ml-base">Full Name</label>
+<input class="w-full bg-surface-container-lowest border-white/10 rounded-full px-md py-4 text-on-surface placeholder:text-slate-600 focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none transition-all" placeholder="Dr. John Doe" type="text"/>
+</div>
+<div class="space-y-base">
+<label class="font-label-caps text-on-surface-variant uppercase ml-base">Medical College</label>
+<input class="w-full bg-surface-container-lowest border-white/10 rounded-full px-md py-4 text-on-surface placeholder:text-slate-600 focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none transition-all" placeholder="AIIMS, New Delhi" type="text"/>
+</div>
+<div class="grid grid-cols-2 gap-sm">
+<div class="space-y-base">
+<label class="font-label-caps text-on-surface-variant uppercase ml-base">Year</label>
+<select class="w-full bg-surface-container-lowest border-white/10 rounded-full px-md py-4 text-on-surface focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none appearance-none transition-all">
+<option>1st Prof</option>
+<option>2nd Prof</option>
+<option>3rd Prof</option>
+<option>Final Prof</option>
+<option>Intern</option>
+</select>
+</div>
+<div class="flex items-end">
+<button class="w-full py-4 rounded-full liquid-gradient text-on-primary-container font-label-caps uppercase tracking-widest shadow-lg active:scale-95 transition-transform" type="submit">
+                            Join Now
+                        </button>
+</div>
+</div>
+</form>
+<p class="text-center text-[11px] text-slate-500 italic">
+                By joining, you agree to receive beta testing updates.
+            </p>
+</div>
+</main>
+<!-- Bottom Nav Shell (Only for mobile representation if needed) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pt-3 pb-8 bg-[#10121E]/90 backdrop-blur-xl border-t border-white/[0.06] shadow-[0_-8px_30px_rgba(181,153,255,0.1)]">
+<a class="flex flex-col items-center justify-center text-[#B599FF] bg-[#B599FF]/10 rounded-full px-4 py-2" href="#">
+<span class="material-symbols-outlined" data-weight="fill">home</span>
+<span class="font-['Inter'] text-[10px] font-medium uppercase tracking-widest">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-500 hover:text-[#B599FF] transition-all" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="font-['Inter'] text-[10px] font-medium uppercase tracking-widest">Notes</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-500 hover:text-[#B599FF] transition-all" href="#">
+<span class="material-symbols-outlined">forum</span>
+<span class="font-['Inter'] text-[10px] font-medium uppercase tracking-widest">Drops</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-500 hover:text-[#B599FF] transition-all" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-['Inter'] text-[10px] font-medium uppercase tracking-widest">Profile</span>
+</a>
+</nav>
+</body></html>

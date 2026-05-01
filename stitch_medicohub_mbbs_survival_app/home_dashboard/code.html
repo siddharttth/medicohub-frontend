@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Caveat&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary": "#cfbcff",
+                    "on-error-container": "#ffdad6",
+                    "surface-variant": "#2c344f",
+                    "inverse-surface": "#dce1ff",
+                    "error-container": "#93000a",
+                    "primary-container": "#b599ff",
+                    "on-primary-fixed-variant": "#503493",
+                    "on-secondary-container": "#b3b4c5",
+                    "surface-bright": "#313853",
+                    "tertiary-fixed-dim": "#c5c5d6",
+                    "secondary-container": "#444654",
+                    "on-error": "#690005",
+                    "tertiary-fixed": "#e1e1f3",
+                    "on-secondary-fixed": "#191b27",
+                    "tertiary-container": "#a8a8b9",
+                    "on-primary": "#39197c",
+                    "surface-container": "#171e38",
+                    "on-primary-container": "#472a8a",
+                    "surface-tint": "#cfbcff",
+                    "surface-container-highest": "#2c344f",
+                    "on-tertiary-container": "#3c3d4b",
+                    "on-secondary-fixed-variant": "#444654",
+                    "primary-fixed-dim": "#cfbcff",
+                    "outline-variant": "#494551",
+                    "secondary-fixed": "#e1e1f3",
+                    "on-tertiary-fixed": "#191b27",
+                    "on-background": "#dce1ff",
+                    "surface-container-low": "#131a34",
+                    "on-surface-variant": "#cbc4d3",
+                    "on-primary-fixed": "#22005c",
+                    "on-tertiary-fixed-variant": "#444654",
+                    "background": "#0a122b",
+                    "on-secondary": "#2e303d",
+                    "inverse-primary": "#684dad",
+                    "surface-container-high": "#212943",
+                    "primary-fixed": "#e9ddff",
+                    "secondary-fixed-dim": "#c5c5d6",
+                    "surface": "#0a122b",
+                    "surface-dim": "#0a122b",
+                    "on-tertiary": "#2e303d",
+                    "tertiary": "#c5c5d6",
+                    "inverse-on-surface": "#282f4a",
+                    "on-surface": "#dce1ff",
+                    "secondary": "#c5c5d6",
+                    "surface-container-lowest": "#050c26",
+                    "outline": "#948e9d",
+                    "error": "#ffb4ab"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "container-max": "1280px",
+                    "xl": "64px",
+                    "lg": "40px",
+                    "gutter": "24px",
+                    "md": "24px",
+                    "sm": "12px",
+                    "base": "8px",
+                    "xs": "4px"
+            },
+            "fontFamily": {
+                    "label-caps": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "display": ["Inter"],
+                    "accent-note": ["Caveat"]
+            },
+            "fontSize": {
+                    "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "display": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "accent-note": ["20px", {"lineHeight": "1.2", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { background-color: #0a122b; color: #dce1ff; -webkit-font-smoothing: antialiased; }
+        .glass-card { background: #10121E; border: 1px solid rgba(255, 255, 255, 0.06); backdrop-filter: blur(12px); }
+        .halo-purple { box-shadow: 0 0 40px -10px rgba(181, 153, 255, 0.3); }
+        .heatmap-cell { width: 12px; height: 12px; border-radius: 2px; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-md text-on-surface selection:bg-primary-container selection:text-on-primary-container">
+<!-- Top Navigation Bar (Shared Component Strategy) -->
+<header class="bg-[#0C0E1A]/80 backdrop-blur-md text-[#B599FF] font-['Inter'] font-semibold tracking-tight docked full-width top-0 border-b border-white/[0.06] flex justify-between items-center w-full px-6 py-4 sticky z-50">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center overflow-hidden border border-white/10">
+<img alt="Student Profile" data-alt="A professional close-up portrait of a young medical student wearing a modern white coat, set against a dark, moody background with subtle purple ambient lighting. The student has a focused and calm expression, representing the survival theme of the application. High-end digital photography style with soft bokeh and pristine detail." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDuQPbHnsl7a6MSKKGLcFVXFKxR-e85d-5Hmubiyzv3OjOhui7d7pgd7Ikv-_LAfKWEWQd7RAprZ9jPoGrTC7IXX2G174bWXc_Yo165f9Hr0mrHWoDxLHGyjrxgU1nsPihfONzciAYoCg7xPup8RL5_Q7X2LrDQ_EVPlJSncVnPXsdXtRmgbHACKU8VEr47FOa2QzoJieU9YCMO7xrvgjhV2kiaCcn7tFbRVqpRZlaCXRDlpsxk_RHsZOK0lLPk8pxwDVGneuoLreE"/>
+</div>
+<span class="text-xl font-black text-[#B599FF] tracking-tighter">MedicoHub</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full hover:bg-white/5 transition-colors active:scale-95 duration-200">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+</button>
+</div>
+</header>
+<main class="max-w-container-max mx-auto px-6 pt-8 pb-32">
+<!-- Welcome Header -->
+<div class="flex justify-between items-end mb-10">
+<div>
+<h1 class="font-headline-lg text-on-surface mb-2">Good morning, Siddharth 👋</h1>
+<p class="font-body-lg text-on-surface-variant">What are you surviving today?</p>
+</div>
+<div class="bg-primary-container/10 border border-primary-container/20 px-4 py-2 rounded-full flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-[18px]" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+<span class="font-label-caps text-primary-container">Day 7 🔥</span>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Main CTA: Exam Mode -->
+<div class="md:col-span-8 glass-card halo-purple rounded-lg p-lg relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-lg opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-[120px]" data-icon="bolt">bolt</span>
+</div>
+<div class="relative z-10">
+<div class="inline-flex items-center gap-2 bg-primary-container text-on-primary-container px-3 py-1 rounded-full mb-6">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">emergency</span>
+<span class="font-label-caps text-[10px]">CRITICAL READ</span>
+</div>
+<h2 class="font-display text-on-surface mb-4">Exam Mode ⚡</h2>
+<p class="font-body-lg text-on-surface-variant mb-8 max-w-md">Select a subject and get your last-minute survival pack. High-yield topics only.</p>
+<button class="bg-primary-container text-on-primary-container px-8 py-4 rounded-full font-headline-md flex items-center gap-3 hover:shadow-[0_0_20px_rgba(181,153,255,0.4)] transition-all active:scale-95">
+                        Enter Exam Mode 
+                        <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+<!-- Decorative Light Source -->
+<div class="absolute -bottom-20 -left-20 w-64 h-64 bg-primary-container/20 rounded-full blur-[100px]"></div>
+</div>
+<!-- Side Actions -->
+<div class="md:col-span-4 flex flex-col gap-gutter">
+<!-- Senior Notes -->
+<div class="glass-card rounded-lg p-md flex-1 group hover:border-primary-container/30 transition-all cursor-pointer">
+<div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-6 text-primary-container">
+<span class="material-symbols-outlined text-[28px]" data-icon="description">description</span>
+</div>
+<h3 class="font-headline-md text-on-surface mb-2">Senior Notes</h3>
+<p class="font-body-md text-on-surface-variant">Browse curated notes by subject and year.</p>
+</div>
+<!-- Medico Drops -->
+<div class="glass-card rounded-lg p-md flex-1 group hover:border-primary-container/30 transition-all cursor-pointer">
+<div class="flex justify-between items-start mb-6">
+<div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-[28px]" data-icon="forum">forum</span>
+</div>
+<div class="flex items-center gap-2 bg-emerald-500/10 px-3 py-1 rounded-full">
+<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+<span class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">356 Online</span>
+</div>
+</div>
+<h3 class="font-headline-md text-on-surface mb-2">Medico Drops</h3>
+<p class="font-body-md text-on-surface-variant">Live collaborative triage for difficult cases.</p>
+</div>
+</div>
+<!-- Your Streak Section -->
+<div class="md:col-span-12 glass-card rounded-lg p-lg">
+<div class="flex justify-between items-center mb-8">
+<div class="flex items-center gap-3">
+<h3 class="font-headline-md text-on-surface">Your streak</h3>
+<span class="font-accent-note text-primary-container">Consistency is the cure.</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-xs text-on-surface-variant">Less</span>
+<div class="flex gap-1">
+<div class="heatmap-cell bg-white/5"></div>
+<div class="heatmap-cell bg-primary-container/20"></div>
+<div class="heatmap-cell bg-primary-container/50"></div>
+<div class="heatmap-cell bg-primary-container"></div>
+</div>
+<span class="text-xs text-on-surface-variant">More</span>
+</div>
+</div>
+<!-- Heatmap Grid -->
+<div class="overflow-x-auto pb-4">
+<div class="inline-grid grid-rows-7 grid-flow-col gap-1.5">
+<!-- Simulated 52 weeks of cells -->
+<!-- Using a smaller subset for visual representation -->
+<script>
+                            const container = document.currentScript.parentElement;
+                            const levels = ['bg-white/5', 'bg-primary-container/10', 'bg-primary-container/30', 'bg-primary-container/60', 'bg-primary-container'];
+                            for(let i=0; i < 350; i++) {
+                                const level = levels[Math.floor(Math.random() * levels.length)];
+                                const div = document.createElement('div');
+                                div.className = `heatmap-cell ${level}`;
+                                container.appendChild(div);
+                            }
+                        </script>
+</div>
+</div>
+</div>
+<!-- Additional Survival Content (Bento) -->
+<div class="md:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-gutter mt-4">
+<div class="glass-card rounded-lg p-md border-l-4 border-l-primary-container">
+<p class="font-accent-note text-primary-container mb-2">Reminder</p>
+<p class="font-body-md italic text-on-surface">"Sleep is just a diagnostic tool you haven't mastered yet."</p>
+</div>
+<div class="md:col-span-2 glass-card rounded-lg p-md flex items-center justify-between">
+<div>
+<h4 class="font-headline-md text-on-surface">Weekly Survival Rate</h4>
+<p class="font-body-md text-on-surface-variant">84% of tasks completed</p>
+</div>
+<div class="w-32 h-3 bg-white/5 rounded-full relative overflow-hidden">
+<div class="absolute top-0 left-0 h-full w-[84%] bg-gradient-to-r from-primary-container to-primary shadow-[0_0_10px_rgba(181,153,255,0.5)]"></div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation Bar (Shared Component Strategy) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pt-3 pb-8 bg-[#10121E]/90 backdrop-blur-xl border-t border-white/[0.06] shadow-[0_-8px_30px_rgba(181,153,255,0.1)] rounded-t-[32px]">
+<!-- Home (Active) -->
+<a class="flex flex-col items-center justify-center text-[#B599FF] bg-[#B599FF]/10 rounded-full px-4 py-2 hover:text-[#B599FF] transition-all active:scale-90 duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-['Inter'] text-[10px] font-medium uppercase tracking-widest mt-1">Home</span>
+</a>
+<!-- Notes -->
+<a class="flex flex-col items-center justify-center text-slate-500 hover:text-[#B599FF] transition-all active:scale-90 duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+<span class="font-['Inter'] text-[10px] font-medium uppercase tracking-widest mt-1">Notes</span>
+</a>
+<!-- Exam -->
+<a class="flex flex-col items-center justify-center text-slate-500 hover:text-[#B599FF] transition-all active:scale-90 duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="local_fire_department">local_fire_department</span>
+<span class="font-['Inter'] text-[10px] font-medium uppercase tracking-widest mt-1">Exam</span>
+</a>
+<!-- Drops -->
+<a class="flex flex-col items-center justify-center text-slate-500 hover:text-[#B599FF] transition-all active:scale-90 duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="forum">forum</span>
+<span class="font-['Inter'] text-[10px] font-medium uppercase tracking-widest mt-1">Drops</span>
+</a>
+<!-- Profile -->
+<a class="flex flex-col items-center justify-center text-slate-500 hover:text-[#B599FF] transition-all active:scale-90 duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-['Inter'] text-[10px] font-medium uppercase tracking-widest mt-1">Profile</span>
+</a>
+</nav>
+</body></html>

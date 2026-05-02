@@ -6,26 +6,25 @@ import {
   FlatList,
   TouchableOpacity,
   TextInput,
-  Linking,
+  Alert,
   Modal,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
 } from 'react-native';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Sharing from 'expo-sharing';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
-import * as FileSystem from 'expo-file-system';
-import * as Sharing from 'expo-sharing';
 import Toast from 'react-native-toast-message';
 import { notesApi, UploadNoteType } from '../../src/api/notes';
+import { NoteRequest } from '../../src/types';
 import { GlassCard } from '../../src/components/ui/GlassCard';
 import { Chip } from '../../src/components/ui/Chip';
 import { LoadingSpinner } from '../../src/components/ui/LoadingSpinner';
 import { Subject, NoteType, Note } from '../../src/types';
-
-const { Paths } = FileSystem;
 
 const SUBJECTS: Subject[] = [
   'Anatomy', 'Physiology', 'Biochemistry', 'Pathology',
@@ -101,36 +100,6 @@ export default function NotesScreen() {
     }
   };
 
-  const downloadAndOpenFile = async (url: string, fileName: string) => {
-    try {
-      // Create a filename with proper extension
-      const fileNameWithExt = fileName.includes('.') ? fileName : `${fileName}.pdf`;
-      
-      // Get cache directory path and create file path
-      const cacheDir = Paths.cache;
-      const filePath = `${cacheDir.uri}${fileNameWithExt}`;
-
-      // Download the file to cache directory
-      const downloadResult = await FileSystem.downloadAsync(url, filePath);
-      
-      if (downloadResult.status === 200) {
-        // Open the file using Sharing (works on both iOS and Android)
-        if (await Sharing.isAvailableAsync()) {
-          await Sharing.shareAsync(downloadResult.uri, {
-            UTI: fileNameWithExt.includes('.pdf') ? 'com.adobe.pdf' : 'public.content',
-            mimeType: fileNameWithExt.includes('.pdf') ? 'application/pdf' : 'application/octet-stream',
-          });
-        } else {
-          // Fallback for web or if sharing not available
-          Linking.openURL(url);
-        }
-      }
-    } catch (error) {
-      console.error('Download error:', error);
-      throw error;
-    }
-  };
-
   const uploadMutation = useMutation({
     mutationFn: () => {
       if (!uploadTitle.trim()) return Promise.reject(new Error('Title required'));
@@ -146,8 +115,13 @@ export default function NotesScreen() {
         fileType: pickedFile.mimeType,
       });
     },
-    onSuccess: () => {
-      Toast.show({ type: 'success', text1: 'Note uploaded!', text2: 'Thanks for contributing.' });
+    onSuccess: async (note) => {
+      // If uploaded to fulfill a request, link them
+      if (fulfillRequestId) {
+        await fulfillMutation.mutateAsync({ requestId: fulfillRequestId, noteId: note.id }).catch(() => {});
+        setFulfillRequestId(null);
+      }
+      Toast.show({ type: 'success', text1: 'Note uploaded!', text2: fulfillRequestId ? 'Request fulfilled 🎉' : 'Thanks for contributing.' });
       setShowUpload(false);
       resetUploadForm();
       queryClient.invalidateQueries({ queryKey: ['notes'] });
@@ -157,6 +131,29 @@ export default function NotesScreen() {
       Toast.show({ type: 'error', text1: msg });
     },
   });
+
+  const { data: allRequests = [] } = useQuery<NoteRequest[]>({
+    queryKey: ['note-requests'],
+    queryFn: notesApi.getAllRequests,
+    staleTime: 30_000,
+  });
+
+  const pendingRequests = allRequests.filter((r) => r.status === 'pending');
+
+  const fulfillMutation = useMutation({
+    mutationFn: ({ requestId, noteId }: { requestId: string; noteId: string }) =>
+      notesApi.fulfillRequest(requestId, noteId),
+    onSuccess: () => {
+      Toast.show({ type: 'success', text1: 'Request fulfilled!', text2: 'Note is now public.' });
+      queryClient.invalidateQueries({ queryKey: ['note-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['notes'] });
+    },
+    onError: (e: any) => {
+      Toast.show({ type: 'error', text1: e?.response?.data?.message ?? 'Failed to fulfill' });
+    },
+  });
+
+  const [fulfillRequestId, setFulfillRequestId] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['notes', selectedSubject, selectedType, searchQuery],
@@ -172,13 +169,15 @@ export default function NotesScreen() {
     mutationFn: (id: string) => notesApi.download(id),
     onSuccess: async (res) => {
       try {
-        Toast.show({ type: 'success', text1: 'Downloading...', text2: 'Opening file soon' });
-        // Extract filename from URL or use default
-        const urlParts = res.url.split('/');
-        const fileName = urlParts[urlParts.length - 1] || 'document.pdf';
-        await downloadAndOpenFile(res.url, fileName);
-      } catch (error) {
-        Toast.show({ type: 'error', text1: 'Could not open file', text2: 'Check your internet connection' });
+        const localUri = (FileSystem.documentDirectory ?? FileSystem.cacheDirectory ?? '') + (res.fileName ?? 'download');
+        const { uri } = await FileSystem.downloadAsync(res.url, localUri);
+        if (await Sharing.isAvailableAsync()) {
+          await Sharing.shareAsync(uri);
+        } else {
+          Alert.alert('Downloaded', 'File saved to device.');
+        }
+      } catch (e: any) {
+        Alert.alert('Download failed', e.message);
       }
     },
     onError: () => Toast.show({ type: 'error', text1: 'Download failed' }),
@@ -224,8 +223,13 @@ export default function NotesScreen() {
           onPress={() => downloadMutation.mutate(item.id)}
           className="bg-primary rounded-xl px-3 py-2"
           activeOpacity={0.8}
+          disabled={downloadMutation.isPending}
         >
-          <Ionicons name="download-outline" size={18} color="#39197c" />
+          {downloadMutation.isPending && downloadMutation.variables === item.id ? (
+            <ActivityIndicator size="small" color="#39197c" />
+          ) : (
+            <Ionicons name="download-outline" size={18} color="#39197c" />
+          )}
         </TouchableOpacity>
       </View>
 
@@ -245,7 +249,7 @@ export default function NotesScreen() {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       {/* Header */}
       <View className="px-5 pt-4 pb-2">
         <View className="flex-row items-center justify-between mb-4">
@@ -315,7 +319,7 @@ export default function NotesScreen() {
           renderItem={renderNote}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingTop: 8, paddingBottom: 100 }}
+          contentContainerStyle={{ paddingTop: 8, paddingBottom: 24 }}
           ListEmptyComponent={
             <View className="items-center justify-center py-20">
               <Text style={{ fontSize: 40 }}>📭</Text>
@@ -325,6 +329,47 @@ export default function NotesScreen() {
           }
           ListFooterComponent={
             <View className="mx-5 mb-6">
+              {/* ── Open Requests ── */}
+              {pendingRequests.length > 0 && (
+                <View className="mb-4">
+                  <Text className="text-on-surface font-inter-semibold text-base mb-2">
+                    Open Requests 📬 <Text className="text-outline font-inter-medium text-sm">({pendingRequests.length})</Text>
+                  </Text>
+                  {pendingRequests.map((req) => (
+                    <GlassCard key={req.id} className="p-3 mb-2">
+                      <View className="flex-row items-start justify-between">
+                        <View className="flex-1 mr-3">
+                          <View className="flex-row items-center mb-1 gap-2">
+                            <View className="bg-primary-container rounded-full px-2 py-0.5">
+                              <Text className="text-on-primary text-xs font-inter-medium">{req.subject}</Text>
+                            </View>
+                            <View className="bg-surface-container-high rounded-full px-2 py-0.5">
+                              <Text className="text-outline text-xs font-inter">{req.noteType}</Text>
+                            </View>
+                          </View>
+                          <Text className="text-on-surface font-inter-semibold text-sm">{req.topic}</Text>
+                          <Text className="text-outline font-inter text-xs mt-0.5">
+                            Requested by {req.requestedBy?.name ?? 'Someone'}
+                          </Text>
+                        </View>
+                        <TouchableOpacity
+                          onPress={() => {
+                            setFulfillRequestId(req.id);
+                            setUploadSubject(req.subject as any);
+                            setShowUpload(true);
+                          }}
+                          className="bg-primary rounded-xl px-3 py-2"
+                          activeOpacity={0.8}
+                        >
+                          <Text className="text-on-primary font-inter-medium text-xs">Fulfill</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </GlassCard>
+                  ))}
+                </View>
+              )}
+
+              {/* ── Request a note ── */}
               <GlassCard className="p-4" purpleGlow>
                 <Text className="text-on-surface font-inter-semibold text-base mb-1">
                   Can't find what you need?
@@ -335,7 +380,6 @@ export default function NotesScreen() {
 
                 {showRequestForm ? (
                   <>
-                    {/* Topic input */}
                     <Text className="text-on-surface-variant font-inter-medium text-sm mb-1">Topic</Text>
                     <TextInput
                       value={requestTopic}
@@ -346,7 +390,6 @@ export default function NotesScreen() {
                       style={{ fontSize: 14 }}
                     />
 
-                    {/* Note type selector */}
                     <Text className="text-on-surface-variant font-inter-medium text-sm mb-2">Note Type</Text>
                     <View className="flex-row gap-2 mb-4">
                       {REQUEST_NOTE_TYPES.map((t) => (
@@ -359,18 +402,13 @@ export default function NotesScreen() {
                             borderColor: requestNoteType === t.value ? '#cfbcff' : '#494551',
                           }}
                         >
-                          <Text style={{
-                            color: requestNoteType === t.value ? '#39197c' : '#948e9d',
-                            fontSize: 12,
-                            fontWeight: '500',
-                          }}>
+                          <Text style={{ color: requestNoteType === t.value ? '#39197c' : '#948e9d', fontSize: 12, fontWeight: '500' }}>
                             {t.label}
                           </Text>
                         </TouchableOpacity>
                       ))}
                     </View>
 
-                    {/* Subject context */}
                     <Text className="text-outline font-inter text-xs mb-3">
                       Subject: {selectedSubject ?? 'Anatomy (select a subject above to change)'}
                     </Text>
@@ -411,7 +449,7 @@ export default function NotesScreen() {
       {/* Upload Modal */}
       <Modal visible={showUpload} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => { setShowUpload(false); resetUploadForm(); }}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-          <SafeAreaView className="flex-1 bg-background">
+          <SafeAreaView className="flex-1 bg-background" edges={['top']}>
             {/* Modal Header */}
             <View className="flex-row items-center justify-between px-5 py-4 border-b border-outline-variant">
               <TouchableOpacity onPress={() => { setShowUpload(false); resetUploadForm(); }}>

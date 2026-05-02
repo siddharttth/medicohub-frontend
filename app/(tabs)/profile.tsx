@@ -17,8 +17,9 @@ import { usersApi } from '../../src/api/users';
 import { achievementsApi } from '../../src/api/achievements';
 import { authApi } from '../../src/api/auth';
 import { useAuth } from '../../src/hooks/useAuth';
+import { notesApi } from '../../src/api/notes';
 import { GlassCard } from '../../src/components/ui/GlassCard';
-import { Achievement } from '../../src/types';
+import { Achievement, NoteRequest } from '../../src/types';
 
 export default function ProfileScreen() {
   const storeUser = useAuthStore((s) => s.user);
@@ -46,6 +47,12 @@ export default function ProfileScreen() {
     enabled: !!userId,
   });
 
+  const { data: myRequests = [] } = useQuery<NoteRequest[]>({
+    queryKey: ['my-requests'],
+    queryFn: notesApi.getMyRequests,
+    enabled: !!userId,
+  });
+
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
       { text: 'Cancel', style: 'cancel' },
@@ -68,8 +75,8 @@ export default function ProfileScreen() {
     .slice(0, 2) ?? 'MH';
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
         {/* Avatar + Name */}
         <View className="items-center pt-6 pb-4 px-5">
           <View
@@ -151,6 +158,47 @@ export default function ProfileScreen() {
                 );
               })}
             </View>
+          )}
+        </View>
+
+        {/* My Requests */}
+        <View className="px-5 mb-5">
+          <Text className="text-on-surface font-inter-semibold text-base mb-3">My Note Requests 📬</Text>
+          {myRequests.length === 0 ? (
+            <GlassCard className="p-4 items-center">
+              <Text className="text-on-surface-variant font-inter text-sm">No requests yet.</Text>
+            </GlassCard>
+          ) : (
+            myRequests.map((req) => (
+              <GlassCard key={req.id} className="p-3 mb-2">
+                <View className="flex-row items-center justify-between mb-1">
+                  <View className="flex-row gap-2">
+                    <View className="bg-primary-container rounded-full px-2 py-0.5">
+                      <Text className="text-on-primary text-xs font-inter-medium">{req.subject}</Text>
+                    </View>
+                    <View className="bg-surface-container-high rounded-full px-2 py-0.5">
+                      <Text className="text-outline text-xs font-inter">{req.noteType}</Text>
+                    </View>
+                  </View>
+                  <View
+                    className="rounded-full px-2 py-0.5"
+                    style={{ backgroundColor: req.status === 'fulfilled' ? '#1a3a1a' : '#3a2a0a' }}
+                  >
+                    <Text style={{ fontSize: 10, fontWeight: '600', color: req.status === 'fulfilled' ? '#4caf50' : '#ffb300' }}>
+                      {req.status === 'fulfilled' ? '✓ Fulfilled' : '⏳ Pending'}
+                    </Text>
+                  </View>
+                </View>
+                <Text className="text-on-surface font-inter-semibold text-sm">{req.topic}</Text>
+                {req.status === 'fulfilled' && req.fulfilledNote && (
+                  <View className="mt-2 bg-surface-container rounded-xl px-3 py-2">
+                    <Text className="text-on-surface-variant font-inter text-xs mb-0.5">Note uploaded:</Text>
+                    <Text className="text-primary font-inter-medium text-sm">{req.fulfilledNote.title}</Text>
+                    <Text className="text-outline font-inter text-xs">by {req.fulfilledNote.author?.name ?? 'Senior'}</Text>
+                  </View>
+                )}
+              </GlassCard>
+            ))
           )}
         </View>
 

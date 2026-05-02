@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
@@ -13,7 +13,7 @@ import { GlassCard } from '../../src/components/ui/GlassCard';
 import { StatsCard } from '../../src/components/home/StatsCard';
 import { StreakHeatmap } from '../../src/components/home/StreakHeatmap';
 import { ProgressBar } from '../../src/components/ui/ProgressBar';
-import { Note, Message } from '../../src/types';
+import { Message } from '../../src/types';
 
 const getGreeting = () => {
   const h = new Date().getHours();
@@ -45,15 +45,14 @@ export default function HomeScreen() {
 
   const { data: dropsData } = useQuery({
     queryKey: ['drops', 'preview'],
-    queryFn: () => dropsApi.getMessages(1, 3),
+    queryFn: () => dropsApi.getMessages('Anatomy', 3),
     enabled: !!user,
   });
 
   const firstName = user?.name.split(' ')[0] ?? 'Doctor';
-  const survivalRate = stats?.survivalRate ?? user?.survivalRate ?? 0;
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
         {/* Header */}
         <View className="flex-row items-center justify-between px-5 pt-4 pb-2">
@@ -64,7 +63,7 @@ export default function HomeScreen() {
           <View className="bg-primary-container rounded-full px-3 py-1.5 flex-row items-center">
             <Text style={{ fontSize: 14 }}>🔥</Text>
             <Text className="text-on-primary font-inter-bold text-sm ml-1">
-              {stats?.streakDays ?? user?.streak ?? 0}
+              {stats?.streakDays ?? user?.streakDays ?? 0}
             </Text>
           </View>
         </View>
@@ -95,10 +94,10 @@ export default function HomeScreen() {
 
         {/* Stats Row */}
         <View className="flex-row px-5 gap-2 mb-4">
-          <StatsCard label="Streak Days" value={stats?.streakDays ?? user?.streak ?? 0} icon="🔥" />
+          <StatsCard label="Streak Days" value={stats?.streakDays ?? user?.streakDays ?? 0} icon="🔥" />
           <StatsCard label="Notes Shared" value={stats?.notesShared ?? user?.notesShared ?? 0} icon="📚" />
-          <StatsCard label="Survival Rate" value={`${Math.round(survivalRate)}`} icon="💪" suffix="%" />
-          <StatsCard label="Study Hours" value={stats?.studyHours ?? user?.studyHours ?? 0} icon="⏱️" />
+          <StatsCard label="Study Hours" value={stats?.totalStudyHours ?? 0} icon="⏱️" />
+          <StatsCard label="Downloads" value={stats?.notesDownloaded ?? 0} icon="📥" />
         </View>
 
         {/* Streak Heatmap */}
@@ -107,19 +106,19 @@ export default function HomeScreen() {
           <StreakHeatmap data={streakData} />
         </GlassCard>
 
-        {/* Weekly Survival Progress */}
+        {/* Weekly Progress */}
         <GlassCard className="mx-5 p-4 mb-4">
           <View className="flex-row justify-between items-center mb-2">
-            <Text className="text-on-surface font-inter-semibold text-base">Weekly Survival</Text>
-            <Text className="text-primary font-inter-medium text-sm">{Math.round(survivalRate)}%</Text>
+            <Text className="text-on-surface font-inter-semibold text-base">Notes Contributed</Text>
+            <Text className="text-primary font-inter-medium text-sm">{stats?.notesShared ?? 0}</Text>
           </View>
-          <ProgressBar progress={survivalRate / 100} />
+          <ProgressBar progress={Math.min((stats?.notesShared ?? 0) / 10, 1)} />
           <Text className="text-on-surface-variant font-inter text-xs mt-2">
-            {survivalRate >= 80
-              ? 'You are thriving! Keep it up.'
-              : survivalRate >= 50
-              ? 'Good progress. Push through!'
-              : 'Every day counts. Start small.'}
+            {(stats?.notesShared ?? 0) >= 10
+              ? 'Top contributor! Amazing work.'
+              : (stats?.notesShared ?? 0) >= 5
+              ? 'Good progress. Keep sharing!'
+              : 'Upload notes to help your batch.'}
           </Text>
         </GlassCard>
 
@@ -131,34 +130,29 @@ export default function HomeScreen() {
               <Text className="text-primary font-inter-medium text-sm">See all</Text>
             </TouchableOpacity>
           </View>
-          <FlatList
-            data={notesData?.notes ?? []}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            scrollEnabled={false}
-            contentContainerStyle={{ paddingHorizontal: 20 }}
-            keyExtractor={(item) => item.id}
-            ListEmptyComponent={
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20 }}>
+            {(notesData?.notes ?? []).length === 0 ? (
               <GlassCard className="px-4 py-6 mr-3" style={{ width: 200 }}>
                 <Text className="text-on-surface-variant text-sm text-center">No notes yet</Text>
               </GlassCard>
-            }
-            renderItem={({ item }: { item: Note }) => (
-              <GlassCard className="p-4 mr-3" style={{ width: 180 }}>
-                <View className="bg-primary-container rounded-lg px-2 py-0.5 self-start mb-2">
-                  <Text className="text-on-primary text-xs font-inter-medium">{item.subject}</Text>
-                </View>
-                <Text className="text-on-surface font-inter-semibold text-sm mb-1" numberOfLines={2}>
-                  {item.title}
-                </Text>
-                <Text className="text-on-surface-variant text-xs font-inter">{item.author?.name ?? 'Senior'}</Text>
-                <View className="flex-row items-center mt-2">
-                  <Text style={{ color: '#cfbcff', fontSize: 12 }}>★ {Number(item.rating ?? 0).toFixed(1)}</Text>
-                  <Text className="text-outline text-xs ml-2">↓ {item.downloads ?? 0}</Text>
-                </View>
-              </GlassCard>
+            ) : (
+              (notesData?.notes ?? []).map((item) => (
+                <GlassCard key={item.id} className="p-4 mr-3" style={{ width: 180 }}>
+                  <View className="bg-primary-container rounded-lg px-2 py-0.5 self-start mb-2">
+                    <Text className="text-on-primary text-xs font-inter-medium">{item.subject}</Text>
+                  </View>
+                  <Text className="text-on-surface font-inter-semibold text-sm mb-1" numberOfLines={2}>
+                    {item.title}
+                  </Text>
+                  <Text className="text-on-surface-variant text-xs font-inter">{item.author?.name ?? 'Senior'}</Text>
+                  <View className="flex-row items-center mt-2">
+                    <Text style={{ color: '#cfbcff', fontSize: 12 }}>★ {Number(item.rating ?? 0).toFixed(1)}</Text>
+                    <Text className="text-outline text-xs ml-2">↓ {item.downloads ?? 0}</Text>
+                  </View>
+                </GlassCard>
+              ))
             )}
-          />
+          </ScrollView>
         </View>
 
         {/* Medico Drops Preview */}

@@ -22,7 +22,7 @@ interface MessagesResponse {
 // Normalize backend drop shape → our Message shape
 // Backend: { _id, author: {_id, name}, text, isPinned, createdAt, ... }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const normalizeDrop = (d: any): Message => ({
+export const normalizeDrop = (d: any): Message => ({
   id: d._id ?? d.id,
   content: d.text ?? d.content ?? '',
   text: d.text ?? d.content ?? '',

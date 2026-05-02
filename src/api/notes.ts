@@ -14,10 +14,19 @@ export interface UploadNoteData {
   fileType: string;
 }
 
+// Map frontend lowercase noteType → backend enum values (our fix)
+const NOTE_TYPE_MAP: Record<NoteType, string> = {
+  pdf: 'PDF',
+  handwritten: 'Handwritten',
+  diagram: 'Diagram',
+  pyq: 'PYQ',
+};
+
 interface NoteSearchParams {
   subject?: Subject;
   noteType?: NoteType;
   query?: string;
+  q?: string;
   sortBy?: string;
   limit?: number;
   skip?: number;
@@ -34,7 +43,6 @@ interface NoteSearchResponse {
   pagination: Pagination;
 }
 
-// Backend accepts: "PDF" | "Diagram" | "Summary"
 export type RequestNoteType = 'PDF' | 'Diagram' | 'Summary';
 
 interface NoteRequestData {
@@ -56,37 +64,50 @@ const normalizeNote = (n: any): Note => ({
   id: n._id ?? n.id,
   noteType: (n.noteType ?? '').toLowerCase() as Note['noteType'],
   rating: normalizeRating(n.rating),
-  ratingCount: n.ratingCount ?? 0,
-  hasRated: n.hasRated ?? false,
   author: (n.author ?? n.uploadedBy)
     ? { ...(n.author ?? n.uploadedBy), id: (n.author ?? n.uploadedBy)?._id ?? (n.author ?? n.uploadedBy)?.id }
     : undefined,
 });
 
 export const notesApi = {
-  search: (params: NoteSearchParams): Promise<NoteSearchResponse> =>
-    apiClient.get('/notes/search', { params }).then((r) => ({
+  // Our fix: map noteType casing + send q param correctly
+  search: (params: NoteSearchParams): Promise<NoteSearchResponse> => {
+    const backendParams: Record<string, any> = {
+      ...(params.subject && { subject: params.subject }),
+      ...(params.noteType && { noteType: NOTE_TYPE_MAP[params.noteType] }),
+      ...(params.sortBy && { sortBy: params.sortBy }),
+      ...((params.q || params.query) && { q: params.q ?? params.query }),
+      ...(params.limit && { limit: params.limit }),
+      ...(params.skip && { skip: params.skip }),
+    };
+    return apiClient.get('/notes/search', { params: backendParams }).then((r) => ({
       notes: (r.data.data ?? []).map(normalizeNote),
       pagination: r.data.pagination ?? { total: 0, limit: 20, skip: 0 },
-    })),
+    }));
+  },
 
   getTrending: (): Promise<Note[]> =>
-    apiClient.get('/notes/trending').then((r) => (r.data.data.notes ?? []).map(normalizeNote)),
+    apiClient.get('/notes/trending').then((r) => (r.data.data?.notes ?? []).map(normalizeNote)),
 
   getById: (id: string): Promise<Note> =>
-    apiClient.get(`/notes/${id}`).then((r) => normalizeNote(r.data.data)),
+    apiClient.get(`/notes/${id}`).then((r) => normalizeNote(r.data.data?.note ?? r.data.data)),
 
   getMyNotes: (): Promise<Note[]> =>
     apiClient.get('/notes/me').then((r) => (r.data.data ?? []).map(normalizeNote)),
 
+  // Our fix: GET not POST, map fileUrl → url
   download: (id: string): Promise<{ url: string; fileName?: string }> =>
     apiClient.get(`/notes/${id}/download`).then((r) => ({
-      url: r.data.data?.downloadUrl ?? r.data.data?.url,
+      url: r.data.data?.fileUrl ?? r.data.data?.downloadUrl ?? r.data.data?.url ?? '',
       fileName: r.data.data?.fileName,
     })),
 
   requestNote: (data: NoteRequestData): Promise<void> =>
-    apiClient.post('/notes/request', { subject: data.subject, topic: data.topic, noteType: data.noteType }).then((r) => r.data),
+    apiClient.post('/notes/request', {
+      subject: data.subject,
+      topic: data.topic,
+      noteType: data.noteType,
+    }).then((r) => r.data),
 
   upload: (data: UploadNoteData): Promise<Note> => {
     const form = new FormData();
@@ -95,20 +116,15 @@ export const notesApi = {
     form.append('noteType', data.noteType);
     if (data.description) form.append('description', data.description);
     if (data.tags) form.append('tags', data.tags);
-    // React Native FormData file object
     form.append('file', { uri: data.fileUri, name: data.fileName, type: data.fileType } as any);
     return apiClient.post('/notes/upload', form, {
       headers: { 'Content-Type': 'multipart/form-data' },
     }).then((r) => normalizeNote(r.data.data.note));
   },
 
-  rate: (id: string, rating: number = 1): Promise<Note> =>
-    apiClient.post(`/notes/${id}/rate`, { rating }).then(r => normalizeNote(r.data.data)),
+  rate: (id: string, score: number): Promise<Note> =>
+    apiClient.post(`/notes/${id}/rate`, { score }).then((r) => normalizeNote(r.data.data)),
 
-  rate: (id: string, rating: number): Promise<Note> =>
-    apiClient.post(`/notes/${id}/rate`, { rating }).then((r) => normalizeNote(r.data.data)),
-
-  // Note requests
   getAllRequests: (): Promise<NoteRequest[]> =>
     apiClient.get('/notes/requests', { params: { status: 'pending' } }).then((r) => {
       const list = r.data.data?.requests ?? r.data.data ?? [];

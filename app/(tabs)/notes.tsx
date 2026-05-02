@@ -69,7 +69,13 @@ export default function NotesScreen() {
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [selectedType, setSelectedType] = useState<NoteType | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'notes' | 'requests'>('notes');
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(searchQuery), 400);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
   const [showRequestForm, setShowRequestForm] = useState(false);
   const [requestTopic, setRequestTopic] = useState('');
   const [requestNoteType, setRequestNoteType] = useState<'PDF' | 'Diagram' | 'Summary'>('PDF');
@@ -173,12 +179,12 @@ export default function NotesScreen() {
   const [fulfillRequestId, setFulfillRequestId] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['notes', selectedSubject, selectedType, searchQuery],
+    queryKey: ['notes', selectedSubject, selectedType, debouncedQuery],
     queryFn: () =>
       notesApi.search({
         subject: selectedSubject ?? undefined,
         noteType: selectedType ?? undefined,
-        query: searchQuery || undefined,
+        q: debouncedQuery || undefined,
       }),
   });
 

@@ -72,9 +72,14 @@ export default function DropsScreen() {
   const [inputText, setInputText] = useState('');
   const [selectedSubject, setSelectedSubject] = useState<Subject>('Anatomy');
   const flatListRef = useRef<FlatList>(null);
-  const { messages, isTyping, onlineCount, addMessage, setMessages } = useDropsStore();
+  const { messages, isTyping, onlineCount, addMessage, setMessages, joinSubject } = useDropsStore();
   const user = useAuthStore((s) => s.user);
   const { socket } = useSocket();
+
+  // Fix: join the socket room whenever subject changes
+  useEffect(() => {
+    joinSubject(selectedSubject);
+  }, [selectedSubject, socket]);
 
   // Clear messages immediately on subject change so old subject's messages don't flash
   const handleSubjectChange = (subject: Subject) => {
@@ -97,6 +102,7 @@ export default function DropsScreen() {
     mutationFn: (text: string) =>
       dropsApi.sendMessage({ subject: selectedSubject, text }),
     onSuccess: (newMsg) => {
+      // Add optimistically — deduplication in store handles socket duplicate
       addMessage(newMsg);
     },
     onError: () => Toast.show({ type: 'error', text1: 'Failed to send message' }),

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -48,17 +48,24 @@ export default function NotesScreen() {
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [selectedType, setSelectedType] = useState<NoteType | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [showRequestForm, setShowRequestForm] = useState(false);
+
+  // Debounce search input — only fire API call 400ms after user stops typing
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(searchQuery), 400);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
   const [requestTopic, setRequestTopic] = useState('');
   const [requestNoteType, setRequestNoteType] = useState<'PDF' | 'Diagram' | 'Summary'>('PDF');
 
   const { data, isLoading } = useQuery({
-    queryKey: ['notes', selectedSubject, selectedType, searchQuery],
+    queryKey: ['notes', selectedSubject, selectedType, debouncedQuery],
     queryFn: () =>
       notesApi.search({
         subject: selectedSubject ?? undefined,
         noteType: selectedType ?? undefined,
-        query: searchQuery || undefined,
+        q: debouncedQuery || undefined,
       }),
   });
 
@@ -105,7 +112,7 @@ export default function NotesScreen() {
           <Text className="text-on-surface font-inter-semibold text-base" numberOfLines={2}>
             {item.title}
           </Text>
-          <Text className="text-on-surface-variant font-inter text-sm mt-1">by {item.author?.name ?? 'Senior'}</Text>
+          <Text className="text-on-surface-variant font-inter text-sm mt-1">by {(item.author as any)?.name ?? 'Senior'}</Text>
         </View>
         <TouchableOpacity
           onPress={() => downloadMutation.mutate(item.id)}
@@ -125,7 +132,7 @@ export default function NotesScreen() {
       </View>
 
       <View className="flex-row items-center">
-        <Text style={{ color: '#cfbcff', fontSize: 12 }}>★ {(item.rating ?? 0).toFixed(1)}</Text>
+        <Text style={{ color: '#cfbcff', fontSize: 12 }}>★ {(typeof item.rating === 'number' ? item.rating : 0).toFixed(1)}</Text>
         <Text className="text-outline text-xs ml-3">↓ {item.downloads ?? 0} downloads</Text>
       </View>
     </GlassCard>

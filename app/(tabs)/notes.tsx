@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Animated,
 } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
@@ -137,6 +138,7 @@ export default function NotesScreen() {
       queryClient.invalidateQueries({ queryKey: ['notes'] });
       queryClient.invalidateQueries({ queryKey: ['stats', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['me'] });
+      queryClient.invalidateQueries({ queryKey: ['achievements', user?.id] });
     },
     onError: (e: any) => {
       const msg = e?.response?.data?.message ?? e?.message ?? 'Upload failed';
@@ -198,6 +200,17 @@ export default function NotesScreen() {
     onError: () => Toast.show({ type: 'error', text1: 'Download failed' }),
   });
 
+  const rateMutation = useMutation({
+    mutationFn: ({ id, rating }: { id: string; rating: number }) => notesApi.rate(id, rating),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notes'] });
+      Toast.show({ type: 'success', text1: 'Star added!' });
+    },
+    onError: (e: any) => {
+      Toast.show({ type: 'error', text1: e?.response?.data?.message ?? 'Failed to rate' });
+    },
+  });
+
   const requestMutation = useMutation({
     mutationFn: () => {
       if (!requestTopic.trim()) return Promise.reject(new Error('Topic required'));
@@ -221,49 +234,76 @@ export default function NotesScreen() {
     },
   });
 
-  const renderNote = ({ item }: { item: Note }) => (
-    <GlassCard className="mx-5 mb-3 p-4">
-      <View className="flex-row items-start justify-between mb-2">
-        <View className="flex-1 mr-3">
-          <View className="flex-row items-center mb-1">
-            <Text style={{ fontSize: 14, marginRight: 6 }}>{NOTE_TYPE_ICONS[item.noteType]}</Text>
-            <View className="bg-primary-container rounded-full px-2 py-0.5">
-              <Text className="text-on-primary text-xs font-inter-medium">{item.subject}</Text>
+  const renderNote = ({ item }: { item: Note }) => {
+    const scaleAnim = new Animated.Value(1);
+
+    const handleStar = () => {
+      Animated.sequence([
+        Animated.timing(scaleAnim, { toValue: 1.5, duration: 150, useNativeDriver: true }),
+        Animated.timing(scaleAnim, { toValue: 1, duration: 150, useNativeDriver: true }),
+      ]).start(() => rateMutation.mutate({ id: item.id, rating: 1 }));
+    };
+
+    return (
+      <GlassCard className="mx-5 mb-3 p-4">
+        <View className="flex-row items-start justify-between mb-2">
+          <View className="flex-1 mr-3">
+            <View className="flex-row items-center mb-1">
+              <Text style={{ fontSize: 14, marginRight: 6 }}>{NOTE_TYPE_ICONS[item.noteType]}</Text>
+              <View className="bg-primary-container rounded-full px-2 py-0.5">
+                <Text className="text-on-primary text-xs font-inter-medium">{item.subject}</Text>
+              </View>
             </View>
+            <Text className="text-on-surface font-inter-semibold text-base" numberOfLines={2}>
+              {item.title}
+            </Text>
+            <Text className="text-on-surface-variant font-inter text-sm mt-1">by {item.author?.name ?? 'Senior'}</Text>
           </View>
-          <Text className="text-on-surface font-inter-semibold text-base" numberOfLines={2}>
-            {item.title}
-          </Text>
-          <Text className="text-on-surface-variant font-inter text-sm mt-1">by {item.author?.name ?? 'Senior'}</Text>
+          <TouchableOpacity
+            onPress={() => downloadMutation.mutate(item.id)}
+            className="bg-primary rounded-xl px-3 py-2"
+            activeOpacity={0.8}
+            disabled={downloadMutation.isPending}
+          >
+            {downloadMutation.isPending && downloadMutation.variables === item.id ? (
+              <ActivityIndicator size="small" color="#39197c" />
+            ) : (
+              <Ionicons name="download-outline" size={18} color="#39197c" />
+            )}
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          onPress={() => downloadMutation.mutate(item.id)}
-          className="bg-primary rounded-xl px-3 py-2"
-          activeOpacity={0.8}
-          disabled={downloadMutation.isPending}
-        >
-          {downloadMutation.isPending && downloadMutation.variables === item.id ? (
-            <ActivityIndicator size="small" color="#39197c" />
-          ) : (
-            <Ionicons name="download-outline" size={18} color="#39197c" />
-          )}
-        </TouchableOpacity>
-      </View>
 
-      <View className="flex-row flex-wrap gap-1 mb-2">
-        {(item.tags ?? []).map((tag) => (
-          <View key={tag} className="bg-surface-container-high rounded-full px-2 py-0.5">
-            <Text className="text-on-surface-variant text-xs font-inter">#{tag}</Text>
+        <View className="flex-row flex-wrap gap-1 mb-2">
+          {(item.tags ?? []).map((tag) => (
+            <View key={tag} className="bg-surface-container-high rounded-full px-2 py-0.5">
+              <Text className="text-on-surface-variant text-xs font-inter">#{tag}</Text>
+            </View>
+          ))}
+        </View>
+
+        <View className="flex-row items-center justify-between">
+          <View className="flex-row items-center">
+            <Text style={{ color: '#cfbcff', fontSize: 12 }}>★ {item.ratingCount ?? 0} stars</Text>
+            <Text className="text-outline text-xs ml-3">↓ {item.downloads ?? 0} downloads</Text>
           </View>
-        ))}
-      </View>
-
-      <View className="flex-row items-center">
-        <Text style={{ color: '#cfbcff', fontSize: 12 }}>★ {Number(item.rating ?? 0).toFixed(1)}</Text>
-        <Text className="text-outline text-xs ml-3">↓ {item.downloads ?? 0} downloads</Text>
-      </View>
-    </GlassCard>
-  );
+          <TouchableOpacity
+            onPress={handleStar}
+            className="bg-secondary rounded-xl px-3 py-2"
+            activeOpacity={0.8}
+            disabled={rateMutation.isPending}
+          >
+            <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+              <Ionicons
+                name={item.hasRated ? 'star' : 'star-outline'}
+                size={18}
+                color={item.hasRated ? '#FFD700' : '#39197c'}
+              />
+            </Animated.View>
+          </TouchableOpacity>
+        </View>
+      </GlassCard>
+    );
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>

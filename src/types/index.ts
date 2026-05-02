@@ -24,11 +24,13 @@ export interface Note {
   noteType: 'pdf' | 'handwritten' | 'diagram' | 'pyq';
   author: User;
   rating: number;
+  ratingCount: number;
   downloads: number;
   tags: string[];
   fileUrl: string;
   previewUrl?: string;
   createdAt: string;
+  hasRated?: boolean;
 }
 
 export interface ExamPackTopic {

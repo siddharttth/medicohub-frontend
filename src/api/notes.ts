@@ -56,6 +56,8 @@ const normalizeNote = (n: any): Note => ({
   id: n._id ?? n.id,
   noteType: (n.noteType ?? '').toLowerCase() as Note['noteType'],
   rating: normalizeRating(n.rating),
+  ratingCount: n.ratingCount ?? 0,
+  hasRated: n.hasRated ?? false,
   author: (n.author ?? n.uploadedBy)
     ? { ...(n.author ?? n.uploadedBy), id: (n.author ?? n.uploadedBy)?._id ?? (n.author ?? n.uploadedBy)?.id }
     : undefined,
@@ -99,6 +101,9 @@ export const notesApi = {
       headers: { 'Content-Type': 'multipart/form-data' },
     }).then((r) => normalizeNote(r.data.data.note));
   },
+
+  rate: (id: string, rating: number = 1): Promise<Note> =>
+    apiClient.post(`/notes/${id}/rate`, { rating }).then(r => normalizeNote(r.data.data)),
 
   rate: (id: string, rating: number): Promise<Note> =>
     apiClient.post(`/notes/${id}/rate`, { rating }).then((r) => normalizeNote(r.data.data)),

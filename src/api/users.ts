@@ -9,8 +9,11 @@ export const usersApi = {
     apiClient.patch(`/users/${id}`, data).then((r) => r.data.data),
 
   getStreak: (id: string): Promise<StreakDay[]> =>
-    apiClient.get(`/users/${id}/streak`).then((r) => r.data.data.streak),
+    apiClient.get(`/users/${id}/streak`).then((r) => r.data.data.streak ?? []),
 
   getStats: (id: string): Promise<Stats> =>
     apiClient.get(`/users/${id}/stats`).then((r) => r.data.data),
+
+  logStudySession: (minutes: number): Promise<void> =>
+    apiClient.post('/users/study-session', { minutes }).then(() => {}),
 };

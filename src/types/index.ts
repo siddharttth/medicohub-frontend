@@ -24,11 +24,13 @@ export interface Note {
   noteType: 'pdf' | 'handwritten' | 'diagram' | 'pyq';
   author: User;
   rating: number;
+  ratingCount: number;
   downloads: number;
   tags: string[];
   fileUrl: string;
   previewUrl?: string;
   createdAt: string;
+  hasRated?: boolean;
 }
 
 export interface ExamPackTopic {
@@ -134,3 +136,15 @@ export type Subject =
 export type NoteType = 'pdf' | 'handwritten' | 'diagram' | 'pyq';
 
 export type ExamType = 'full-pack' | 'viva-only' | 'quick-review';
+
+export interface NoteRequest {
+  id: string;
+  _id?: string;
+  subject: Subject;
+  topic: string;
+  noteType: string;
+  requestedBy: { id: string; name: string };
+  status: 'pending' | 'fulfilled';
+  fulfilledNote?: Note;
+  createdAt: string;
+}

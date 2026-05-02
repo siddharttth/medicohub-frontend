@@ -20,11 +20,11 @@ const OPACITY_LEVELS = [
   '#cfbcff',
 ];
 
-const getColor = (count: number): string => {
-  if (count === 0) return OPACITY_LEVELS[0];
-  if (count <= 1) return OPACITY_LEVELS[1];
-  if (count <= 3) return OPACITY_LEVELS[2];
-  if (count <= 6) return OPACITY_LEVELS[3];
+const getColor = (minutes: number, isActive: boolean): string => {
+  if (!isActive && minutes === 0) return OPACITY_LEVELS[0];
+  if (minutes <= 15) return OPACITY_LEVELS[1];
+  if (minutes <= 30) return OPACITY_LEVELS[2];
+  if (minutes <= 60) return OPACITY_LEVELS[3];
   return OPACITY_LEVELS[4];
 };
 
@@ -32,24 +32,25 @@ export const StreakHeatmap: React.FC<StreakHeatmapProps> = ({ data }) => {
   const cells = useMemo(() => {
     const today = new Date();
     const totalDays = COLS * ROWS;
-    const dataMap = new Map<string, number>();
+    const dataMap = new Map<string, { isActive: boolean; minutesSpent: number }>();
     data.forEach((d) => {
-      dataMap.set(d.date, d.count);
+      dataMap.set(d.date, { isActive: d.isActive, minutesSpent: d.minutesSpent });
     });
 
     return Array.from({ length: totalDays }, (_, i) => {
       const date = subDays(today, totalDays - 1 - i);
       const key = format(date, 'yyyy-MM-dd');
-      return { date: key, count: dataMap.get(key) ?? 0 };
+      const entry = dataMap.get(key);
+      return { date: key, isActive: entry?.isActive ?? false, minutesSpent: entry?.minutesSpent ?? 0 };
     });
   }, [data]);
 
-  const renderCell = ({ item }: { item: { date: string; count: number } }) => (
+  const renderCell = ({ item }: { item: { date: string; isActive: boolean; minutesSpent: number } }) => (
     <View
       style={{
         width: CELL_SIZE,
         height: CELL_SIZE,
-        backgroundColor: getColor(item.count),
+        backgroundColor: getColor(item.minutesSpent, item.isActive),
         borderRadius: 1,
         margin: CELL_GAP / 2,
       }}

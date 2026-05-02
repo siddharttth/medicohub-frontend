@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,12 +6,15 @@ import {
   TouchableOpacity,
   Switch,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Sharing from 'expo-sharing';
 import { useAuthStore } from '../../src/store/authStore';
 import { usersApi } from '../../src/api/users';
 import { achievementsApi } from '../../src/api/achievements';
@@ -24,6 +27,24 @@ import { Achievement, NoteRequest } from '../../src/types';
 export default function ProfileScreen() {
   const storeUser = useAuthStore((s) => s.user);
   const { signOut } = useAuth();
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  const downloadNote = async (noteId: string) => {
+    try {
+      setDownloadingId(noteId);
+      const res = await notesApi.download(noteId);
+      if (!res.url) throw new Error('No URL');
+      const localUri = (FileSystem.documentDirectory ?? FileSystem.cacheDirectory ?? '') + (res.fileName ?? 'download');
+      const { uri } = await FileSystem.downloadAsync(res.url, localUri);
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri);
+      }
+    } catch {
+      Alert.alert('Download failed', 'Could not download the note. Please try again.');
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   // Fetch fresh user data from /auth/me
   const { data: user = storeUser } = useQuery({
@@ -170,34 +191,51 @@ export default function ProfileScreen() {
             </GlassCard>
           ) : (
             myRequests.map((req) => (
-              <GlassCard key={req.id} className="p-3 mb-2">
-                <View className="flex-row items-center justify-between mb-1">
-                  <View className="flex-row gap-2">
-                    <View className="bg-primary-container rounded-full px-2 py-0.5">
-                      <Text className="text-on-primary text-xs font-inter-medium">{req.subject}</Text>
+              <TouchableOpacity
+                key={req.id}
+                activeOpacity={req.status === 'fulfilled' && req.fulfilledNote ? 0.75 : 1}
+                onPress={() => {
+                  if (req.status === 'fulfilled' && req.fulfilledNote) {
+                    downloadNote(req.fulfilledNote.id);
+                  }
+                }}
+              >
+                <GlassCard className="p-3 mb-2">
+                  <View className="flex-row items-center justify-between mb-1">
+                    <View className="flex-row gap-2">
+                      <View className="bg-primary-container rounded-full px-2 py-0.5">
+                        <Text className="text-on-primary text-xs font-inter-medium">{req.subject}</Text>
+                      </View>
+                      <View className="bg-surface-container-high rounded-full px-2 py-0.5">
+                        <Text className="text-outline text-xs font-inter">{req.noteType}</Text>
+                      </View>
                     </View>
-                    <View className="bg-surface-container-high rounded-full px-2 py-0.5">
-                      <Text className="text-outline text-xs font-inter">{req.noteType}</Text>
+                    <View
+                      className="rounded-full px-2 py-0.5"
+                      style={{ backgroundColor: req.status === 'fulfilled' ? '#1a3a1a' : '#3a2a0a' }}
+                    >
+                      <Text style={{ fontSize: 10, fontWeight: '600', color: req.status === 'fulfilled' ? '#4caf50' : '#ffb300' }}>
+                        {req.status === 'fulfilled' ? '✓ Fulfilled' : '⏳ Pending'}
+                      </Text>
                     </View>
                   </View>
-                  <View
-                    className="rounded-full px-2 py-0.5"
-                    style={{ backgroundColor: req.status === 'fulfilled' ? '#1a3a1a' : '#3a2a0a' }}
-                  >
-                    <Text style={{ fontSize: 10, fontWeight: '600', color: req.status === 'fulfilled' ? '#4caf50' : '#ffb300' }}>
-                      {req.status === 'fulfilled' ? '✓ Fulfilled' : '⏳ Pending'}
-                    </Text>
-                  </View>
-                </View>
-                <Text className="text-on-surface font-inter-semibold text-sm">{req.topic}</Text>
-                {req.status === 'fulfilled' && req.fulfilledNote && (
-                  <View className="mt-2 bg-surface-container rounded-xl px-3 py-2">
-                    <Text className="text-on-surface-variant font-inter text-xs mb-0.5">Note uploaded:</Text>
-                    <Text className="text-primary font-inter-medium text-sm">{req.fulfilledNote.title}</Text>
-                    <Text className="text-outline font-inter text-xs">by {req.fulfilledNote.author?.name ?? 'Senior'}</Text>
-                  </View>
-                )}
-              </GlassCard>
+                  <Text className="text-on-surface font-inter-semibold text-sm">{req.topic}</Text>
+                  {req.status === 'fulfilled' && req.fulfilledNote && (
+                    <View className="mt-2 bg-surface-container rounded-xl px-3 py-2 flex-row items-center justify-between">
+                      <View className="flex-1">
+                        <Text className="text-on-surface-variant font-inter text-xs mb-0.5">Note uploaded:</Text>
+                        <Text className="text-primary font-inter-medium text-sm">{req.fulfilledNote.title}</Text>
+                        <Text className="text-outline font-inter text-xs">by {req.fulfilledNote.author?.name ?? 'Senior'}</Text>
+                      </View>
+                      {downloadingId === req.fulfilledNote.id ? (
+                        <ActivityIndicator size="small" color="#cfbcff" />
+                      ) : (
+                        <Ionicons name="download-outline" size={18} color="#cfbcff" />
+                      )}
+                    </View>
+                  )}
+                </GlassCard>
+              </TouchableOpacity>
             ))
           )}
         </View>

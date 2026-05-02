@@ -1,7 +1,7 @@
 import apiClient from './axios';
 import { Note, Subject, NoteType, NoteRequest } from '../types';
 
-export type UploadNoteType = 'PDF' | 'Handwritten' | 'Diagram' | 'PYQ' | 'DOC' | 'CSV' | 'Image' | 'Other';
+export type UploadNoteType = 'PDF' | 'Handwritten' | 'Diagram' | 'PYQ';
 
 export interface UploadNoteData {
   title: string;
@@ -43,11 +43,19 @@ interface NoteRequestData {
   noteType: RequestNoteType;
 }
 
+const normalizeRating = (rating: any): number => {
+  if (typeof rating === 'number') return rating;
+  if (rating && typeof rating === 'object') {
+    return Number(rating.averageScore ?? rating.average ?? rating.value ?? 0);
+  }
+  return 0;
+};
+
 const normalizeNote = (n: any): Note => ({
   ...n,
   id: n._id ?? n.id,
   noteType: (n.noteType ?? '').toLowerCase() as Note['noteType'],
-  // backend uses uploadedBy on some endpoints, author on others
+  rating: normalizeRating(n.rating),
   author: (n.author ?? n.uploadedBy)
     ? { ...(n.author ?? n.uploadedBy), id: (n.author ?? n.uploadedBy)?._id ?? (n.author ?? n.uploadedBy)?.id }
     : undefined,
@@ -97,14 +105,16 @@ export const notesApi = {
 
   // Note requests
   getAllRequests: (): Promise<NoteRequest[]> =>
-    apiClient.get('/notes/requests').then((r) => {
-      // handles both paginated {requests:[]} and plain array
+    apiClient.get('/notes/requests', { params: { status: 'pending' } }).then((r) => {
       const list = r.data.data?.requests ?? r.data.data ?? [];
-      return list.map((req: any) => ({
-        ...req,
-        id: req._id ?? req.id,
-        requestedBy: { id: req.requestedBy?._id ?? req.requestedBy?.id ?? '', name: req.requestedBy?.name ?? 'Unknown' },
-      }));
+      return list
+        .map((req: any) => ({
+          ...req,
+          id: req._id ?? req.id,
+          status: req.status === 'open' ? 'pending' : req.status,
+          requestedBy: { id: req.requestedBy?._id ?? req.requestedBy?.id ?? '', name: req.requestedBy?.name ?? 'Unknown' },
+        }))
+        .filter((req: any) => req.status === 'pending');
     }),
 
   getMyRequests: (): Promise<NoteRequest[]> =>
@@ -113,6 +123,7 @@ export const notesApi = {
       return list.map((req: any) => ({
         ...req,
         id: req._id ?? req.id,
+        status: req.status === 'open' ? 'pending' : req.status,
         requestedBy: { id: req.requestedBy?._id ?? req.requestedBy?.id ?? '', name: req.requestedBy?.name ?? 'Unknown' },
         fulfilledNote: req.fulfilledNote ? normalizeNote(req.fulfilledNote) : undefined,
       }));

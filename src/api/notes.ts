@@ -17,6 +17,8 @@ export interface UploadNoteData {
 interface NoteSearchParams {
   subject?: Subject;
   noteType?: NoteType;
+  subjects?: Subject[];
+  noteTypes?: NoteType[];
   query?: string;
   sortBy?: string;
   limit?: number;
@@ -66,8 +68,8 @@ const normalizeNote = (n: any): Note => ({
 export const notesApi = {
   search: (params: NoteSearchParams): Promise<NoteSearchResponse> =>
     apiClient.get('/notes/search', { params }).then((r) => ({
-      notes: (r.data.data ?? []).map(normalizeNote),
-      pagination: r.data.pagination ?? { total: 0, limit: 20, skip: 0 },
+      notes: (r.data.data?.notes ?? []).map(normalizeNote),
+      pagination: r.data.data?.pagination ?? r.data.pagination ?? { total: 0, limit: 20, skip: 0 },
     })),
 
   getTrending: (): Promise<Note[]> =>
@@ -101,9 +103,6 @@ export const notesApi = {
       headers: { 'Content-Type': 'multipart/form-data' },
     }).then((r) => normalizeNote(r.data.data.note));
   },
-
-  rate: (id: string, rating: number = 1): Promise<Note> =>
-    apiClient.post(`/notes/${id}/rate`, { rating }).then(r => normalizeNote(r.data.data)),
 
   rate: (id: string, rating: number): Promise<Note> =>
     apiClient.post(`/notes/${id}/rate`, { rating }).then((r) => normalizeNote(r.data.data)),

@@ -26,7 +26,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   return (
     <View
       className={`rounded-full overflow-hidden ${className}`}
-      style={{ height, backgroundColor: '#212943' }}
+      style={{ height, backgroundColor: 'rgba(255,255,255,0.06)' }}
     >
       <Animated.View
         style={{

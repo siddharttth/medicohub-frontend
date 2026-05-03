@@ -28,46 +28,72 @@ const SUBJECTS: Subject[] = [
   'Pharmacology', 'Microbiology', 'Surgery', 'Medicine',
 ];
 
+const SUBJECT_COLORS: Record<string, { bg: string; text: string; border: string; activeBg: string }> = {
+  Anatomy:      { bg: '#10121e', text: '#948e9d', border: 'rgba(255,255,255,0.07)', activeBg: '#cfbcff' },
+  Physiology:   { bg: '#10121e', text: '#948e9d', border: 'rgba(255,255,255,0.07)', activeBg: '#4ade80' },
+  Biochemistry: { bg: '#10121e', text: '#948e9d', border: 'rgba(255,255,255,0.07)', activeBg: '#60a5fa' },
+  Pathology:    { bg: '#10121e', text: '#948e9d', border: 'rgba(255,255,255,0.07)', activeBg: '#fb923c' },
+  Pharmacology: { bg: '#10121e', text: '#948e9d', border: 'rgba(255,255,255,0.07)', activeBg: '#f472b6' },
+  Microbiology: { bg: '#10121e', text: '#948e9d', border: 'rgba(255,255,255,0.07)', activeBg: '#22d3ee' },
+  Surgery:      { bg: '#10121e', text: '#948e9d', border: 'rgba(255,255,255,0.07)', activeBg: '#fbbf24' },
+  Medicine:     { bg: '#10121e', text: '#948e9d', border: 'rgba(255,255,255,0.07)', activeBg: '#a78bfa' },
+};
+
+// ─── Typing indicator ────────────────────────────────────────────────────────
 const TypingIndicator = () => {
-  const dot1 = useRef(new Animated.Value(0)).current;
-  const dot2 = useRef(new Animated.Value(0)).current;
-  const dot3 = useRef(new Animated.Value(0)).current;
+  const dots = [
+    useRef(new Animated.Value(0)).current,
+    useRef(new Animated.Value(0)).current,
+    useRef(new Animated.Value(0)).current,
+  ];
 
   useEffect(() => {
-    const animate = (dot: Animated.Value, delay: number) =>
+    dots.forEach((dot, i) =>
       Animated.loop(
         Animated.sequence([
-          Animated.delay(delay),
-          Animated.timing(dot, { toValue: 1, duration: 300, useNativeDriver: true }),
-          Animated.timing(dot, { toValue: 0, duration: 300, useNativeDriver: true }),
-          Animated.delay(600 - delay),
+          Animated.delay(i * 160),
+          Animated.timing(dot, { toValue: 1, duration: 280, useNativeDriver: true }),
+          Animated.timing(dot, { toValue: 0.3, duration: 280, useNativeDriver: true }),
+          Animated.delay(480 - i * 160),
         ])
-      ).start();
-
-    animate(dot1, 0);
-    animate(dot2, 200);
-    animate(dot3, 400);
+      ).start()
+    );
   }, []);
 
   return (
-    <View className="flex-row items-center px-4 py-2">
-      {[dot1, dot2, dot3].map((dot, i) => (
-        <Animated.View
-          key={i}
-          style={{
-            width: 6,
-            height: 6,
-            borderRadius: 3,
-            backgroundColor: '#948e9d',
-            marginHorizontal: 2,
-            opacity: dot,
-          }}
-        />
-      ))}
+    <View style={{ paddingHorizontal: 20, paddingVertical: 6, alignItems: 'flex-start' }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 4,
+          backgroundColor: '#10121e',
+          borderWidth: 1,
+          borderColor: 'rgba(255,255,255,0.07)',
+          paddingHorizontal: 14,
+          paddingVertical: 10,
+          borderRadius: 20,
+          borderTopLeftRadius: 6,
+        }}
+      >
+        {dots.map((dot, i) => (
+          <Animated.View
+            key={i}
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: 3,
+              backgroundColor: '#948e9d',
+              opacity: dot,
+            }}
+          />
+        ))}
+      </View>
     </View>
   );
 };
 
+// ─── Main screen ─────────────────────────────────────────────────────────────
 export default function DropsScreen() {
   const [inputText, setInputText] = useState('');
   const [selectedSubject, setSelectedSubject] = useState<Subject>('Anatomy');
@@ -76,7 +102,6 @@ export default function DropsScreen() {
   const user = useAuthStore((s) => s.user);
   const { socket } = useSocket();
 
-  // Clear messages immediately on subject change so old subject's messages don't flash
   const handleSubjectChange = (subject: Subject) => {
     setMessages([]);
     setSelectedSubject(subject);
@@ -89,31 +114,26 @@ export default function DropsScreen() {
       setMessages(res.messages);
       return res;
     },
-    // Keep previous data in cache so switching back restores instantly
     staleTime: 30_000,
   });
 
   const sendMutation = useMutation({
-    mutationFn: (text: string) =>
-      dropsApi.sendMessage({ subject: selectedSubject, text }),
-    onSuccess: (newMsg) => {
-      addMessage(newMsg);
-    },
+    mutationFn: (text: string) => dropsApi.sendMessage({ subject: selectedSubject, text }),
+    onSuccess: (newMsg) => addMessage(newMsg),
     onError: () => Toast.show({ type: 'error', text1: 'Failed to send message' }),
   });
 
   const aiMutation = useMutation({
     mutationFn: (question: string) => aiApi.ask(question, selectedSubject),
     onSuccess: (res) => {
-      const aiMessage: Message = {
+      addMessage({
         id: Date.now().toString(),
         content: res.answer,
         sender: { id: 'ai', name: 'MedicoAI' },
         type: 'ai',
         isPinned: false,
         createdAt: new Date().toISOString(),
-      };
-      addMessage(aiMessage);
+      });
     },
     onError: () => Toast.show({ type: 'error', text1: 'AI request failed' }),
   });
@@ -128,10 +148,7 @@ export default function DropsScreen() {
 
   const handleAskAI = () => {
     const text = inputText.trim();
-    if (!text) {
-      Toast.show({ type: 'info', text1: 'Type a question first' });
-      return;
-    }
+    if (!text) { Toast.show({ type: 'info', text1: 'Type a question first' }); return; }
     setInputText('');
     aiMutation.mutate(text);
   };
@@ -141,63 +158,135 @@ export default function DropsScreen() {
     socket?.emit('typing', { isTyping: text.length > 0 });
   };
 
+  const activeColor = SUBJECT_COLORS[selectedSubject]?.activeBg ?? '#cfbcff';
+  const isDarkActive = ['#cfbcff', '#4ade80', '#60a5fa', '#22d3ee', '#fbbf24', '#a78bfa', '#f472b6', '#fb923c'].includes(activeColor);
+
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#070810' }} edges={['top']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        className="flex-1"
+        style={{ flex: 1 }}
         keyboardVerticalOffset={0}
       >
-        {/* Header */}
-        <View className="flex-row items-center justify-between px-5 py-3 border-b border-outline-variant">
-          <View>
-            <Text className="text-on-surface font-inter-bold text-xl">Medico Drops 💬</Text>
-            <View className="flex-row items-center mt-0.5">
-              <View className="w-2 h-2 rounded-full bg-green-500 mr-1.5" />
-              <Text className="text-on-surface-variant font-inter text-xs">
-                {onlineCount > 0 ? `${onlineCount} online` : 'Connecting...'}
+        {/* ── Header ── */}
+        <View style={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 16 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+            <View>
+              <Text
+                style={{
+                  fontFamily: 'Inter_400Regular',
+                  fontSize: 11,
+                  color: '#948e9d',
+                  letterSpacing: 2,
+                  textTransform: 'uppercase',
+                  marginBottom: 6,
+                }}
+              >
+                Batch Chat
+              </Text>
+              <Text
+                style={{
+                  fontFamily: 'NotoSerif_700Bold',
+                  fontSize: 36,
+                  color: '#e1e3e4',
+                  letterSpacing: -0.5,
+                  lineHeight: 40,
+                }}
+              >
+                Medico Drops
+              </Text>
+            </View>
+            {/* Online indicator */}
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+                backgroundColor: 'rgba(74,222,128,0.08)',
+                borderWidth: 1,
+                borderColor: 'rgba(74,222,128,0.2)',
+                borderRadius: 999,
+                paddingHorizontal: 12,
+                paddingVertical: 7,
+                marginBottom: 4,
+              }}
+            >
+              <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: '#4ade80' }} />
+              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, color: '#4ade80' }}>
+                {onlineCount > 0 ? `${onlineCount} online` : 'Live'}
               </Text>
             </View>
           </View>
         </View>
 
-        {/* Subject Selector */}
-        <View className="border-b border-outline-variant bg-surface-container" style={{ minHeight: 56 }}>
+        {/* ── Subject pills ── */}
+        <View style={{ marginBottom: 12 }}>
           <ScrollView
             horizontal
-            showsHorizontalScrollIndicator={true}
-            contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10 }}
-            scrollIndicatorInsets={{ right: 16 }}
-            style={{ flexGrow: 0 }}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingLeft: 20, paddingRight: 8 }}
           >
-            {SUBJECTS.map((s) => (
-              <TouchableOpacity
-                key={s}
-                onPress={() => handleSubjectChange(s)}
-                className="mr-3 px-4 py-2 rounded-full flex-shrink-0"
-                style={{
-                  backgroundColor: selectedSubject === s ? '#7c3aed' : 'rgba(255,255,255,0.06)',
-                  borderWidth: 1.5,
-                  borderColor: selectedSubject === s ? '#b599ff' : 'rgba(255,255,255,0.1)',
-                }}
-                activeOpacity={0.8}
-              >
-                <Text
-                  className="font-inter-medium text-sm"
-                  style={{ color: selectedSubject === s ? '#fff' : '#948e9d' }}
-                  numberOfLines={1}
+            {SUBJECTS.map((s) => {
+              const isActive = selectedSubject === s;
+              const color = SUBJECT_COLORS[s];
+              return (
+                <TouchableOpacity
+                  key={s}
+                  onPress={() => handleSubjectChange(s)}
+                  activeOpacity={0.75}
+                  style={{
+                    paddingHorizontal: 18,
+                    paddingVertical: 9,
+                    borderRadius: 999,
+                    marginRight: 8,
+                    backgroundColor: isActive ? color.activeBg : '#10121e',
+                    borderWidth: 1,
+                    borderColor: isActive ? color.activeBg : 'rgba(255,255,255,0.07)',
+                  }}
                 >
-                  {s}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <Text
+                    style={{
+                      fontFamily: 'Inter_700Bold',
+                      fontSize: 10,
+                      letterSpacing: 1.2,
+                      textTransform: 'uppercase',
+                      color: isActive ? '#1a0a3a' : '#948e9d',
+                    }}
+                  >
+                    {s}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </ScrollView>
+
+          {/* Active subject accent line */}
+          <View
+            style={{
+              height: 1.5,
+              marginTop: 12,
+              marginHorizontal: 20,
+              backgroundColor: 'rgba(255,255,255,0.05)',
+              borderRadius: 1,
+              overflow: 'hidden',
+            }}
+          >
+            <View
+              style={{
+                width: 48,
+                height: '100%',
+                backgroundColor: activeColor,
+                borderRadius: 1,
+                opacity: 0.6,
+              }}
+            />
+          </View>
         </View>
 
-        {/* Messages */}
+        {/* ── Messages ── */}
         {isLoading ? (
-          <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="#cfbcff" />
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+            <ActivityIndicator color="#cfbcff" size="large" />
           </View>
         ) : (
           <FlatList
@@ -208,65 +297,133 @@ export default function DropsScreen() {
             )}
             keyExtractor={(item, index) => item.id ?? index.toString()}
             inverted
-            contentContainerStyle={{ paddingVertical: 12 }}
+            contentContainerStyle={{ paddingVertical: 16 }}
             showsVerticalScrollIndicator={false}
             ListHeaderComponent={isTyping ? <TypingIndicator /> : null}
             ListEmptyComponent={
-              <View className="items-center justify-center py-20">
-                <Text style={{ fontSize: 40 }}>💬</Text>
-                <Text className="text-on-surface-variant font-inter-medium text-base mt-3">
+              <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 80 }}>
+                <Text style={{ fontSize: 44 }}>💬</Text>
+                <Text
+                  style={{
+                    fontFamily: 'NotoSerif_600SemiBold',
+                    fontSize: 18,
+                    color: '#e1e3e4',
+                    marginTop: 14,
+                  }}
+                >
                   No messages yet
                 </Text>
-                <Text className="text-outline font-inter text-sm mt-1">
-                  Start the conversation!
+                <Text
+                  style={{
+                    fontFamily: 'Inter_400Regular',
+                    fontSize: 13,
+                    color: '#948e9d',
+                    marginTop: 6,
+                  }}
+                >
+                  Start the conversation in {selectedSubject}
                 </Text>
               </View>
             }
           />
         )}
 
-        {/* Input Bar */}
+        {/* ── Input bar ── */}
         <View
-          className="flex-row items-end px-3 py-2 border-t border-outline-variant"
-          style={{ backgroundColor: '#0a122b' }}
+          style={{
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+            paddingBottom: 16,
+            borderTopWidth: 1,
+            borderTopColor: 'rgba(255,255,255,0.05)',
+            backgroundColor: '#070810',
+            flexDirection: 'row',
+            alignItems: 'flex-end',
+            gap: 8,
+          }}
         >
-          <View className="flex-1 bg-surface-container border border-outline-variant rounded-2xl px-4 py-2 mr-2">
+          {/* Text input */}
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: '#10121e',
+              borderWidth: 1,
+              borderColor: 'rgba(255,255,255,0.08)',
+              borderRadius: 22,
+              paddingHorizontal: 18,
+              paddingVertical: 11,
+              minHeight: 46,
+              justifyContent: 'center',
+            }}
+          >
             <TextInput
               value={inputText}
               onChangeText={handleInputChange}
-              placeholder={`Ask about ${selectedSubject}...`}
-              placeholderTextColor="#494551"
+              placeholder={`Message ${selectedSubject}...`}
+              placeholderTextColor="rgba(148,142,157,0.45)"
               multiline
               maxLength={500}
-              className="text-on-surface font-inter"
-              style={{ fontSize: 14, maxHeight: 100 }}
+              style={{
+                fontFamily: 'Inter_400Regular',
+                fontSize: 14,
+                color: '#e1e3e4',
+                maxHeight: 100,
+                padding: 0,
+              }}
             />
           </View>
 
+          {/* AI button */}
           <TouchableOpacity
             onPress={handleAskAI}
             disabled={aiMutation.isPending}
-            className="w-10 h-10 rounded-full bg-surface-container-high items-center justify-center mr-1"
             activeOpacity={0.8}
+            style={{
+              width: 46,
+              height: 46,
+              borderRadius: 23,
+              backgroundColor: 'rgba(74,222,128,0.1)',
+              borderWidth: 1,
+              borderColor: 'rgba(74,222,128,0.2)',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
           >
             {aiMutation.isPending ? (
-              <ActivityIndicator size="small" color="#cfbcff" />
+              <ActivityIndicator size="small" color="#4ade80" />
             ) : (
-              <Text style={{ fontSize: 18 }}>🤖</Text>
+              <Text style={{ fontSize: 20 }}>🤖</Text>
             )}
           </TouchableOpacity>
 
+          {/* Send button */}
           <TouchableOpacity
             onPress={handleSend}
             disabled={sendMutation.isPending || !inputText.trim()}
-            className="w-10 h-10 rounded-full bg-primary items-center justify-center"
             activeOpacity={0.8}
-            style={{ opacity: inputText.trim() ? 1 : 0.5 }}
+            style={{
+              width: 46,
+              height: 46,
+              borderRadius: 23,
+              backgroundColor: inputText.trim() ? '#cfbcff' : '#10121e',
+              borderWidth: 1,
+              borderColor: inputText.trim() ? '#cfbcff' : 'rgba(255,255,255,0.08)',
+              alignItems: 'center',
+              justifyContent: 'center',
+              shadowColor: inputText.trim() ? '#cfbcff' : 'transparent',
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 0.35,
+              shadowRadius: 10,
+            }}
           >
             {sendMutation.isPending ? (
               <ActivityIndicator size="small" color="#39197c" />
             ) : (
-              <Ionicons name="send" size={18} color="#39197c" />
+              <Ionicons
+                name="send"
+                size={18}
+                color={inputText.trim() ? '#39197c' : '#494551'}
+              />
             )}
           </TouchableOpacity>
         </View>

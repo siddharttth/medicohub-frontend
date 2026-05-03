@@ -9,16 +9,16 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        background: '#0a122b',
-        'surface-container': '#171e38',
-        'surface-container-low': '#131a34',
-        'surface-container-high': '#212943',
-        'surface-container-highest': '#2c344f',
+        background: '#070810',
+        'surface-container': '#10121e',
+        'surface-container-low': '#0c0e18',
+        'surface-container-high': '#181b2e',
+        'surface-container-highest': '#1e2133',
         primary: '#cfbcff',
         'primary-container': '#b599ff',
         'on-primary': '#39197c',
-        'on-surface': '#dce1ff',
-        'on-surface-variant': '#cbc4d3',
+        'on-surface': '#e1e3e4',
+        'on-surface-variant': '#948e9d',
         outline: '#948e9d',
         'outline-variant': '#494551',
         error: '#ffb4ab',
@@ -31,6 +31,9 @@ module.exports = {
         'inter-bold': ['Inter_700Bold'],
         caveat: ['Caveat_400Regular'],
         'caveat-bold': ['Caveat_700Bold'],
+        headline: ['NotoSerif_700Bold'],
+        'headline-medium': ['NotoSerif_500Medium'],
+        'headline-semibold': ['NotoSerif_600SemiBold'],
       },
       borderRadius: {
         '3xl': '24px',

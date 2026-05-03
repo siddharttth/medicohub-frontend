@@ -146,23 +146,16 @@ export default function HomeScreen() {
             marginHorizontal: 20,
             marginBottom: 28,
             borderRadius: 28,
-            overflow: 'hidden',
-            // ambient glow
-            shadowColor: '#b599ff',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 24,
-            elevation: 8,
           }}
         >
           <LinearGradient
-            colors={['rgba(181,153,255,0.22)', 'rgba(181,153,255,0.06)']}
+            colors={['#2a1f3d', '#1a1530']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={{
               borderRadius: 28,
               borderWidth: 1,
-              borderColor: 'rgba(181,153,255,0.22)',
+              borderColor: 'rgba(181,153,255,0.35)',
               padding: 26,
             }}
           >
@@ -173,7 +166,7 @@ export default function HomeScreen() {
                   width: 44,
                   height: 44,
                   borderRadius: 14,
-                  backgroundColor: 'rgba(181,153,255,0.22)',
+                  backgroundColor: 'rgba(181,153,255,0.3)',
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}

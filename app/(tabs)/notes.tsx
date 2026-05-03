@@ -470,7 +470,7 @@ export default function NotesScreen() {
       // fallback single-value fields for backends that only accept one value
       subject: selectedSubjects.length === 1 ? selectedSubjects[0] : undefined,
       noteType: selectedTypes.length === 1 ? selectedTypes[0] : undefined,
-      limit: 100,
+      limit: 50,
     }),
   });
 

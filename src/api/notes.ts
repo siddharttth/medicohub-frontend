@@ -67,10 +67,14 @@ const normalizeNote = (n: any): Note => ({
 
 export const notesApi = {
   search: (params: NoteSearchParams): Promise<NoteSearchResponse> =>
-    apiClient.get('/notes/search', { params }).then((r) => ({
-      notes: (r.data.data?.notes ?? []).map(normalizeNote),
-      pagination: r.data.data?.pagination ?? r.data.pagination ?? { total: 0, limit: 20, skip: 0 },
-    })),
+    apiClient.get('/notes/search', { params }).then((r) => {
+      const data = r.data.data;
+      const notes = Array.isArray(data) ? data : (data?.notes ?? []);
+      return {
+        notes: notes.map(normalizeNote),
+        pagination: r.data.pagination ?? data?.pagination ?? { total: 0, limit: 20, skip: 0 },
+      };
+    }),
 
   getTrending: (): Promise<Note[]> =>
     apiClient.get('/notes/trending').then((r) => (r.data.data.notes ?? []).map(normalizeNote)),

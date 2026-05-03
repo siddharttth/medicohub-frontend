@@ -688,7 +688,7 @@ export default function NotesScreen() {
             </View>
           </View>
           {/* Single merged filter row: subjects | divider | types */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingLeft: 20, paddingRight: 12, alignItems: 'center' }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingLeft: 20, paddingRight: 12, paddingVertical: 8, alignItems: 'center' }}>
             {SUBJECTS.map((s) => (
               <FilterChip
                 key={s}

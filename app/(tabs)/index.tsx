@@ -105,10 +105,10 @@ export default function HomeScreen() {
   const notesProgress = Math.min(notesShared / 10, 1);
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#070810' }} edges={['top']}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        className="flex-1"
+        style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: 40 }}
       >
         {/* Greeting */}

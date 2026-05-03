@@ -22,7 +22,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0a122b"
+        "backgroundColor": "#070810"
       },
       "package": "com.medicohub.app"
     },

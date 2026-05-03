@@ -61,7 +61,7 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
       isRefreshing = true;
 
-      const { refreshToken, logout, setAccessToken } = useAuthStore.getState();
+      const { refreshToken, logout, setTokens } = useAuthStore.getState();
 
       if (!refreshToken) {
         logout();
@@ -70,11 +70,12 @@ apiClient.interceptors.response.use(
 
       try {
         const response = await axios.post(`${BASE_URL}/auth/refresh`, { refreshToken });
-        const { accessToken } = response.data;
-        setAccessToken(accessToken);
-        processQueue(null, accessToken);
+        const { accessToken: newAccess, refreshToken: newRefresh } = response.data.data ?? response.data;
+        // Always persist both tokens — refresh rotation means old refresh is now invalid
+        setTokens(newAccess, newRefresh ?? refreshToken);
+        processQueue(null, newAccess);
         if (originalRequest.headers) {
-          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+          originalRequest.headers.Authorization = `Bearer ${newAccess}`;
         }
         return apiClient(originalRequest);
       } catch (refreshError) {

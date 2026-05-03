@@ -832,14 +832,66 @@ export default function ExamScreen() {
             </View>
           </>
         ) : (
-          <View style={{ marginHorizontal: 20, marginTop: 40, alignItems: 'center' }}>
-            <View style={{ width: 80, height: 80, borderRadius: 28, backgroundColor: 'rgba(181,153,255,0.1)', borderWidth: 1, borderColor: 'rgba(181,153,255,0.18)', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
-              <Text style={{ fontSize: 36 }}>⚡</Text>
+          <View style={{ marginHorizontal: 20, marginTop: 8, paddingBottom: 20 }}>
+            {/* Hero */}
+            <View style={{ backgroundColor: '#10121e', borderRadius: 28, borderWidth: 1, borderColor: 'rgba(207,188,255,0.12)', padding: 24, marginBottom: 16, overflow: 'hidden' }}>
+              <View style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(207,188,255,0.06)' }} />
+              <View style={{ width: 52, height: 52, borderRadius: 18, backgroundColor: 'rgba(207,188,255,0.12)', borderWidth: 1, borderColor: 'rgba(207,188,255,0.2)', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                <Text style={{ fontSize: 26 }}>🧠</Text>
+              </View>
+              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: '#948e9d', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 6 }}>
+                AI-Powered
+              </Text>
+              <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 26, color: '#e1e3e4', letterSpacing: -0.4, lineHeight: 32, marginBottom: 10 }}>
+                Your personal{'\n'}exam coach
+              </Text>
+              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: '#948e9d', lineHeight: 21 }}>
+                Pick a subject above to generate topic-specific exam packs — MCQs, short answers, viva questions — all based on your actual syllabus.
+              </Text>
             </View>
-            <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 20, color: '#e1e3e4', letterSpacing: -0.2, marginBottom: 8, textAlign: 'center' }}>Select a Subject</Text>
-            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: '#948e9d', textAlign: 'center', lineHeight: 21, maxWidth: 260 }}>
-              Pick a subject above to generate your personalized AI exam pack
-            </Text>
+
+            {/* Feature cards */}
+            {[
+              {
+                icon: '📦', color: '#cfbcff',
+                label: 'Full Pack',
+                desc: '10 MCQs · 10 Short Qs · 10 Long Qs for a complete 100-mark paper',
+              },
+              {
+                icon: '⚡', color: '#fbbf24',
+                label: 'Quick Review',
+                desc: '15 high-yield short Q&As — perfect for last-minute revision before exams',
+              },
+              {
+                icon: '🎙️', color: '#4ade80',
+                label: 'Viva Only Pack',
+                desc: '15 examiner-style viva questions with crisp answers to ace your orals',
+              },
+              {
+                icon: '🔁', color: '#60a5fa',
+                label: 'Viva Practice',
+                desc: 'One question at a time — practice answering without peeking, then reveal the answer',
+              },
+            ].map((f) => (
+              <View key={f.label} style={{ backgroundColor: '#10121e', borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)', padding: 16, marginBottom: 10, flexDirection: 'row', alignItems: 'flex-start', gap: 14 }}>
+                <View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: `${f.color}15`, borderWidth: 1, borderColor: `${f.color}25`, alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Text style={{ fontSize: 20 }}>{f.icon}</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: '#e1e3e4', marginBottom: 4 }}>{f.label}</Text>
+                  <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: '#948e9d', lineHeight: 18 }}>{f.desc}</Text>
+                </View>
+              </View>
+            ))}
+
+            {/* Tip */}
+            <View style={{ marginTop: 6, backgroundColor: 'rgba(207,188,255,0.05)', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(207,188,255,0.1)', padding: 14, flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
+              <Text style={{ fontSize: 16 }}>💡</Text>
+              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: '#948e9d', lineHeight: 18, flex: 1 }}>
+                <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#cfbcff' }}>Pro tip: </Text>
+                Enter specific topics like "Krebs cycle, Glycolysis" instead of just "Biochemistry" to get laser-focused exam questions.
+              </Text>
+            </View>
           </View>
         )}
       </ScrollView>

@@ -584,7 +584,7 @@ export default function NotesScreen() {
       {/* ── Header ── */}
       <View style={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 0 }}>
         {/* Title row */}
-        <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 24 }}>
           <View>
             <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: '#948e9d', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 6 }}>
               Resource Hub
@@ -597,15 +597,23 @@ export default function NotesScreen() {
             onPress={() => setShowUpload(true)}
             activeOpacity={0.85}
             style={{
-              width: 44, height: 44, borderRadius: 14,
-              backgroundColor: 'rgba(207,188,255,0.12)',
-              borderWidth: 1, borderColor: 'rgba(207,188,255,0.22)',
-              alignItems: 'center', justifyContent: 'center',
-              marginTop: 6,
-              shadowColor: '#cfbcff', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.2, shadowRadius: 10,
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: '#cfbcff',
+              paddingHorizontal: 16,
+              paddingVertical: 8,
+              borderRadius: 999,
+              gap: 6,
+              marginBottom: 4, // subtle lift to align better with text baseline
+              shadowColor: '#cfbcff',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 12,
+              elevation: 4,
             }}
           >
-            <Ionicons name="arrow-up-outline" size={20} color="#cfbcff" />
+            <Ionicons name="arrow-up-outline" size={16} color="#39197c" />
+            <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 12, color: '#39197c' }}>Upload</Text>
           </TouchableOpacity>
         </View>
 

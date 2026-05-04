@@ -343,8 +343,9 @@ export default function NotesScreen() {
   const [pickedFile, setPickedFile] = useState<PickedFile | null>(null);
   const [fulfillRequestId, setFulfillRequestId] = useState<string | null>(null);
 
-  const COLLAPSE_HEIGHT = 100;
-  const collapseProgress = useRef(new Animated.Value(0)).current;
+  const measuredContentHeight = useRef(300);
+  const collapsibleHeightAnim = useRef(new Animated.Value(300)).current;
+  const collapsibleIsExpanded = useRef(true);
   const lastScrollY = useRef(0);
   const scrollDirection = useRef<'up' | 'down' | null>(null);
 
@@ -354,7 +355,6 @@ export default function NotesScreen() {
     const diff = y - lastScrollY.current;
     lastScrollY.current = y;
 
-    // Ignore tiny jitter and overscroll bounce at the bottom
     if (Math.abs(diff) < 1) return;
     const distanceFromBottom = contentSize.height - layoutMeasurement.height - y;
     if (distanceFromBottom < 40 && diff > 0) return;
@@ -363,9 +363,13 @@ export default function NotesScreen() {
     if (newDir === scrollDirection.current) return;
     scrollDirection.current = newDir;
 
-    collapseProgress.stopAnimation(() => {
-      Animated.timing(collapseProgress, {
-        toValue: newDir === 'down' ? 1 : 0,
+    const shouldCollapse = newDir === 'down';
+    if (shouldCollapse === !collapsibleIsExpanded.current) return;
+    collapsibleIsExpanded.current = !shouldCollapse;
+
+    collapsibleHeightAnim.stopAnimation(() => {
+      Animated.timing(collapsibleHeightAnim, {
+        toValue: shouldCollapse ? 0 : measuredContentHeight.current,
         duration: 200,
         useNativeDriver: false,
         isInteraction: false,
@@ -373,14 +377,9 @@ export default function NotesScreen() {
     });
   };
 
-  const collapsibleHeight = collapseProgress.interpolate({
-    inputRange: [0, 1],
-    outputRange: [COLLAPSE_HEIGHT, 0],
-    extrapolate: 'clamp',
-  });
-  const collapsibleOpacity = collapseProgress.interpolate({
-    inputRange: [0, 0.7],
-    outputRange: [1, 0],
+  const collapsibleOpacity = collapsibleHeightAnim.interpolate({
+    inputRange: [0, 60],
+    outputRange: [0, 1],
     extrapolate: 'clamp',
   });
 
@@ -665,7 +664,16 @@ export default function NotesScreen() {
 
       {/* ── Collapsible: search + filters (notes tab only) ── */}
       {activeTab === 'notes' && (
-        <Animated.View style={{ overflow: 'hidden', height: collapsibleHeight, opacity: collapsibleOpacity, minHeight: 0 }}>
+        <Animated.View style={{ overflow: 'hidden', height: collapsibleHeightAnim, opacity: collapsibleOpacity, minHeight: 0 }}>
+          <View onLayout={(e) => {
+            const h = e.nativeEvent.layout.height;
+            if (h > 0 && h !== measuredContentHeight.current) {
+              measuredContentHeight.current = h;
+              if (collapsibleIsExpanded.current) {
+                collapsibleHeightAnim.setValue(h);
+              }
+            }
+          }}>
           {/* Search bar */}
           <View style={{ paddingHorizontal: 20, marginTop: 16, marginBottom: 12 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#10121e', borderRadius: 18, paddingHorizontal: 14, paddingVertical: 11, borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' }}>
@@ -688,7 +696,7 @@ export default function NotesScreen() {
             </View>
           </View>
           {/* Single merged filter row: subjects | divider | types */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingLeft: 20, paddingRight: 12, alignItems: 'center' }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingLeft: 20, paddingRight: 12, paddingVertical: 8, alignItems: 'center' }}>
             {SUBJECTS.map((s) => (
               <FilterChip
                 key={s}
@@ -709,6 +717,7 @@ export default function NotesScreen() {
               />
             ))}
           </ScrollView>
+          </View>
         </Animated.View>
       )}
 

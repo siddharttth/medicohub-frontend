@@ -45,19 +45,46 @@ export interface ExamPackPYQ {
   type: string;
 }
 
+export interface ExamPackMCQ {
+  question: string;
+  options: string[];
+  answer: string;
+}
+
+export interface ExamPackQA {
+  question: string;
+  answer: string;
+}
+
 export interface ExamPack {
+  _id?: string;
+  status?: 'pending' | 'done' | 'failed';
   subject: string;
   packType?: string;
-  topics?: ExamPackTopic[];
-  mnemonics?: string[];
-  pyqs?: ExamPackPYQ[];
-  tips?: string;
+  inputTopics?: string[];
+  // full-pack
+  mcqs?: ExamPackMCQ[];
+  shortQuestions?: ExamPackQA[];
+  longQuestions?: string[];
+  // quick-review
+  reviewQuestions?: ExamPackQA[];
+  // viva-only
+  vivaQuestions?: ExamPackQA[];
   generatedAt?: string;
 }
 
 export interface VivaQ {
   question: string;
   answer: string;
+}
+
+export interface DailyUsage {
+  packsUsed: number;
+  packsLimit: number;
+  packsRemaining: number;
+  vivaUsed: number;
+  vivaLimit: number;
+  vivaRemaining: number;
 }
 
 export interface Topic {

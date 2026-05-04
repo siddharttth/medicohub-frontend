@@ -217,6 +217,10 @@ export default function HomeScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: '#070810' }} edges={['top']}>
       <ScrollView
         showsVerticalScrollIndicator={false}
+<<<<<<< HEAD
+=======
+        style={{ flex: 1 }}
+>>>>>>> 386d02674064c8929dfad979249766d589e5138d
         contentContainerStyle={{ paddingBottom: 40 }}
       >
         {/* Greeting */}
@@ -254,6 +258,7 @@ export default function HomeScreen() {
             marginHorizontal: 20,
             marginBottom: 24,
             borderRadius: 28,
+<<<<<<< HEAD
             overflow: 'hidden',
             borderWidth: 1,
             borderColor: 'rgba(207,188,255,0.18)',
@@ -265,6 +270,18 @@ export default function HomeScreen() {
             end={{ x: 1, y: 1 }}
             style={{
               width: '100%',
+=======
+          }}
+        >
+          <LinearGradient
+            colors={['#2a1f3d', '#1a1530']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              borderRadius: 28,
+              borderWidth: 1,
+              borderColor: 'rgba(181,153,255,0.35)',
+>>>>>>> 386d02674064c8929dfad979249766d589e5138d
               padding: 26,
               backgroundColor: '#10121e',
             }}
@@ -272,12 +289,21 @@ export default function HomeScreen() {
             <View style={{ marginBottom: 20 }}>
               <View
                 style={{
+<<<<<<< HEAD
                   alignSelf: 'flex-start',
                   paddingHorizontal: 12,
                   paddingVertical: 6,
                   borderRadius: 999,
                   backgroundColor: 'rgba(124,58,237,0.18)',
                   marginBottom: 12,
+=======
+                  width: 44,
+                  height: 44,
+                  borderRadius: 14,
+                  backgroundColor: 'rgba(181,153,255,0.3)',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+>>>>>>> 386d02674064c8929dfad979249766d589e5138d
                 }}
               >
                 <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: '#c4b5fd', letterSpacing: 1.5, textTransform: 'uppercase' }}>

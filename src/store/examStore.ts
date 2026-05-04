@@ -1,32 +1,41 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ExamPack, VivaQ, Topic, Subject } from '../types';
+import { ExamPack, VivaQ, Topic, Subject, DailyUsage } from '../types';
 
-const PACK_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const PACK_TTL_MS = 24 * 60 * 60 * 1000;
 const MAX_PACKS_PER_SUBJECT = 3;
 
 export interface StoredPack {
-  pack: ExamPack;
-  generatedAt: number; // timestamp
+  pack: ExamPack & { _id?: string; status?: string };
+  generatedAt: number;
   examType: string;
+  topics?: string[];
 }
 
 interface ExamState {
   selectedSubject: Subject | null;
-  // packs stored per subject: { [subject]: StoredPack[] }
   packsBySubject: Record<string, StoredPack[]>;
-  vivaQuestion: VivaQ | null;
-  // topic completion stored per subject: { [subject]: Record<topicId, boolean> }
+  // viva questions per subject (today's session)
+  vivasBySubject: Record<string, VivaQ[]>;
+  vivaTopics: string[];
   completionsBySubject: Record<string, Record<string, boolean>>;
   topics: Topic[];
   isGenerating: boolean;
   isAskingViva: boolean;
+  dailyUsage: DailyUsage | null;
 
   setSubject: (s: Subject) => void;
-  addPack: (pack: ExamPack, examType: string) => void;
+  addPack: (pack: ExamPack & { _id?: string; status?: string }, examType: string, topics: string[]) => void;
+  updatePack: (packId: string, updated: Partial<ExamPack & { _id?: string; status?: string }>) => void;
   getActivePacks: (subject: Subject) => StoredPack[];
-  setVivaQuestion: (q: VivaQ) => void;
+  setPacksForSubject: (subject: Subject, packs: Array<ExamPack & { _id?: string; status?: string }>) => void;
+
+  addVivaQuestion: (subject: Subject, q: VivaQ) => void;
+  setVivaQuestions: (subject: Subject, qs: VivaQ[]) => void;
+  getVivaQuestions: (subject: Subject) => VivaQ[];
+  setVivaTopics: (t: string[]) => void;
+
   setTopics: (topics: Topic[]) => void;
   toggleTopic: (id: string) => void;
   addTopic: (title: string) => void;
@@ -34,11 +43,14 @@ interface ExamState {
   deleteTopic: (id: string) => void;
   setIsGenerating: (v: boolean) => void;
   setIsAskingViva: (v: boolean) => void;
+  setDailyUsage: (u: DailyUsage) => void;
   reset: () => void;
 
   // legacy compat
   generatedPack: ExamPack | null;
   setPack: (p: ExamPack) => void;
+  vivaQuestion: VivaQ | null;
+  setVivaQuestion: (q: VivaQ | null) => void;
 }
 
 export const useExamStore = create<ExamState>()(
@@ -46,31 +58,32 @@ export const useExamStore = create<ExamState>()(
     (set, get) => ({
       selectedSubject: null,
       packsBySubject: {},
+      vivasBySubject: {},
       generatedPack: null,
       vivaQuestion: null,
+      vivaTopics: [],
       completionsBySubject: {},
       topics: [],
       isGenerating: false,
       isAskingViva: false,
+      dailyUsage: null,
 
       setSubject: (s) => {
         const state = get();
-        // Rehydrate topics with saved completions for this subject
         const completions = state.completionsBySubject[s] ?? {};
         const rehydrated = state.topics.map((t) =>
           completions[t.id] !== undefined ? { ...t, completed: completions[t.id] } : t
         );
-        set({ selectedSubject: s, topics: rehydrated });
+        set({ selectedSubject: s, topics: rehydrated, vivaTopics: [] });
       },
 
-      addPack: (pack, examType) =>
+      addPack: (pack, examType, topics) =>
         set((state) => {
-          const subject = pack.subject ?? state.selectedSubject ?? '';
+          const subject = (pack.subject ?? state.selectedSubject ?? '') as Subject;
           const existing = (state.packsBySubject[subject] ?? []).filter(
             (p) => Date.now() - p.generatedAt < PACK_TTL_MS
           );
-          // cap at MAX_PACKS_PER_SUBJECT, dropping oldest if needed
-          const updated = [...existing, { pack, generatedAt: Date.now(), examType }]
+          const updated = [...existing, { pack, generatedAt: Date.now(), examType, topics }]
             .slice(-MAX_PACKS_PER_SUBJECT);
           return {
             packsBySubject: { ...state.packsBySubject, [subject]: updated },
@@ -78,21 +91,54 @@ export const useExamStore = create<ExamState>()(
           };
         }),
 
-      getActivePacks: (subject) => {
-        const packs = get().packsBySubject[subject] ?? [];
-        return packs.filter((p) => Date.now() - p.generatedAt < PACK_TTL_MS);
-      },
+      updatePack: (packId, updated) =>
+        set((state) => {
+          const next: Record<string, StoredPack[]> = {};
+          for (const [subj, packs] of Object.entries(state.packsBySubject)) {
+            next[subj] = packs.map((sp) =>
+              sp.pack._id === packId ? { ...sp, pack: { ...sp.pack, ...updated } } : sp
+            );
+          }
+          return { packsBySubject: next };
+        }),
+
+      setPacksForSubject: (subject, packs) =>
+        set((state) => {
+          const mapped: StoredPack[] = packs.map((p) => ({
+            pack: p,
+            generatedAt: p.generatedAt ? new Date(p.generatedAt).getTime() : Date.now(),
+            examType: p.packType ?? 'full-pack',
+            topics: p.inputTopics ?? [],
+          }));
+          return { packsBySubject: { ...state.packsBySubject, [subject]: mapped } };
+        }),
+
+      getActivePacks: (subject) =>
+        (get().packsBySubject[subject] ?? []).filter(
+          (p) => Date.now() - p.generatedAt < PACK_TTL_MS
+        ),
+
+      addVivaQuestion: (subject, q) =>
+        set((state) => {
+          const existing = state.vivasBySubject[subject] ?? [];
+          return { vivasBySubject: { ...state.vivasBySubject, [subject]: [...existing, q] } };
+        }),
+
+      setVivaQuestions: (subject, qs) =>
+        set((state) => ({ vivasBySubject: { ...state.vivasBySubject, [subject]: qs } })),
+
+      getVivaQuestions: (subject) => get().vivasBySubject[subject] ?? [],
 
       setPack: (p) => set({ generatedPack: p }),
-
       setVivaQuestion: (q) => set({ vivaQuestion: q }),
+      setVivaTopics: (t) => set({ vivaTopics: t }),
+      setDailyUsage: (u) => set({ dailyUsage: u }),
 
       setTopics: (topics) =>
         set((state) => {
           const subject = state.selectedSubject;
           if (!subject) return { topics };
           const completions = state.completionsBySubject[subject] ?? {};
-          // Merge backend topics with locally saved completions
           const merged = topics.map((t) =>
             completions[t.id] !== undefined ? { ...t, completed: completions[t.id] } : t
           );
@@ -121,27 +167,21 @@ export const useExamStore = create<ExamState>()(
 
       addTopic: (title) =>
         set((state) => ({
-          topics: [
-            ...state.topics,
-            { id: `local-${Date.now()}`, title, yield: 'medium', completed: false },
-          ],
+          topics: [...state.topics, { id: `local-${Date.now()}`, title, yield: 'medium', completed: false }],
         })),
 
       editTopic: (id, title) =>
-        set((state) => ({
-          topics: state.topics.map((t) => (t.id === id ? { ...t, title } : t)),
-        })),
+        set((state) => ({ topics: state.topics.map((t) => (t.id === id ? { ...t, title } : t)) })),
 
       deleteTopic: (id) =>
-        set((state) => ({
-          topics: state.topics.filter((t) => t.id !== id),
-        })),
+        set((state) => ({ topics: state.topics.filter((t) => t.id !== id) })),
 
       reset: () =>
         set({
           selectedSubject: null,
           generatedPack: null,
           vivaQuestion: null,
+          vivaTopics: [],
           topics: [],
           isGenerating: false,
           isAskingViva: false,
@@ -150,10 +190,11 @@ export const useExamStore = create<ExamState>()(
     {
       name: 'exam-store',
       storage: createJSONStorage(() => AsyncStorage),
-      // Only persist pack cache + completions; don't persist loading states
       partialize: (state) => ({
         packsBySubject: state.packsBySubject,
+        vivasBySubject: state.vivasBySubject,
         completionsBySubject: state.completionsBySubject,
+        vivaTopics: state.vivaTopics,
       }),
     }
   )

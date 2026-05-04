@@ -7,85 +7,91 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:4000/api';
 const SOCKET_URL = API_URL.replace('/api', '');
 
 interface DropsState {
-  messages: Message[];
+  // per-subject message cache — messages stay across subject switches
+  messagesBySubject: Record<string, Message[]>;
   pinnedMessages: Message[];
   isTyping: boolean;
   onlineCount: number;
   socket: Socket | null;
-  addMessage: (m: Message) => void;
-  setMessages: (messages: Message[]) => void;
+
+  getMessages: (subject: string) => Message[];
+  addMessage: (subject: string, m: Message) => void;
+  setMessages: (subject: string, messages: Message[]) => void;
+  prependMessages: (subject: string, messages: Message[]) => void;
   setPinnedMessages: (messages: Message[]) => void;
   setTyping: (b: boolean) => void;
   setOnlineCount: (n: number) => void;
   initSocket: (token: string) => void;
-  joinSubject: (subject: string) => void;
   disconnect: () => void;
 }
 
 export const useDropsStore = create<DropsState>((set, get) => ({
-  messages: [],
+  messagesBySubject: {},
   pinnedMessages: [],
   isTyping: false,
   onlineCount: 0,
   socket: null,
 
-  // Deduplicate by id to prevent double-add from API + socket
-  addMessage: (m) =>
+  getMessages: (subject) => get().messagesBySubject[subject] ?? [],
+
+  addMessage: (subject, m) =>
     set((state) => {
-      if (state.messages.some((msg) => msg.id === m.id)) return state;
-      return { messages: [m, ...state.messages] };
+      const existing = state.messagesBySubject[subject] ?? [];
+      // dedupe by id
+      if (existing.some((e) => e.id === m.id)) return state;
+      return { messagesBySubject: { ...state.messagesBySubject, [subject]: [m, ...existing] } };
     }),
 
-  setMessages: (messages) => set({ messages }),
+  setMessages: (subject, messages) =>
+    set((state) => ({
+      messagesBySubject: { ...state.messagesBySubject, [subject]: messages },
+    })),
+
+  // merge older messages (for pagination) without duplicates
+  prependMessages: (subject, messages) =>
+    set((state) => {
+      const existing = state.messagesBySubject[subject] ?? [];
+      const existingIds = new Set(existing.map((m) => m.id));
+      const fresh = messages.filter((m) => !existingIds.has(m.id));
+      return { messagesBySubject: { ...state.messagesBySubject, [subject]: [...existing, ...fresh] } };
+    }),
+
   setPinnedMessages: (pinnedMessages) => set({ pinnedMessages }),
   setTyping: (b) => set({ isTyping: b }),
   setOnlineCount: (n) => set({ onlineCount: n }),
-
-  joinSubject: (subject) => {
-    const { socket } = get();
-    if (socket?.connected) {
-      socket.emit('join-subject', subject);
-    }
-  },
 
   initSocket: (token) => {
     const existing = get().socket;
     if (existing?.connected) return;
 
-    // Fix 1: connect to /drops namespace
+    // Fix: connect to /drops namespace
     const socket = io(`${SOCKET_URL}/drops`, {
       auth: { token },
       transports: ['websocket'],
       reconnection: true,
-      reconnectionAttempts: 5,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
     });
 
-    socket.on('connect', () => {
-      console.log('[Socket] Connected to /drops');
-    });
+    socket.on('connect', () => console.log('[Socket] Connected'));
 
-    socket.on('online_count', (count: number) => {
-      set({ onlineCount: count });
-    });
+    socket.on('online_count', (count: number) => set({ onlineCount: count }));
 
-    // Fix 2: listen for 'new-drop' (backend event name)
-    // Fix 3: normalize raw MongoDB doc → Message shape
+    // Fix: backend emits 'new-drop', normalize raw MongoDB doc
     socket.on('new-drop', (rawDrop: any) => {
       const message = normalizeDrop(rawDrop);
-      set((state) => {
-        // Fix 4: deduplicate — skip if already added via API response
-        if (state.messages.some((m) => m.id === message.id)) return state;
-        return { messages: [message, ...state.messages] };
-      });
+      const subject = rawDrop.subject ?? (socket as any)._currentSubject ?? '';
+      if (subject) {
+        set((state) => {
+          const existing = state.messagesBySubject[subject] ?? [];
+          if (existing.some((e) => e.id === message.id)) return state;
+          return { messagesBySubject: { ...state.messagesBySubject, [subject]: [message, ...existing] } };
+        });
+      }
     });
 
-    socket.on('typing', ({ isTyping }: { isTyping: boolean }) => {
-      set({ isTyping });
-    });
-
-    socket.on('disconnect', () => {
-      console.log('[Socket] Disconnected');
-    });
+    socket.on('typing', ({ isTyping }: { isTyping: boolean }) => set({ isTyping }));
+    socket.on('disconnect', () => console.log('[Socket] Disconnected'));
 
     set({ socket });
   },

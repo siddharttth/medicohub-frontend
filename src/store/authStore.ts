@@ -20,7 +20,8 @@ interface AuthState {
   logout: () => Promise<void>;
   hydrate: () => Promise<void>;
   updateUser: (user: Partial<User>) => void;
-  setAccessToken: (token: string, refreshToken?: string) => void;
+  setAccessToken: (token: string) => void;
+  setTokens: (accessToken: string, refreshToken: string) => void;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -75,16 +76,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     });
   },
 
-  setAccessToken: (token, newRefreshToken) => {
-    set({ accessToken: token, ...(newRefreshToken ? { refreshToken: newRefreshToken } : {}) });
+  setAccessToken: (token) => {
+    set({ accessToken: token });
     AsyncStorage.getItem(STORAGE_KEY).then((raw) => {
       if (raw) {
         const stored: StoredAuth = JSON.parse(raw);
-        AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({
-          ...stored,
-          accessToken: token,
-          ...(newRefreshToken ? { refreshToken: newRefreshToken } : {}),
-        }));
+        AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ ...stored, accessToken: token }));
+      }
+    });
+  },
+
+  setTokens: (accessToken, refreshToken) => {
+    set({ accessToken, refreshToken });
+    AsyncStorage.getItem(STORAGE_KEY).then((raw) => {
+      if (raw) {
+        const stored: StoredAuth = JSON.parse(raw);
+        AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ ...stored, accessToken, refreshToken }));
       }
     });
   },

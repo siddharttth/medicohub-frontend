@@ -60,7 +60,7 @@ export const TopicChecklist: React.FC<TopicChecklistProps> = ({
   return (
     <View>
       {topics.length === 0 && !showAddInput && (
-        <Text className="text-on-surface-variant text-sm text-center py-4">
+        <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: '#948e9d', textAlign: 'center', paddingVertical: 20 }}>
           No topics yet — generate a pack or add your own.
         </Text>
       )}
@@ -70,18 +70,27 @@ export const TopicChecklist: React.FC<TopicChecklistProps> = ({
           key={item.id}
           style={{
             borderBottomWidth: index < topics.length - 1 ? 1 : 0,
-            borderBottomColor: 'rgba(73,69,81,0.4)',
+            borderBottomColor: 'rgba(255,255,255,0.05)',
           }}
         >
           {editingId === item.id ? (
-            /* ── Edit mode ── */
-            <View className="flex-row items-center py-2 gap-2">
+            <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 10, gap: 8 }}>
               <TextInput
                 value={editText}
                 onChangeText={setEditText}
                 autoFocus
-                className="flex-1 text-on-surface font-inter text-sm bg-surface-container border border-primary rounded-lg px-3 py-2"
-                style={{ fontSize: 14 }}
+                style={{
+                  flex: 1,
+                  fontFamily: 'Inter_400Regular',
+                  fontSize: 14,
+                  color: '#e1e3e4',
+                  backgroundColor: 'rgba(255,255,255,0.04)',
+                  borderWidth: 1,
+                  borderColor: 'rgba(207,188,255,0.3)',
+                  borderRadius: 12,
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
+                }}
                 onSubmitEditing={handleSaveEdit}
                 returnKeyType="done"
               />
@@ -96,9 +105,7 @@ export const TopicChecklist: React.FC<TopicChecklistProps> = ({
               </TouchableOpacity>
             </View>
           ) : (
-            /* ── Normal row ── */
-            <View className="flex-row items-center py-3">
-              {/* Checkbox */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 12 }}>
               <TouchableOpacity
                 onPress={() => onToggle(item.id)}
                 hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
@@ -115,63 +122,68 @@ export const TopicChecklist: React.FC<TopicChecklistProps> = ({
                 )}
               </TouchableOpacity>
 
-              {/* Title */}
               <Text
-                className="flex-1 font-inter text-sm"
                 style={{
-                  color: item.completed ? '#494551' : '#dce1ff',
+                  flex: 1,
+                  fontFamily: 'Inter_400Regular',
+                  fontSize: 14,
+                  lineHeight: 20,
+                  color: item.completed ? '#494551' : '#c8cdd0',
                   textDecorationLine: item.completed ? 'line-through' : 'none',
                 }}
               >
                 {item.title}
               </Text>
 
-              {/* Yield badge */}
-              <View
-                style={{
-                  paddingHorizontal: 6, paddingVertical: 2,
-                  borderRadius: 999, marginLeft: 6,
-                  backgroundColor: `${yieldColor(item.yield)}22`,
-                }}
-              >
-                <Text style={{ fontSize: 10, color: yieldColor(item.yield), fontWeight: '600' }}>
+              <View style={{
+                paddingHorizontal: 7, paddingVertical: 2, borderRadius: 999,
+                backgroundColor: `${yieldColor(item.yield)}18`, marginLeft: 6,
+              }}>
+                <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 9, color: yieldColor(item.yield), letterSpacing: 0.8 }}>
                   {item.yield?.toUpperCase()}
                 </Text>
               </View>
 
-              {/* Edit button */}
               <TouchableOpacity
                 onPress={() => handleStartEdit(item)}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 4 }}
-                style={{ marginLeft: 8 }}
+                style={{ marginLeft: 10 }}
               >
-                <Ionicons name="pencil-outline" size={15} color="#948e9d" />
+                <Ionicons name="pencil-outline" size={15} color="#494551" />
               </TouchableOpacity>
 
-              {/* Delete button */}
               <TouchableOpacity
                 onPress={() => handleDelete(item.id, item.title)}
                 hitSlop={{ top: 8, bottom: 8, left: 4, right: 8 }}
-                style={{ marginLeft: 6 }}
+                style={{ marginLeft: 8 }}
               >
-                <Ionicons name="trash-outline" size={15} color="#ff4444" />
+                <Ionicons name="trash-outline" size={15} color="rgba(255,100,100,0.5)" />
               </TouchableOpacity>
             </View>
           )}
         </View>
       ))}
 
-      {/* Add new topic */}
       {showAddInput ? (
-        <View className="flex-row items-center pt-3 gap-2">
+        <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 12, gap: 8 }}>
           <TextInput
             value={newTopicText}
             onChangeText={setNewTopicText}
             placeholder="e.g. Brachial Plexus..."
             placeholderTextColor="#494551"
             autoFocus
-            className="flex-1 text-on-surface font-inter text-sm bg-surface-container border border-outline-variant rounded-lg px-3 py-2"
-            style={{ fontSize: 14 }}
+            style={{
+              flex: 1,
+              fontFamily: 'Inter_400Regular',
+              fontSize: 14,
+              color: '#e1e3e4',
+              backgroundColor: 'rgba(255,255,255,0.04)',
+              borderWidth: 1,
+              borderColor: 'rgba(255,255,255,0.08)',
+              borderRadius: 12,
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+            }}
             onSubmitEditing={handleAdd}
             returnKeyType="done"
           />
@@ -188,11 +200,13 @@ export const TopicChecklist: React.FC<TopicChecklistProps> = ({
       ) : (
         <TouchableOpacity
           onPress={() => setShowAddInput(true)}
-          className="flex-row items-center pt-3 mt-1"
           activeOpacity={0.7}
+          style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 14, marginTop: 2 }}
         >
           <Ionicons name="add-circle-outline" size={18} color="#cfbcff" />
-          <Text className="text-primary font-inter-medium text-sm ml-2">Add topic</Text>
+          <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: '#cfbcff', marginLeft: 8 }}>
+            Add topic
+          </Text>
         </TouchableOpacity>
       )}
     </View>

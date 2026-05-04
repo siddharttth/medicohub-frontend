@@ -16,74 +16,128 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, currentUs
   const body = message.content || message.text || '';
   const time = message.createdAt ? format(new Date(message.createdAt), 'HH:mm') : '';
 
+  // Own message — right-aligned, purple fill
   if (isCurrentUser) {
     return (
-      <View className="items-end mb-3 px-4">
+      <View style={{ alignItems: 'flex-end', marginBottom: 10, paddingHorizontal: 20 }}>
         <View
-          className="max-w-[75%] px-4 py-3"
           style={{
+            maxWidth: '78%',
             backgroundColor: '#cfbcff',
-            borderTopLeftRadius: 24,
-            borderBottomLeftRadius: 24,
-            borderTopRightRadius: 4,
-            borderBottomRightRadius: 24,
+            paddingHorizontal: 16,
+            paddingVertical: 11,
+            borderTopLeftRadius: 22,
+            borderBottomLeftRadius: 22,
+            borderTopRightRadius: 6,
+            borderBottomRightRadius: 22,
+            shadowColor: '#cfbcff',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.2,
+            shadowRadius: 8,
           }}
         >
-          <Text style={{ color: '#39197c', fontWeight: '500', fontSize: 14 }}>{body}</Text>
+          <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 14, color: '#39197c', lineHeight: 20 }}>
+            {body}
+          </Text>
         </View>
-        <Text className="text-outline text-xs mt-1">{time}</Text>
+        <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 10, color: '#494551', marginTop: 4 }}>
+          {time}
+        </Text>
       </View>
     );
   }
 
+  // AI message — green-tinted surface
   if (isAI) {
     return (
-      <View className="items-start mb-3 px-4">
-        <View className="flex-row items-center mb-1">
-          <View className="w-5 h-5 rounded-full bg-green-600 items-center justify-center mr-2">
-            <Text style={{ fontSize: 10 }}>🤖</Text>
+      <View style={{ alignItems: 'flex-start', marginBottom: 10, paddingHorizontal: 20 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5, gap: 6 }}>
+          <View
+            style={{
+              width: 22,
+              height: 22,
+              borderRadius: 11,
+              backgroundColor: 'rgba(74,222,128,0.15)',
+              borderWidth: 1,
+              borderColor: 'rgba(74,222,128,0.3)',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Text style={{ fontSize: 11 }}>🤖</Text>
           </View>
-          <Text className="text-xs text-on-surface-variant font-inter-medium">MedicoAI</Text>
+          <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, color: '#4ade80', letterSpacing: 0.3 }}>
+            MedicoAI
+          </Text>
         </View>
         <View
-          className="max-w-[75%] px-4 py-3"
           style={{
-            backgroundColor: 'rgba(34,197,94,0.15)',
+            maxWidth: '78%',
+            backgroundColor: 'rgba(74,222,128,0.08)',
             borderWidth: 1,
-            borderColor: 'rgba(34,197,94,0.3)',
-            borderTopRightRadius: 24,
-            borderBottomRightRadius: 24,
-            borderTopLeftRadius: 4,
-            borderBottomLeftRadius: 24,
+            borderColor: 'rgba(74,222,128,0.2)',
+            paddingHorizontal: 16,
+            paddingVertical: 11,
+            borderTopRightRadius: 22,
+            borderBottomRightRadius: 22,
+            borderTopLeftRadius: 6,
+            borderBottomLeftRadius: 22,
           }}
         >
-          <Text className="text-on-surface text-sm font-inter">{body}</Text>
+          <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: '#e1e3e4', lineHeight: 21 }}>
+            {body}
+          </Text>
         </View>
-        <Text className="text-outline text-xs mt-1">{time}</Text>
+        <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 10, color: '#494551', marginTop: 4 }}>
+          {time}
+        </Text>
       </View>
     );
   }
 
+  // Other user message — left-aligned, dark surface
   return (
-    <View className="items-start mb-3 px-4">
-      <View className="flex-row items-center mb-1">
-        <View className="w-5 h-5 rounded-full bg-surface-container-high items-center justify-center mr-2">
+    <View style={{ alignItems: 'flex-start', marginBottom: 10, paddingHorizontal: 20 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5, gap: 6 }}>
+        <View
+          style={{
+            width: 22,
+            height: 22,
+            borderRadius: 11,
+            backgroundColor: 'rgba(255,255,255,0.06)',
+            borderWidth: 1,
+            borderColor: 'rgba(255,255,255,0.1)',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
           <Text style={{ fontSize: 10 }}>👤</Text>
         </View>
-        <Text className="text-xs text-on-surface-variant font-inter-medium">{senderName}</Text>
+        <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, color: '#948e9d', letterSpacing: 0.3 }}>
+          {senderName}
+        </Text>
       </View>
       <View
-        className="max-w-[75%] px-4 py-3 bg-surface-container-high"
         style={{
-          borderTopRightRadius: 24,
-          borderBottomRightRadius: 24,
-          borderTopLeftRadius: 4,
-          borderBottomLeftRadius: 24,
+          maxWidth: '78%',
+          backgroundColor: '#10121e',
+          borderWidth: 1,
+          borderColor: 'rgba(255,255,255,0.07)',
+          paddingHorizontal: 16,
+          paddingVertical: 11,
+          borderTopRightRadius: 22,
+          borderBottomRightRadius: 22,
+          borderTopLeftRadius: 6,
+          borderBottomLeftRadius: 22,
         }}
       >
-        <Text className="text-on-surface text-sm font-inter">{body}</Text>
+        <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: '#e1e3e4', lineHeight: 21 }}>
+          {body}
+        </Text>
       </View>
-      <Text className="text-outline text-xs mt-1">{time}</Text>
+      <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 10, color: '#494551', marginTop: 4 }}>
+        {time}
+      </Text>
     </View>
   );
 };

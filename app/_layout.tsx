@@ -15,6 +15,11 @@ import {
   Inter_700Bold,
 } from '@expo-google-fonts/inter';
 import { Caveat_400Regular, Caveat_700Bold } from '@expo-google-fonts/caveat';
+import {
+  NotoSerif_500Medium,
+  NotoSerif_600SemiBold,
+  NotoSerif_700Bold,
+} from '@expo-google-fonts/noto-serif';
 import { useAuthStore } from '../src/store/authStore';
 import { usersApi } from '../src/api/users';
 import { toastConfig } from '../src/components/ui/Toast';
@@ -68,6 +73,9 @@ export default function RootLayout() {
     Inter_700Bold,
     Caveat_400Regular,
     Caveat_700Bold,
+    NotoSerif_500Medium,
+    NotoSerif_600SemiBold,
+    NotoSerif_700Bold,
   });
 
   useEffect(() => {
@@ -80,8 +88,8 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
-          <StatusBar style="light" backgroundColor="#0a122b" />
-          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0a122b' } }}>
+          <StatusBar style="light" backgroundColor="#070810" />
+          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#070810' } }}>
             <Stack.Screen name="index" />
             <Stack.Screen name="(auth)" />
             <Stack.Screen name="(tabs)" />

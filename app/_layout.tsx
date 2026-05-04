@@ -1,5 +1,6 @@
 import '../global.css';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { AppState, AppStateStatus } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -15,6 +16,7 @@ import {
 } from '@expo-google-fonts/inter';
 import { Caveat_400Regular, Caveat_700Bold } from '@expo-google-fonts/caveat';
 import { useAuthStore } from '../src/store/authStore';
+import { usersApi } from '../src/api/users';
 import { toastConfig } from '../src/components/ui/Toast';
 
 const queryClient = new QueryClient({
@@ -28,6 +30,36 @@ const queryClient = new QueryClient({
 
 export default function RootLayout() {
   const hydrate = useAuthStore((s) => s.hydrate);
+  const user = useAuthStore((s) => s.user);
+  const sessionStart = useRef<number | null>(null);
+
+  // Track active time and log to backend when app goes to background
+  useEffect(() => {
+    if (!user) return;
+    sessionStart.current = Date.now();
+
+    const handleAppState = (next: AppStateStatus) => {
+      if (next === 'active') {
+        sessionStart.current = Date.now();
+      } else if (next === 'background' || next === 'inactive') {
+        if (sessionStart.current) {
+          const minutes = Math.round((Date.now() - sessionStart.current) / 60000);
+          if (minutes >= 1) usersApi.logStudySession(minutes).catch(() => {});
+          sessionStart.current = null;
+        }
+      }
+    };
+
+    const sub = AppState.addEventListener('change', handleAppState);
+    return () => {
+      // Log remaining time on unmount
+      if (sessionStart.current) {
+        const minutes = Math.round((Date.now() - sessionStart.current) / 60000);
+        if (minutes >= 1) usersApi.logStudySession(minutes).catch(() => {});
+      }
+      sub.remove();
+    };
+  }, [user?.id]);
 
   const [fontsLoaded] = useFonts({
     Inter_400Regular,

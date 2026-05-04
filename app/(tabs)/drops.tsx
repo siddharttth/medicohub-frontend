@@ -148,7 +148,7 @@ export default function DropsScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         className="flex-1"
@@ -168,33 +168,37 @@ export default function DropsScreen() {
         </View>
 
         {/* Subject Selector */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 8 }}
-          style={{ flexGrow: 0 }}
-        >
-          {SUBJECTS.map((s) => (
-            <TouchableOpacity
-              key={s}
-              onPress={() => handleSubjectChange(s)}
-              className="mr-2 px-3 py-1.5 rounded-full"
-              style={{
-                backgroundColor: selectedSubject === s ? '#7c3aed' : 'rgba(255,255,255,0.06)',
-                borderWidth: 1,
-                borderColor: selectedSubject === s ? '#b599ff' : 'rgba(255,255,255,0.1)',
-              }}
-              activeOpacity={0.8}
-            >
-              <Text
-                className="font-inter-medium text-xs"
-                style={{ color: selectedSubject === s ? '#fff' : '#948e9d' }}
+        <View className="border-b border-outline-variant bg-surface-container" style={{ minHeight: 56 }}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={true}
+            contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10 }}
+            scrollIndicatorInsets={{ right: 16 }}
+            style={{ flexGrow: 0 }}
+          >
+            {SUBJECTS.map((s) => (
+              <TouchableOpacity
+                key={s}
+                onPress={() => handleSubjectChange(s)}
+                className="mr-3 px-4 py-2 rounded-full flex-shrink-0"
+                style={{
+                  backgroundColor: selectedSubject === s ? '#7c3aed' : 'rgba(255,255,255,0.06)',
+                  borderWidth: 1.5,
+                  borderColor: selectedSubject === s ? '#b599ff' : 'rgba(255,255,255,0.1)',
+                }}
+                activeOpacity={0.8}
               >
-                {s}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+                <Text
+                  className="font-inter-medium text-sm"
+                  style={{ color: selectedSubject === s ? '#fff' : '#948e9d' }}
+                  numberOfLines={1}
+                >
+                  {s}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
 
         {/* Messages */}
         {isLoading ? (

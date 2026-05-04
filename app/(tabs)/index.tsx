@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Animated, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
@@ -7,6 +7,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuthStore } from '../../src/store/authStore';
 import { usersApi } from '../../src/api/users';
+import { notesApi } from '../../src/api/notes';
+import { Note } from '../../src/types';
 import { ProgressBar } from '../../src/components/ui/ProgressBar';
 
 const getGreeting = () => {
@@ -37,21 +39,20 @@ function StatCard({
     }).start();
   };
 
-  const onPressOut = () => {
-    Animated.spring(scale, {
-      toValue: 1,
-      useNativeDriver: true,
-      speed: 20,
-      bounciness: 10,
-    }).start();
-  };
-
+  const requestedSubjectColor = '#cfbcff';
   return (
     <Animated.View style={{ flex: 1, transform: [{ scale }] }}>
       <TouchableOpacity
         activeOpacity={1}
         onPressIn={onPressIn}
-        onPressOut={onPressOut}
+        onPressOut={() => {
+          Animated.spring(scale, {
+            toValue: 1,
+            useNativeDriver: true,
+            speed: 20,
+            bounciness: 10,
+          }).start();
+        }}
         style={{
           backgroundColor: '#10121e',
           borderRadius: 20,
@@ -88,6 +89,76 @@ function StatCard({
   );
 }
 
+function RecommendationCard({
+  note,
+  onPress,
+}: {
+  note: Note;
+  onPress: () => void;
+}) {
+  return (
+    <TouchableOpacity
+      activeOpacity={0.88}
+      onPress={onPress}
+      style={{
+        width: 240,
+        marginRight: 16,
+        backgroundColor: '#10121e',
+        borderRadius: 26,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.08)',
+        padding: 18,
+      }}
+    >
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 }}>
+        <Text
+          style={{
+            fontFamily: 'Inter_600SemiBold',
+            fontSize: 12,
+            color: '#948e9d',
+            textTransform: 'uppercase',
+            letterSpacing: 1.5,
+          }}
+        >
+          {note.subject}
+        </Text>
+        <Text style={{ fontSize: 12, color: '#7c3aed' }}>{note.noteType.toUpperCase()}</Text>
+      </View>
+      <Text
+        style={{
+          fontFamily: 'NotoSerif_700Bold',
+          fontSize: 18,
+          color: '#e1e3e4',
+          marginBottom: 10,
+          lineHeight: 24,
+        }}
+        numberOfLines={2}
+      >
+        {note.title}
+      </Text>
+      <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: '#9ca3af', marginBottom: 16 }} numberOfLines={2}>
+        by {note.author?.name ?? 'Senior'}
+      </Text>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Ionicons name="star" size={14} color="#fbbf24" />
+          <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: '#e1e3e4' }}>
+            {note.rating?.toFixed(1) ?? '0.0'}
+          </Text>
+        </View>
+        <View style={{
+          paddingHorizontal: 10,
+          paddingVertical: 6,
+          borderRadius: 999,
+          backgroundColor: 'rgba(124,58,237,0.12)',
+        }}>
+          <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: '#7c3aed' }}>View</Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
 export default function HomeScreen() {
   const user = useAuthStore((s) => s.user);
 
@@ -95,6 +166,13 @@ export default function HomeScreen() {
     queryKey: ['stats', user?.id],
     queryFn: () => usersApi.getStats(user!.id),
     enabled: !!user,
+  });
+
+  const { data: recommendations = [], isLoading: isLoadingRecommendations } = useQuery({
+    queryKey: ['recommendations', user?.id],
+    queryFn: () => notesApi.getTrending(),
+    enabled: !!user,
+    staleTime: 30_000,
   });
 
   const firstName = user?.name.split(' ')[0] ?? 'Doctor';
@@ -224,6 +302,68 @@ export default function HomeScreen() {
             </View>
           </LinearGradient>
         </TouchableOpacity>
+
+        {/* Recommendation Section */}
+        <View style={{ marginBottom: 24 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginHorizontal: 20, marginBottom: 14 }}>
+            <View>
+              <Text
+                style={{
+                  fontFamily: 'NotoSerif_600SemiBold',
+                  fontSize: 20,
+                  color: '#e1e3e4',
+                  marginBottom: 4,
+                }}
+              >
+                Recommended for you
+              </Text>
+              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: '#948e9d' }}>
+                Useful notes suggested based on trending study materials.
+              </Text>
+            </View>
+            <TouchableOpacity onPress={() => router.push('/(tabs)/notes')} activeOpacity={0.7}>
+              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: '#cfbcff' }}>See all</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 20 }}
+          >
+            {isLoadingRecommendations ? (
+              <View style={{ width: '100%', alignItems: 'center', justifyContent: 'center', paddingVertical: 24 }}>
+                <ActivityIndicator size="small" color="#cfbcff" />
+              </View>
+            ) : recommendations.length > 0 ? (
+              recommendations.map((note) => (
+                <RecommendationCard
+                  key={note.id}
+                  note={note}
+                  onPress={() => router.push('/(tabs)/notes')}
+                />
+              ))
+            ) : (
+              <View style={{ width: '100%', paddingHorizontal: 20 }}>
+                <View
+                  style={{
+                    backgroundColor: '#10121e',
+                    borderRadius: 24,
+                    borderWidth: 1,
+                    borderColor: 'rgba(255,255,255,0.08)',
+                    padding: 18,
+                  }}
+                >
+                  <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: '#e1e3e4', marginBottom: 8 }}>
+                    No recommended notes available yet.
+                  </Text>
+                  <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: '#9ca3af' }}>
+                    Explore the notes tab to discover more study material.
+                  </Text>
+                </View>
+              </View>
+            )}
+          </ScrollView>
+        </View>
 
         {/* Stats Row */}
         <View style={{ flexDirection: 'row', paddingHorizontal: 20, gap: 10, marginBottom: 24 }}>

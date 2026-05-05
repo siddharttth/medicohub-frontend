@@ -554,7 +554,6 @@ export default function NotesScreen() {
     mutationFn: ({ id, rating }: { id: string; rating: number }) => notesApi.rate(id, rating),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notes'] });
-      Toast.show({ type: 'success', text1: 'Star added!' });
     },
     onError: (e: any) => {
       Toast.show({ type: 'error', text1: e?.response?.data?.message ?? 'Failed to rate' });

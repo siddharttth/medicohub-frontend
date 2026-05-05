@@ -466,12 +466,15 @@ export default function ExamScreen() {
   });
 
   // ── Fetch topics checklist ──
-  useQuery({
+  const { data: fetchedTopics } = useQuery({
     queryKey: ['topics', selectedSubject],
     queryFn: () => examApi.getTopics(selectedSubject!),
     enabled: !!selectedSubject,
-    onSuccess: (data) => setTopics(data),
-  } as any);
+    staleTime: 5 * 60_000,
+  });
+  useEffect(() => {
+    if (fetchedTopics) setTopics(fetchedTopics);
+  }, [fetchedTopics]);
 
   // ── Load user's packs from DB when subject changes ──
   useEffect(() => {

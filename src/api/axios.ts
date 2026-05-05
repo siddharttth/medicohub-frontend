@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 import { useAuthStore } from '../store/authStore';
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:4000/api';
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://medicohub-backend-1.onrender.com/api';
 
 export const apiClient: AxiosInstance = axios.create({
   baseURL: BASE_URL,

@@ -3,7 +3,7 @@ import { io, Socket } from 'socket.io-client';
 import { Message } from '../types';
 import { normalizeDrop } from '../api/drops';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:4000/api';
+const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://medicohub-backend-1.onrender.com/api';
 const SOCKET_URL = API_URL.replace('/api', '');
 
 interface DropsState {

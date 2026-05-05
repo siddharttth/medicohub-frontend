@@ -36,6 +36,8 @@
       "expo-font",
       "./plugins/withAdiRegistration",
       "./plugins/withLocalProperties",
+      "./plugins/withR8Minify",
+      "./plugins/withProguardRules",
       [
         "expo-notifications",
         {

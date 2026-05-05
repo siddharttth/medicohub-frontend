@@ -229,11 +229,14 @@ export default function Onboarding() {
             label="Password"
             value={form.password}
             onChange={(v) => setForm((f) => ({ ...f, password: v }))}
-            placeholder="min. 6 characters"
+            placeholder="••••••••"
             secure
             icon="lock-closed-outline"
             autoCapitalize="none"
           />
+          <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: 'rgba(148,142,157,0.5)', marginTop: 6, marginBottom: 4 }}>
+            8+ chars with uppercase, lowercase, and number
+          </Text>
 
           {/* Year selector */}
           <View style={{ marginBottom: 28 }}>

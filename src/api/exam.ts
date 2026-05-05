@@ -57,6 +57,18 @@ export const examApi = {
   getTopics: (subject: Subject): Promise<Topic[]> =>
     apiClient.get(`/topics/${subject}`).then((r) => r.data.data.topics),
 
-  completeTopic: (topicId: string): Promise<Topic> =>
-    apiClient.patch(`/topics/${topicId}/complete`).then((r) => r.data.data),
+  completeTopic: (topicId: string, subject: string): Promise<Topic> =>
+    apiClient.patch(`/topics/${topicId}/complete`, { subject }).then((r) => r.data.data),
+
+  addCustomTopic: (subject: string, title: string): Promise<Topic> =>
+    apiClient.post(`/topics/${subject}/custom`, { title }).then((r) => r.data.data.topic),
+
+  editCustomTopic: (id: string, title: string): Promise<Topic> =>
+    apiClient.patch(`/topics/custom/${id}`, { title }).then((r) => r.data.data.topic),
+
+  deleteCustomTopic: (id: string): Promise<void> =>
+    apiClient.delete(`/topics/custom/${id}`).then(() => undefined),
+
+  getCustomTopics: (subject: string): Promise<Topic[]> =>
+    apiClient.get(`/topics/${subject}/custom`).then((r) => r.data.data.topics),
 };

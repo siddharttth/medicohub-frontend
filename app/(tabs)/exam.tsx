@@ -473,8 +473,11 @@ export default function ExamScreen() {
     staleTime: 5 * 60_000,
   });
   useEffect(() => {
-    if (fetchedTopics) setTopics(fetchedTopics);
-  }, [fetchedTopics]);
+    if (!fetchedTopics || !selectedSubject) return;
+    examApi.getCustomTopics(selectedSubject).then((custom) => {
+      setTopics([...fetchedTopics, ...custom]);
+    }).catch(() => { setTopics(fetchedTopics); });
+  }, [fetchedTopics, selectedSubject]);
 
   // ── Load user's packs from DB when subject changes ──
   useEffect(() => {
@@ -486,6 +489,26 @@ export default function ExamScreen() {
       setVivaQuestions(selectedSubject, qs);
     }).catch(() => {});
   }, [selectedSubject]);
+
+  const handleAddTopic = async (title: string) => {
+    if (!selectedSubject) return;
+    try {
+      const topic = await examApi.addCustomTopic(selectedSubject, title);
+      addTopic(topic.id, topic.title);
+    } catch {
+      addTopic(`local-${Date.now()}`, title);
+    }
+  };
+
+  const handleEditTopic = async (id: string, title: string) => {
+    editTopic(id, title);
+    if (!id.startsWith('local-')) examApi.editCustomTopic(id, title).catch(() => {});
+  };
+
+  const handleDeleteTopic = async (id: string) => {
+    deleteTopic(id);
+    if (!id.startsWith('local-')) examApi.deleteCustomTopic(id).catch(() => {});
+  };
 
   // ── Reload packs when screen refocuses ──
   useFocusEffect(
@@ -603,7 +626,7 @@ export default function ExamScreen() {
 
   const handleTopicToggle = (id: string) => {
     toggleTopic(id);
-    if (!id.startsWith('local-')) examApi.completeTopic(id).catch(() => {});
+    if (!id.startsWith('local-') && selectedSubject) examApi.completeTopic(id, selectedSubject).catch(() => {});
   };
 
   return (
@@ -831,7 +854,7 @@ export default function ExamScreen() {
                   </View>
                 )}
               </View>
-              <TopicChecklist topics={topics} onToggle={handleTopicToggle} onAdd={addTopic} onEdit={editTopic} onDelete={deleteTopic} />
+              <TopicChecklist topics={topics} onToggle={handleTopicToggle} onAdd={handleAddTopic} onEdit={handleEditTopic} onDelete={handleDeleteTopic} />
             </View>
           </>
         ) : (

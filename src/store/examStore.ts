@@ -38,7 +38,7 @@ interface ExamState {
 
   setTopics: (topics: Topic[]) => void;
   toggleTopic: (id: string) => void;
-  addTopic: (title: string) => void;
+  addTopic: (id: string, title: string) => void;
   editTopic: (id: string, title: string) => void;
   deleteTopic: (id: string) => void;
   setIsGenerating: (v: boolean) => void;
@@ -165,9 +165,9 @@ export const useExamStore = create<ExamState>()(
           return { topics: updated, completionsBySubject: completions };
         }),
 
-      addTopic: (title) =>
+      addTopic: (id, title) =>
         set((state) => ({
-          topics: [...state.topics, { id: `local-${Date.now()}`, title, yield: 'medium', completed: false }],
+          topics: [...state.topics, { id, title, yield: 'medium', completed: false }],
         })),
 
       editTopic: (id, title) =>

@@ -101,6 +101,9 @@ export default function Login() {
                 <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color="#494551" />
               </TouchableOpacity>
             </View>
+            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: 'rgba(148,142,157,0.5)', marginTop: 8 }}>
+              8+ chars with uppercase, lowercase, and number
+            </Text>
           </View>
 
           {/* Sign in button */}

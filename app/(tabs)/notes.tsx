@@ -131,6 +131,7 @@ function NoteCard({
 }) {
   const starScale = useRef(new Animated.Value(1)).current;
   const cardScale = useRef(new Animated.Value(1)).current;
+  const [flipped, setFlipped] = useState(false);
   const subjectColor = getSubjectColor(item.subject);
   const typeInfo = NOTE_TYPE_ICONS[item.noteType] ?? NOTE_TYPE_ICONS.pdf;
 
@@ -141,10 +142,29 @@ function NoteCard({
     ]).start(() => onStar());
   };
 
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+
+  const handleFlip = () => {
+    const direction = flipped ? 1 : -1;
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 0, duration: 120, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: direction * 18, duration: 120, useNativeDriver: true }),
+    ]).start(() => {
+      setFlipped((f) => !f);
+      slideAnim.setValue(-direction * 18);
+      Animated.parallel([
+        Animated.timing(fadeAnim, { toValue: 1, duration: 160, useNativeDriver: true }),
+        Animated.timing(slideAnim, { toValue: 0, duration: 160, useNativeDriver: true }),
+      ]).start();
+    });
+  };
+
   return (
     <Animated.View style={{ transform: [{ scale: cardScale }], marginHorizontal: 20, marginBottom: 16 }}>
       <TouchableOpacity
         activeOpacity={0.9}
+        onPress={handleFlip}
         onPressIn={() =>
           Animated.spring(cardScale, { toValue: 0.97, useNativeDriver: true, speed: 40, bounciness: 0 }).start()
         }
@@ -155,10 +175,39 @@ function NoteCard({
           backgroundColor: '#10121e',
           borderRadius: 28,
           borderWidth: 1,
-          borderColor: `${subjectColor.text}20`,
+          borderColor: flipped ? `${subjectColor.text}40` : `${subjectColor.text}20`,
           padding: 22,
+          minHeight: 180,
         }}
       >
+        <Animated.View style={{ opacity: fadeAnim, transform: [{ translateX: slideAnim }] }}>
+        {flipped ? (
+          /* ── BACK FACE (description + tags) ── */
+          <View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: subjectColor.text, letterSpacing: 1.5, textTransform: 'uppercase' }}>About this note</Text>
+            </View>
+            {item.description ? (
+              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: '#e1e3e4', lineHeight: 22, marginBottom: 14 }}>
+                {item.description}
+              </Text>
+            ) : (
+              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: '#948e9d', marginBottom: 14 }}>No description provided.</Text>
+            )}
+            {(item.tags ?? []).length > 0 && (
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
+                {(item.tags ?? []).map((tag) => (
+                  <View key={tag} style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' }}>
+                    <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: '#948e9d', letterSpacing: 0.5 }}>#{tag}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: '#494551' }}>Tap to flip back</Text>
+          </View>
+        ) : (
+          /* ── FRONT FACE ── */
+          <View>
         {/* Top row: icon + subject badge + download */}
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -312,6 +361,9 @@ function NoteCard({
             </Animated.View>
           </TouchableOpacity>
         </View>
+        </View>
+        )}
+        </Animated.View>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -727,6 +779,9 @@ export default function NotesScreen() {
           showsVerticalScrollIndicator={false}
           onScroll={handleScroll}
           scrollEventThrottle={16}
+          decelerationRate="normal"
+          overScrollMode="never"
+          bounces={false}
           contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40 }}
         >
           {/* Request form always on top */}
@@ -775,6 +830,9 @@ export default function NotesScreen() {
           showsVerticalScrollIndicator={false}
           onScroll={handleScroll}
           scrollEventThrottle={16}
+          decelerationRate="normal"
+          overScrollMode="never"
+          bounces={false}
           contentContainerStyle={{ paddingTop: 12, paddingBottom: 32 }}
           renderItem={({ item }) => (
             <NoteCard

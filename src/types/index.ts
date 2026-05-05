@@ -27,6 +27,7 @@ export interface Note {
   ratingCount: number;
   downloads: number;
   tags: string[];
+  description?: string;
   fileUrl: string;
   previewUrl?: string;
   createdAt: string;

@@ -5,7 +5,15 @@
       "Bash(sed -n '91,100p' /Users/siddharthshekhar/Developer/college-projects/medicohub-frontend/src/types/index.ts)",
       "Bash(sed -n '164,185p' /Users/siddharthshekhar/Developer/college-projects/medicohub-frontend/src/store/examStore.ts)",
       "Bash(node -e ' *)",
-      "Bash(java -version)"
+      "Bash(java -version)",
+      "Bash(brew list *)",
+      "Bash(export PATH=\"/opt/homebrew/opt/openjdk@17/bin:$PATH\")",
+      "Bash(cat >> *)",
+      "Bash(nvm --version)",
+      "Bash(sudo sh -c 'echo \"setenv JAVA_HOME /opt/homebrew/opt/openjdk@17\" >> /etc/launchd.conf')"
+    ],
+    "additionalDirectories": [
+      "/Users/siddharthshekhar"
     ]
   }
 }

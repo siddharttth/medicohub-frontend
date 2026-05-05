@@ -58,7 +58,7 @@ const normalizeNote = (n: any): Note => ({
   id: n._id ?? n.id,
   noteType: (n.noteType ?? '').toLowerCase() as Note['noteType'],
   rating: normalizeRating(n.rating),
-  ratingCount: n.ratingCount ?? 0,
+  ratingCount: n.rating?.count ?? n.ratingCount ?? 0,
   hasRated: n.hasRated ?? false,
   author: (n.author ?? n.uploadedBy)
     ? { ...(n.author ?? n.uploadedBy), id: (n.author ?? n.uploadedBy)?._id ?? (n.author ?? n.uploadedBy)?.id }

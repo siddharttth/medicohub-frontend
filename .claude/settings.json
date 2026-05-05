@@ -4,7 +4,8 @@
       "Bash(git fetch *)",
       "Bash(sed -n '91,100p' /Users/siddharthshekhar/Developer/college-projects/medicohub-frontend/src/types/index.ts)",
       "Bash(sed -n '164,185p' /Users/siddharthshekhar/Developer/college-projects/medicohub-frontend/src/store/examStore.ts)",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(java -version)"
     ]
   }
 }

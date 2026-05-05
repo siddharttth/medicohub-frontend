@@ -500,14 +500,16 @@ export default function ExamScreen() {
     }
   };
 
+  const isCustomId = (id: string) => /^[a-f\d]{24}$/i.test(id);
+
   const handleEditTopic = async (id: string, title: string) => {
     editTopic(id, title);
-    if (!id.startsWith('local-')) examApi.editCustomTopic(id, title).catch(() => {});
+    if (isCustomId(id)) examApi.editCustomTopic(id, title).catch(() => {});
   };
 
   const handleDeleteTopic = async (id: string) => {
     deleteTopic(id);
-    if (!id.startsWith('local-')) examApi.deleteCustomTopic(id).catch(() => {});
+    if (isCustomId(id)) examApi.deleteCustomTopic(id).catch(() => {});
   };
 
   // ── Reload packs when screen refocuses ──

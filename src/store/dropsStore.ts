@@ -73,7 +73,7 @@ export const useDropsStore = create<DropsState>((set, get) => ({
       reconnectionDelay: 1000,
     });
 
-    socket.on('connect', () => console.log('[Socket] Connected'));
+    socket.on('connect', () => {});
 
     socket.on('online_count', (count: number) => set({ onlineCount: count }));
 
@@ -91,7 +91,7 @@ export const useDropsStore = create<DropsState>((set, get) => ({
     });
 
     socket.on('typing', ({ isTyping }: { isTyping: boolean }) => set({ isTyping }));
-    socket.on('disconnect', () => console.log('[Socket] Disconnected'));
+    socket.on('disconnect', () => {});
 
     set({ socket });
   },

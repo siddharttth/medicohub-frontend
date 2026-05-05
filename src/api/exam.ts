@@ -57,7 +57,7 @@ export const examApi = {
   getTopics: (subject: Subject): Promise<Topic[]> =>
     apiClient.get(`/topics/${subject}`).then((r) => r.data.data.topics),
 
-  completeTopic: (topicId: string, subject: string): Promise<Topic> =>
+  completeTopic: (topicId: string, subject: string): Promise<{ topicId: string; completed: boolean; streakDays: number | null }> =>
     apiClient.patch(`/topics/${topicId}/complete`, { subject }).then((r) => r.data.data),
 
   addCustomTopic: (subject: string, title: string): Promise<Topic> =>

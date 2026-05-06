@@ -29,6 +29,13 @@ const SUBJECT_COLORS: Record<string, string> = {
   Surgery: '#fbbf24', Medicine: '#a78bfa',
 };
 
+// Darker shades of subject colors — for text on tinted backgrounds in light mode
+const SUBJECT_DARK_COLORS: Record<string, string> = {
+  Anatomy: '#5E35B1', Physiology: '#16A34A', Biochemistry: '#1D4ED8',
+  Pathology: '#C2410C', Pharmacology: '#BE185D', Microbiology: '#0E7490',
+  Surgery: '#92400E', Medicine: '#6D28D9',
+};
+
 const EXAM_TYPES: { label: string; value: ExamType; icon: string; desc: string }[] = [
   { label: 'Full Pack', value: 'full-pack', icon: '📦', desc: '10 MCQs + Short + Long Qs' },
   { label: 'Quick Review', value: 'quick-review', icon: '⚡', desc: '15 high-yield short Qs' },
@@ -107,31 +114,54 @@ function PackCard({ stored, onSelect, active, subjectColor }: {
 }) {
   const isDark = useThemeStore((s) => s.isDark);
   const t = getTheme(isDark);
+  const subjectDarkColor = Object.entries(SUBJECT_COLORS).find(([, v]) => v === subjectColor)?.[0];
+  const subjectTextColor = isDark ? subjectColor : (subjectDarkColor ? (SUBJECT_DARK_COLORS[subjectDarkColor] ?? t.primaryText) : t.primaryText);
   const isPending = stored.pack.status === 'pending';
   const isFailed = stored.pack.status === 'failed';
   return (
-    <TouchableOpacity onPress={onSelect} disabled={isPending} activeOpacity={0.8}
-      style={{ backgroundColor: active ? `${subjectColor}12` : t.card, borderRadius: 18, borderWidth: 1, borderColor: active ? `${subjectColor}30` : isFailed ? '#ffb4ab30' : t.cardBorder, paddingHorizontal: 16, paddingVertical: 14, marginBottom: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', opacity: isPending ? 0.7 : 1 }}>
-      <View style={{ flex: 1 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-          <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: active ? subjectColor : t.onSurface }}>
-            {stored.examType.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+    <View style={{ marginBottom: 12, borderRadius: 20, borderWidth: 1, borderColor: active ? `${subjectColor}${isDark ? '40' : '60'}` : isFailed ? 'rgba(255,180,171,0.2)' : t.cardBorder, overflow: 'hidden', opacity: isPending ? 0.7 : 1 }}>
+      {/* ── Header row — always visible, tap to toggle ── */}
+      <TouchableOpacity onPress={onSelect} disabled={isPending} activeOpacity={0.8}
+        style={{ backgroundColor: active ? `${subjectColor}${isDark ? '18' : '22'}` : t.card, paddingHorizontal: 16, paddingVertical: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <View style={{ flex: 1 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 3 }}>
+            <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 14, color: active ? subjectTextColor : t.onSurface }}>
+              {stored.examType.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+            </Text>
+            {isPending && <ActivityIndicator size="small" color={subjectTextColor} style={{ marginLeft: 2 }} />}
+          </View>
+          {(stored.topics ?? []).length > 0 && (
+            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: t.onSurfaceVariant, marginBottom: 2 }} numberOfLines={1}>{(stored.topics ?? []).join(', ')}</Text>
+          )}
+          <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: isFailed ? '#ffb4ab' : t.outlineVariant }}>
+            {isFailed ? 'Generation failed — tap to retry' : isPending ? 'Generating in background…' : timeLeft(stored.generatedAt)}
           </Text>
-          {isPending && <ActivityIndicator size="small" color={subjectColor} style={{ marginLeft: 2 }} />}
         </View>
-        {(stored.topics ?? []).length > 0 && (
-          <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: t.onSurfaceVariant, marginBottom: 2 }} numberOfLines={1}>{(stored.topics ?? []).join(', ')}</Text>
+        {!isPending && !isFailed && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: active ? `${subjectColor}${isDark ? '25' : '30'}` : t.iconBg, borderWidth: 1, borderColor: active ? `${subjectColor}${isDark ? '40' : '60'}` : t.cardBorder }}>
+              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: active ? subjectTextColor : t.outlineVariant, letterSpacing: 0.5 }}>{active ? 'VIEWING' : 'TAP TO VIEW'}</Text>
+            </View>
+            <Ionicons name={active ? 'chevron-up' : 'chevron-down'} size={16} color={active ? subjectTextColor : t.outlineVariant} />
+          </View>
         )}
-        <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: isFailed ? '#ffb4ab' : t.outlineVariant }}>
-          {isFailed ? 'Generation failed — tap to retry' : isPending ? 'Generating in background…' : timeLeft(stored.generatedAt)}
-        </Text>
-      </View>
-      {!isPending && !isFailed && (
-        <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: active ? `${subjectColor}20` : t.iconBg, borderWidth: 1, borderColor: active ? `${subjectColor}30` : t.cardBorder }}>
-          <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: active ? subjectColor : t.outlineVariant, letterSpacing: 0.5 }}>{active ? 'VIEWING' : 'TAP'}</Text>
+      </TouchableOpacity>
+
+      {/* ── Expanded content — same card, below the header ── */}
+      {active && stored.pack.status === 'done' && (
+        <View style={{ backgroundColor: t.card, borderTopWidth: 1, borderTopColor: `${subjectColor}${isDark ? '25' : '40'}`, padding: 20 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 18 }}>
+            <View style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: `${subjectColor}${isDark ? '20' : '28'}`, alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ fontSize: 16 }}>✨</Text>
+            </View>
+            <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 15, color: subjectTextColor, letterSpacing: -0.2 }}>
+              {stored.pack.subject} — {stored.examType.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+            </Text>
+          </View>
+          <PackContent pack={stored.pack} subjectColor={subjectColor} />
         </View>
       )}
-    </TouchableOpacity>
+    </View>
   );
 }
 
@@ -148,9 +178,12 @@ function SectionLabel({ children }: { children: string }) {
 // ── Pack content renderer ────────────────────────────────────────────────────
 function PackContent({ pack, subjectColor }: { pack: ExamPack; subjectColor: string }) {
   const [expandedMCQ, setExpandedMCQ] = useState<number | null>(null);
+  const [selectedOption, setSelectedOption] = useState<Record<number, number>>({});
   const [revealedAnswers, setRevealedAnswers] = useState<Record<number, boolean>>({});
   const isDark = useThemeStore((s) => s.isDark);
   const t = getTheme(isDark);
+  const subjectDarkColor = Object.entries(SUBJECT_COLORS).find(([, v]) => v === subjectColor)?.[0];
+  const subjectTextColor = isDark ? subjectColor : (subjectDarkColor ? (SUBJECT_DARK_COLORS[subjectDarkColor] ?? t.primaryText) : t.primaryText);
 
   const rowStyle = {
     backgroundColor: t.iconBg,
@@ -163,40 +196,64 @@ function PackContent({ pack, subjectColor }: { pack: ExamPack; subjectColor: str
       {(pack.mcqs ?? []).length > 0 && (
         <View style={{ marginBottom: 24 }}>
           <SectionLabel>MCQs (10 × 1 mark)</SectionLabel>
-          {(pack.mcqs ?? []).map((q, i) => (
-            <View key={i} style={rowStyle}>
-              <TouchableOpacity onPress={() => setExpandedMCQ(expandedMCQ === i ? null : i)} activeOpacity={0.8}>
-                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: t.onSurface, lineHeight: 20, marginBottom: 6 }}>
-                  {i + 1}. {q.question}
-                </Text>
-              </TouchableOpacity>
-              {expandedMCQ === i && (
-                <>
-                  {q.options.map((opt, j) => {
-                    const letter = ['A', 'B', 'C', 'D'][j];
-                    const isAnswer = q.answer === letter || q.answer === opt || opt.startsWith(`${q.answer}.`);
-                    return (
-                      <View key={j} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4, paddingLeft: 4 }}>
-                        <View style={{
-                          width: 22, height: 22, borderRadius: 6, marginRight: 8, alignItems: 'center', justifyContent: 'center',
-                          backgroundColor: isAnswer ? `${subjectColor}25` : 'rgba(255,255,255,0.04)',
-                          borderWidth: 1, borderColor: isAnswer ? `${subjectColor}40` : 'rgba(255,255,255,0.07)',
-                        }}>
-                          <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 10, color: isAnswer ? subjectColor : t.outlineVariant }}>{letter}</Text>
-                        </View>
-                        <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: isAnswer ? subjectColor : '#948e9d', flex: 1, lineHeight: 18 }}>
-                          {opt.replace(/^[A-D]\.\s*/, '')}
-                        </Text>
-                      </View>
-                    );
-                  })}
-                </>
-              )}
-              {expandedMCQ !== i && (
-                <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: t.outlineVariant }}>Tap to see options & answer</Text>
-              )}
-            </View>
-          ))}
+          {(pack.mcqs ?? []).map((q, i) => {
+            const isExpanded = expandedMCQ === i;
+            const picked = selectedOption[i];
+            const hasAnswered = picked !== undefined;
+            return (
+              <View key={i} style={rowStyle}>
+                <TouchableOpacity onPress={() => { if (!isExpanded) setExpandedMCQ(i); }} activeOpacity={0.8}>
+                  <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: t.onSurface, lineHeight: 20, marginBottom: isExpanded ? 12 : 6 }}>
+                    {i + 1}. {q.question}
+                  </Text>
+                </TouchableOpacity>
+                {isExpanded ? (
+                  <>
+                    {q.options.map((opt, j) => {
+                      const letter = ['A', 'B', 'C', 'D'][j];
+                      const isCorrect = q.answer === letter || q.answer === opt || opt.startsWith(`${q.answer}.`);
+                      const isSelected = picked === j;
+                      const showResult = hasAnswered;
+                      const bgColor = showResult
+                        ? isCorrect ? `${subjectColor}35` : isSelected ? 'rgba(255,100,100,0.12)' : t.iconBg
+                        : t.iconBg;
+                      const borderColor = showResult
+                        ? isCorrect ? `${subjectColor}70` : isSelected ? 'rgba(255,100,100,0.35)' : t.cardBorder
+                        : t.cardBorder;
+                      const textColor = showResult
+                        ? isCorrect ? subjectTextColor : isSelected ? (isDark ? '#ff6b6b' : '#C0392B') : t.onSurfaceVariant
+                        : t.onSurface;
+                      const letterColor = showResult
+                        ? isCorrect ? subjectTextColor : isSelected ? (isDark ? '#ff6b6b' : '#C0392B') : t.outlineVariant
+                        : t.outlineVariant;
+                      return (
+                        <TouchableOpacity
+                          key={j}
+                          onPress={() => { if (!hasAnswered) setSelectedOption((p) => ({ ...p, [i]: j })); }}
+                          activeOpacity={hasAnswered ? 1 : 0.7}
+                          style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8, paddingHorizontal: 10, paddingVertical: 10, borderRadius: 12, backgroundColor: bgColor, borderWidth: 1, borderColor }}
+                        >
+                          <View style={{ width: 22, height: 22, borderRadius: 6, marginRight: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: showResult ? (isCorrect ? `${subjectColor}30` : isSelected ? 'rgba(255,100,100,0.2)' : t.iconBg) : t.card, borderWidth: 1, borderColor }}>
+                            <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 10, color: letterColor }}>{letter}</Text>
+                          </View>
+                          <Text style={{ fontFamily: isCorrect && showResult ? 'Inter_600SemiBold' : 'Inter_400Regular', fontSize: 13, color: textColor, flex: 1, lineHeight: 18 }}>
+                            {opt.replace(/^[A-D]\.\s*/, '')}
+                          </Text>
+                          {showResult && isCorrect && <Ionicons name="checkmark-circle" size={16} color={subjectTextColor} style={{ marginLeft: 6 }} />}
+                          {showResult && isSelected && !isCorrect && <Ionicons name="close-circle" size={16} color={isDark ? '#ff6b6b' : '#C0392B'} style={{ marginLeft: 6 }} />}
+                        </TouchableOpacity>
+                      );
+                    })}
+                    {!hasAnswered && (
+                      <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: t.outlineVariant, marginTop: 4, textAlign: 'center' }}>Tap an option to submit your answer</Text>
+                    )}
+                  </>
+                ) : (
+                  <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: t.outlineVariant }}>Tap to see options & answer</Text>
+                )}
+              </View>
+            );
+          })}
         </View>
       )}
 
@@ -223,8 +280,8 @@ function PackContent({ pack, subjectColor }: { pack: ExamPack; subjectColor: str
           <View style={{ backgroundColor: t.iconBg, borderRadius: 16, borderWidth: 1, borderColor: t.cardBorder, padding: 4 }}>
             {(pack.longQuestions ?? []).map((q, i) => (
               <View key={i} style={{ flexDirection: 'row', alignItems: 'flex-start', padding: 12, borderBottomWidth: i < (pack.longQuestions?.length ?? 0) - 1 ? 1 : 0, borderBottomColor: t.separator }}>
-                <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 14, color: subjectColor, marginRight: 10, lineHeight: 21 }}>{i + 1}.</Text>
-                <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: '#c8cdd0', flex: 1, lineHeight: 21 }}>{q}</Text>
+                <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 14, color: subjectTextColor, marginRight: 10, lineHeight: 21 }}>{i + 1}.</Text>
+                <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: t.onSurface, flex: 1, lineHeight: 21 }}>{q}</Text>
               </View>
             ))}
           </View>
@@ -260,13 +317,13 @@ function PackContent({ pack, subjectColor }: { pack: ExamPack; subjectColor: str
                 onPress={() => setRevealedAnswers((p) => ({ ...p, [i]: !p[i] }))}
                 style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
               >
-                <Ionicons name={revealedAnswers[i] ? 'eye-off-outline' : 'eye-outline'} size={14} color={subjectColor} />
-                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, color: subjectColor }}>
+                <Ionicons name={revealedAnswers[i] ? 'eye-off-outline' : 'eye-outline'} size={14} color={subjectTextColor} />
+                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, color: subjectTextColor }}>
                   {revealedAnswers[i] ? 'Hide answer' : 'Reveal answer'}
                 </Text>
               </TouchableOpacity>
               {revealedAnswers[i] && (
-                <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: '#c8cdd0', lineHeight: 20, marginTop: 8 }}>
+                <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: t.onSurface, lineHeight: 20, marginTop: 8 }}>
                   {q.answer}
                 </Text>
               )}
@@ -284,6 +341,8 @@ function VivaCards({ questions, subjectColor }: { questions: VivaQ[]; subjectCol
   const [revealedMap, setRevealedMap] = useState<Record<number, boolean>>({});
   const isDark = useThemeStore((s) => s.isDark);
   const t = getTheme(isDark);
+  const subjectDarkColor = Object.entries(SUBJECT_COLORS).find(([, v]) => v === subjectColor)?.[0];
+  const subjectTextColor = isDark ? subjectColor : (subjectDarkColor ? (SUBJECT_DARK_COLORS[subjectDarkColor] ?? t.primaryText) : t.primaryText);
   const flatRef = useRef<FlatList>(null);
 
   // Auto-scroll to latest when a new question is added
@@ -337,7 +396,7 @@ function VivaCards({ questions, subjectColor }: { questions: VivaQ[]; subjectCol
                 borderWidth: 1, borderColor: `${subjectColor}20`,
                 borderRadius: 18, padding: 18,
               }}>
-                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: subjectColor, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 10 }}>
+                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: subjectTextColor, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 10 }}>
                   Question {itemIdx + 1}
                 </Text>
                 <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 15, color: t.onSurface, lineHeight: 22, marginBottom: 14 }}>
@@ -347,8 +406,8 @@ function VivaCards({ questions, subjectColor }: { questions: VivaQ[]; subjectCol
                   onPress={() => setRevealedMap((m) => ({ ...m, [itemIdx]: !m[itemIdx] }))}
                   style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
                 >
-                  <Ionicons name={isRevealed ? 'eye-off-outline' : 'eye-outline'} size={14} color={subjectColor} />
-                  <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: subjectColor }}>
+                  <Ionicons name={isRevealed ? 'eye-off-outline' : 'eye-outline'} size={14} color={subjectTextColor} />
+                  <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: subjectTextColor }}>
                     {isRevealed ? 'Hide answer' : 'Reveal answer'}
                   </Text>
                 </TouchableOpacity>
@@ -403,6 +462,8 @@ export default function ExamScreen() {
   const vivaQuestions = selectedSubject ? getVivaQuestions(selectedSubject) : [];
   const viewingPack = viewingPackIndex !== null ? activePacks[viewingPackIndex]?.pack ?? null : null;
   const subjectColor = selectedSubject ? (SUBJECT_COLORS[selectedSubject] ?? '#cfbcff') : '#cfbcff';
+  const subjectDarkColor = selectedSubject ? (SUBJECT_DARK_COLORS[selectedSubject] ?? '#5E35B1') : '#5E35B1';
+  const subjectTextColor = isDark ? subjectColor : subjectDarkColor;
   const completedCount = topics.filter((t) => t.completed).length;
 
   const packsUsed = dailyUsage?.packsUsed ?? 0;
@@ -653,9 +714,9 @@ export default function ExamScreen() {
                   const isActive = selectedExamType === et.value;
                   return (
                     <TouchableOpacity key={et.value} onPress={() => setSelectedExamType(et.value)} activeOpacity={0.8}
-                      style={{ flex: 1, paddingVertical: 12, borderRadius: 16, alignItems: 'center', backgroundColor: isActive ? `${subjectColor}18` : t.card, borderWidth: 1, borderColor: isActive ? `${subjectColor}40` : t.cardBorder }}>
+                      style={{ flex: 1, paddingVertical: 12, borderRadius: 16, alignItems: 'center', backgroundColor: isActive ? `${subjectColor}${isDark ? '28' : '30'}` : t.card, borderWidth: 1, borderColor: isActive ? `${subjectColor}${isDark ? '55' : '70'}` : t.cardBorder }}>
                       <Text style={{ fontSize: 16, marginBottom: 4 }}>{et.icon}</Text>
-                      <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, letterSpacing: 0.8, color: isActive ? subjectColor : t.onSurfaceVariant }}>{et.label}</Text>
+                      <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, letterSpacing: 0.8, color: isActive ? subjectTextColor : t.onSurfaceVariant }}>{et.label}</Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -668,10 +729,10 @@ export default function ExamScreen() {
             {/* ── Generate button ── */}
             <TouchableOpacity onPress={() => { if (!limitReached && !isGenerating) setShowTopicsModal(true); }} disabled={limitReached || isGenerating} activeOpacity={0.85}
               style={{ marginHorizontal: 20, marginBottom: 20, borderRadius: 28, overflow: 'hidden', opacity: (limitReached || isGenerating) ? 0.55 : 1 }}>
-              <LinearGradient colors={[`${subjectColor}38`, `${subjectColor}18`]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                style={{ padding: 22, borderRadius: 28, borderWidth: 1, borderColor: `${subjectColor}30`, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+              <LinearGradient colors={[`${subjectColor}${isDark ? '55' : '70'}`, `${subjectColor}${isDark ? '30' : '40'}`]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                style={{ padding: 22, borderRadius: 28, borderWidth: 1, borderColor: `${subjectColor}${isDark ? '50' : '90'}`, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
                 {isGenerating
-                  ? <><ActivityIndicator color={subjectColor} /><Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 16, color: isDark ? '#ffffff' : t.onSurface, letterSpacing: -0.2 }}>Generating in background…</Text></>
+                  ? <><ActivityIndicator color={subjectTextColor} /><Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 16, color: isDark ? '#ffffff' : t.onSurface, letterSpacing: -0.2 }}>Generating in background…</Text></>
                   : <><Text style={{ fontSize: 20 }}>🧠</Text><Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 18, color: isDark ? '#ffffff' : t.onSurface, letterSpacing: -0.2 }}>{limitReached ? 'Daily Limit Reached' : `Generate ${selectedSubject} Pack`}</Text></>
                 }
               </LinearGradient>
@@ -682,31 +743,11 @@ export default function ExamScreen() {
               <View style={{ paddingHorizontal: 20, marginBottom: 20 }}>
                 <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: t.onSurfaceVariant, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Your Packs (valid 24h)</Text>
                 {activePacks.map((sp, i) => (
-                  <PackCard key={sp.pack._id ?? sp.generatedAt} stored={sp} active={viewingPackIndex === i && sp.pack.status === 'done'}
-                    onSelect={() => { if (sp.pack.status !== 'done') return; setViewingPackIndex(viewingPackIndex === i ? null : i); }} subjectColor={subjectColor} />
+                  <PackCard key={sp.pack._id ?? sp.generatedAt} stored={sp}
+                    active={viewingPackIndex === i && sp.pack.status === 'done'}
+                    onSelect={() => { if (sp.pack.status !== 'done') return; setViewingPackIndex(viewingPackIndex === i ? null : i); }}
+                    subjectColor={subjectColor} />
                 ))}
-              </View>
-            )}
-
-            {/* ── Pack content ── */}
-            {viewingPack && viewingPack.status === 'done' && (
-              <View style={{ marginHorizontal: 20, marginBottom: 20, backgroundColor: t.card, borderRadius: 28, borderWidth: 1, borderColor: `${subjectColor}20`, padding: 22 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-                  <View style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: `${subjectColor}18`, borderWidth: 1, borderColor: `${subjectColor}28`, alignItems: 'center', justifyContent: 'center' }}>
-                    <Text style={{ fontSize: 18 }}>✨</Text>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 17, color: subjectColor, letterSpacing: -0.2 }}>
-                      {viewingPack.subject} — {activePacks[viewingPackIndex!]?.examType.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
-                    </Text>
-                    {(activePacks[viewingPackIndex!]?.topics ?? []).length > 0 && (
-                      <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: t.onSurfaceVariant, marginTop: 2 }} numberOfLines={1}>
-                        {(activePacks[viewingPackIndex!]?.topics ?? []).join(', ')}
-                      </Text>
-                    )}
-                  </View>
-                </View>
-                <PackContent pack={viewingPack} subjectColor={subjectColor} />
               </View>
             )}
 
@@ -726,13 +767,16 @@ export default function ExamScreen() {
               )}
               {!vivaTopics.length && <View style={{ height: 14 }} />}
               <TouchableOpacity onPress={handleAskViva} disabled={isAskingViva || vivaLimitReached} activeOpacity={0.8}
-                style={{ backgroundColor: t.iconBg, borderWidth: 1, borderColor: t.cardBorder, borderRadius: 18, paddingVertical: 14, alignItems: 'center', marginBottom: vivaQuestions.length > 0 ? 20 : 0, opacity: vivaLimitReached ? 0.45 : 1 }}>
+                style={{ borderRadius: 18, overflow: 'hidden', marginBottom: vivaQuestions.length > 0 ? 20 : 0, opacity: vivaLimitReached ? 0.45 : 1 }}>
+                <LinearGradient colors={[`${subjectColor}${isDark ? '55' : '70'}`, `${subjectColor}${isDark ? '30' : '40'}`]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                  style={{ borderWidth: 1, borderColor: `${subjectColor}${isDark ? '50' : '90'}`, borderRadius: 18, paddingVertical: 14, alignItems: 'center' }}>
                 {isAskingViva
-                  ? <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><ActivityIndicator size="small" color={subjectColor} /><Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: subjectColor }}>Generating…</Text></View>
-                  : <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: vivaLimitReached ? '#ffb4ab' : subjectColor }}>
+                  ? <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><ActivityIndicator size="small" color={subjectTextColor} /><Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: subjectTextColor }}>Generating…</Text></View>
+                  : <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: vivaLimitReached ? '#ffb4ab' : subjectTextColor }}>
                       {vivaLimitReached ? `Daily limit reached (${MAX_VIVA}/day)` : vivaTopics.length > 0 ? 'Ask Another Viva Question' : 'Set Topics & Start Viva'}
                     </Text>
                 }
+                </LinearGradient>
               </TouchableOpacity>
               <VivaCards questions={vivaQuestions} subjectColor={subjectColor} />
             </View>
@@ -742,8 +786,8 @@ export default function ExamScreen() {
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
                 <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 18, color: t.onSurface, letterSpacing: -0.2 }}>High-Yield Topics</Text>
                 {topics.length > 0 && (
-                  <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: `${subjectColor}18`, borderWidth: 1, borderColor: `${subjectColor}28` }}>
-                    <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 10, color: subjectColor, letterSpacing: 1 }}>{completedCount}/{topics.length}</Text>
+                  <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: `${subjectColor}${isDark ? '28' : '35'}`, borderWidth: 1, borderColor: `${subjectColor}${isDark ? '40' : '60'}` }}>
+                    <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 10, color: subjectTextColor, letterSpacing: 1 }}>{completedCount}/{topics.length}</Text>
                   </View>
                 )}
               </View>

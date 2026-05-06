@@ -24,7 +24,7 @@ import { useAuth } from '../../src/hooks/useAuth';
 import { notesApi } from '../../src/api/notes';
 import { Achievement, NoteRequest } from '../../src/types';
 
-const SUBJECT_COLORS: Record<string, string> = {
+const SUBJECT_FILL_COLORS: Record<string, string> = {
   Anatomy: '#cfbcff', Physiology: '#4ade80', Biochemistry: '#60a5fa',
   Pathology: '#fb923c', Pharmacology: '#f472b6', Microbiology: '#22d3ee',
   Surgery: '#fbbf24', Medicine: '#a78bfa',
@@ -247,7 +247,7 @@ export default function ProfileScreen() {
             </View>
           ) : (
             (showAllRequests ? myRequests : myRequests.slice(0, 2)).map((req) => {
-              const subjectColor = SUBJECT_COLORS[req.subject] ?? '#cfbcff';
+              const subjectFill = SUBJECT_FILL_COLORS[req.subject] ?? '#cfbcff';
               const isFulfilled = req.status === 'fulfilled';
               return (
                 <TouchableOpacity
@@ -258,8 +258,8 @@ export default function ProfileScreen() {
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                     <View style={{ flexDirection: 'row', gap: 6 }}>
-                      <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, backgroundColor: `${subjectColor}18`, borderWidth: 1, borderColor: `${subjectColor}28` }}>
-                        <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 9, letterSpacing: 1.2, textTransform: 'uppercase', color: subjectColor }}>{req.subject}</Text>
+                      <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, backgroundColor: subjectFill, borderWidth: 1, borderColor: subjectFill }}>
+                        <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 9, letterSpacing: 1.2, textTransform: 'uppercase', color: '#1a0a3a' }}>{req.subject}</Text>
                       </View>
                       <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(181,153,255,0.06)', borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(181,153,255,0.12)' }}>
                         <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 9, letterSpacing: 1, color: t.onSurfaceVariant }}>{req.noteType}</Text>

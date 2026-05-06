@@ -59,6 +59,12 @@ const UPLOAD_NOTE_TYPES: { label: string; value: UploadNoteType; icon: string }[
   { label: 'PYQ', value: 'PYQ', icon: '📝' },
 ];
 
+const SUBJECT_FILL_COLORS: Record<string, string> = {
+  Anatomy: '#cfbcff', Physiology: '#4ade80', Biochemistry: '#60a5fa',
+  Pathology: '#fb923c', Pharmacology: '#f472b6', Microbiology: '#22d3ee',
+  Surgery: '#fbbf24', Medicine: '#a78bfa',
+};
+
 const SUBJECT_COLORS_DARK: Record<string, { bg: string; text: string; border: string }> = {
   Anatomy:      { bg: 'rgba(207,188,255,0.12)', text: '#cfbcff', border: 'rgba(207,188,255,0.18)' },
   Physiology:   { bg: 'rgba(74,222,128,0.12)',  text: '#4ade80', border: 'rgba(74,222,128,0.18)' },
@@ -99,14 +105,14 @@ function FilterChip({
 }) {
   const isDark = useThemeStore((s) => s.isDark);
   const t = getTheme(isDark);
-  const color = activeColor ?? '#cfbcff';
+  const color = activeColor ?? t.primaryContainer;
   return (
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.75}
-      style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, marginRight: 7, backgroundColor: selected ? color : t.card, borderWidth: 1, borderColor: selected ? color : t.cardBorder }}
+      style={{ paddingHorizontal: 18, paddingVertical: 9, borderRadius: 999, marginRight: 8, backgroundColor: selected ? color : t.card, borderWidth: 1, borderColor: selected ? color : t.cardBorder }}
     >
-      <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, letterSpacing: 0.6, color: selected ? '#0d0d1a' : t.onSurfaceVariant }}>
+      <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: selected ? '#1a0a3a' : t.onSurfaceVariant }}>
         {label}
       </Text>
     </TouchableOpacity>
@@ -567,7 +573,7 @@ export default function NotesScreen() {
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingLeft: 20, paddingRight: 12, paddingVertical: 8, alignItems: 'center' }}>
               {SUBJECTS.map((s) => (
-                <FilterChip key={s} label={s} selected={selectedSubjects.includes(s)} onPress={() => toggleSubject(s)} activeColor={getSubjectColor(s, isDark).text} />
+                <FilterChip key={s} label={s} selected={selectedSubjects.includes(s)} onPress={() => toggleSubject(s)} activeColor={SUBJECT_FILL_COLORS[s]} />
               ))}
               <View style={{ width: 1, height: 18, backgroundColor: t.separator, marginRight: 7 }} />
               {NOTE_TYPES.map((nt) => (

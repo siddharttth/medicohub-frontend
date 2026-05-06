@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   Switch,
   Alert,
   ActivityIndicator,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
@@ -22,13 +23,66 @@ import { achievementsApi } from '../../src/api/achievements';
 import { authApi } from '../../src/api/auth';
 import { useAuth } from '../../src/hooks/useAuth';
 import { notesApi } from '../../src/api/notes';
+import { CardEmptyState } from '../../src/components/ui/EmptyState';
+import { getSubjectColor } from '../../src/constants/subjects';
 import { Achievement, NoteRequest } from '../../src/types';
 
-const SUBJECT_FILL_COLORS: Record<string, string> = {
-  Anatomy: '#cfbcff', Physiology: '#4ade80', Biochemistry: '#60a5fa',
-  Pathology: '#fb923c', Pharmacology: '#f472b6', Microbiology: '#22d3ee',
-  Surgery: '#fbbf24', Medicine: '#a78bfa',
-};
+// ── Skeleton shimmer ──────────────────────────────────────────────────────────
+function SkeletonBlock({ width, height, style }: { width: string | number; height: number; style?: object }) {
+  const opacity = useRef(new Animated.Value(0.4)).current;
+  React.useEffect(() => {
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 0.85, duration: 700, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0.4, duration: 700, useNativeDriver: true }),
+      ])
+    );
+    anim.start();
+    return () => anim.stop();
+  }, []);
+  const isDark = useThemeStore((s) => s.isDark);
+  const t = getTheme(isDark);
+  return (
+    <Animated.View style={[{ width, height, borderRadius: 8, backgroundColor: t.cardBorder, opacity }, style]} />
+  );
+}
+
+// Fix #26: skeleton for achievements grid
+function AchievementSkeleton() {
+  const isDark = useThemeStore((s) => s.isDark);
+  const t = getTheme(isDark);
+  return (
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12 }}>
+      {[0, 1, 2, 3].map((i) => (
+        <View key={i} style={{ width: '48.5%', backgroundColor: t.card, borderRadius: 22, borderWidth: 1, borderColor: t.cardBorder, padding: 18, alignItems: 'center' }}>
+          <SkeletonBlock width={40} height={40} style={{ borderRadius: 12, marginBottom: 10 }} />
+          <SkeletonBlock width="70%" height={14} style={{ marginBottom: 8 }} />
+          <SkeletonBlock width="90%" height={11} style={{ marginBottom: 4 }} />
+          <SkeletonBlock width="90%" height={11} />
+        </View>
+      ))}
+    </View>
+  );
+}
+
+// Fix #26: skeleton for request cards
+function RequestSkeleton() {
+  const isDark = useThemeStore((s) => s.isDark);
+  const t = getTheme(isDark);
+  return (
+    <>
+      {[0, 1].map((i) => (
+        <View key={i} style={{ backgroundColor: t.card, borderRadius: 22, borderWidth: 1, borderColor: t.cardBorder, padding: 18, marginBottom: 12 }}>
+          <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
+            <SkeletonBlock width={60} height={22} style={{ borderRadius: 8 }} />
+            <SkeletonBlock width={50} height={22} style={{ borderRadius: 8 }} />
+          </View>
+          <SkeletonBlock width="70%" height={16} />
+        </View>
+      ))}
+    </>
+  );
+}
 
 export default function ProfileScreen() {
   const storeUser = useAuthStore((s) => s.user);
@@ -70,17 +124,20 @@ export default function ProfileScreen() {
     enabled: !!userId,
   });
 
-  const { data: achievements = [] } = useQuery<Achievement[]>({
+  const { data: achievements, isLoading: isLoadingAchievements } = useQuery<Achievement[]>({
     queryKey: ['achievements', userId],
     queryFn: () => achievementsApi.getAchievements(userId!),
     enabled: !!userId,
   });
 
-  const { data: myRequests = [] } = useQuery<NoteRequest[]>({
+  const { data: myRequests, isLoading: isLoadingRequests } = useQuery<NoteRequest[]>({
     queryKey: ['my-requests'],
     queryFn: notesApi.getMyRequests,
     enabled: !!userId,
   });
+
+  const achievementList = achievements ?? [];
+  const requestList = myRequests ?? [];
 
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
@@ -92,10 +149,11 @@ export default function ProfileScreen() {
   const initials = user?.name?.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2) ?? 'MH';
   const streakDays = stats?.streakDays ?? user?.streakDays ?? 0;
 
-  const card = {
+  // Fix #4 + #19: standardised card radii — lg=22 for content cards, avatar gets 28 as hero element
+  const cardStyle = {
     backgroundColor: t.card,
-    borderRadius: 28,
-    borderWidth: 1,
+    borderRadius: 22,   // Fix #19: was 28 everywhere; 22 is app standard for content cards
+    borderWidth: 1 as const,
     borderColor: t.cardBorder,
   };
 
@@ -119,27 +177,19 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* ── Avatar card ── */}
-        <View style={{ marginHorizontal: 20, marginTop: 20, marginBottom: 20, ...card, padding: 28, alignItems: 'center' }}>
+        {/* ── Avatar card — borderRadius 28 intentional for hero centred card ── */}
+        <View style={{ marginHorizontal: 20, marginTop: 20, marginBottom: 20, backgroundColor: t.card, borderRadius: 28, borderWidth: 1, borderColor: t.cardBorder, padding: 28, alignItems: 'center' }}>
           <View
             style={{
-              width: 90,
-              height: 90,
-              borderRadius: 45,
-              padding: 3,
-              marginBottom: 16,
-              borderWidth: 2,
-              borderColor: isDark ? 'rgba(207,188,255,0.4)' : 'rgba(181,153,255,0.5)',
-              shadowColor: t.primaryContainer,
-              shadowOffset: { width: 0, height: 0 },
-              shadowOpacity: isDark ? 0.25 : 0.2,
-              shadowRadius: 16,
+              width: 90, height: 90, borderRadius: 45, padding: 3, marginBottom: 16,
+              borderWidth: 2, borderColor: isDark ? 'rgba(207,188,255,0.4)' : 'rgba(181,153,255,0.5)',
+              shadowColor: t.primaryContainer, shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: isDark ? 0.25 : 0.2, shadowRadius: 16,
             }}
           >
             <LinearGradient
               colors={t.avatarGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
+              start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
               style={{ width: '100%', height: '100%', borderRadius: 42, alignItems: 'center', justifyContent: 'center' }}
             >
               <Text style={{ fontSize: 30, fontFamily: 'NotoSerif_700Bold', color: '#fff' }}>{initials}</Text>
@@ -149,7 +199,6 @@ export default function ProfileScreen() {
           <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 24, color: t.onSurface, letterSpacing: -0.3, marginBottom: 6 }}>
             {user?.name ?? 'MedicoHub User'}
           </Text>
-
           <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: t.onSurfaceVariant, marginBottom: 4 }}>
             {user?.email ?? ''}
           </Text>
@@ -169,31 +218,33 @@ export default function ProfileScreen() {
         {/* ── Achievements ── */}
         <View style={{ marginHorizontal: 20, marginBottom: 20 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-            <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 20, color: t.onSurface, letterSpacing: -0.2 }}>Achievements</Text>
-            {achievements.length > 0 && (
+            {/* Fix #1: NotoSerif_700Bold for section headings */}
+            <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 20, color: t.onSurface, letterSpacing: -0.2 }}>Achievements</Text>
+            {achievementList.length > 0 && (
               <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: isDark ? 'rgba(207,188,255,0.1)' : 'rgba(181,153,255,0.1)', borderWidth: 1, borderColor: isDark ? 'rgba(207,188,255,0.18)' : 'rgba(181,153,255,0.25)' }}>
-                <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 10, color: t.primaryText, letterSpacing: 1 }}>{achievements.length} TOTAL</Text>
+                <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 10, color: t.primaryText, letterSpacing: 1 }}>{achievementList.length} TOTAL</Text>
               </View>
             )}
           </View>
 
-          {achievements.length === 0 ? (
-            <View style={{ ...card, padding: 28, alignItems: 'center' }}>
-              <Text style={{ fontSize: 36, marginBottom: 12 }}>🏅</Text>
-              <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 16, color: t.onSurface, marginBottom: 6 }}>No achievements yet</Text>
-              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: t.onSurfaceVariant }}>Keep studying to unlock them!</Text>
+          {/* Fix #26: show skeleton while loading */}
+          {isLoadingAchievements ? (
+            <AchievementSkeleton />
+          ) : achievementList.length === 0 ? (
+            <View style={{ ...cardStyle }}>
+              <CardEmptyState icon="🏅" title="No achievements yet" body="Keep studying to unlock them!" />
             </View>
           ) : (
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12 }}>
-              {achievements.slice(0, 4).map((achievement: Achievement) => {
+              {achievementList.slice(0, 4).map((achievement: Achievement) => {
                 const isUnlocked = achievement.unlockedAt !== null;
                 return (
                   <View
                     key={achievement._id}
                     style={{
                       width: '48.5%',
-                      ...card,
-                      borderRadius: 24,
+                      ...cardStyle,
+                      borderRadius: 22,
                       padding: 18,
                       alignItems: 'center',
                       opacity: isUnlocked ? 1 : 0.45,
@@ -227,39 +278,43 @@ export default function ProfileScreen() {
         {/* ── My Note Requests ── */}
         <View style={{ marginHorizontal: 20, marginBottom: 20 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-            <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 20, color: t.onSurface, letterSpacing: -0.2 }}>
+            {/* Fix #1: NotoSerif_700Bold */}
+            <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 20, color: t.onSurface, letterSpacing: -0.2 }}>
               My Requests
             </Text>
-            {myRequests.length > 2 && (
+            {requestList.length > 2 && (
               <TouchableOpacity onPress={() => setShowAllRequests((v) => !v)} activeOpacity={0.7}>
                 <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: t.primaryText }}>
-                  {showAllRequests ? 'Show less' : `See all ${myRequests.length}`}
+                  {showAllRequests ? 'Show less' : `See all ${requestList.length}`}
                 </Text>
               </TouchableOpacity>
             )}
           </View>
 
-          {myRequests.length === 0 ? (
-            <View style={{ ...card, padding: 28, alignItems: 'center' }}>
-              <Text style={{ fontSize: 36, marginBottom: 12 }}>📬</Text>
-              <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 16, color: t.onSurface, marginBottom: 6 }}>No requests yet</Text>
-              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: t.onSurfaceVariant }}>Request notes from the Notes tab</Text>
+          {/* Fix #26: show skeleton while loading */}
+          {isLoadingRequests ? (
+            <RequestSkeleton />
+          ) : requestList.length === 0 ? (
+            <View style={{ ...cardStyle }}>
+              <CardEmptyState icon="📬" title="No requests yet" body="Request notes from the Notes tab" />
             </View>
           ) : (
-            (showAllRequests ? myRequests : myRequests.slice(0, 2)).map((req) => {
-              const subjectFill = SUBJECT_FILL_COLORS[req.subject] ?? '#cfbcff';
+            (showAllRequests ? requestList : requestList.slice(0, 2)).map((req) => {
+              // Fix #5: use shared getSubjectColor — theme-aware, same as Notes page
+              const sc = getSubjectColor(req.subject, isDark);
               const isFulfilled = req.status === 'fulfilled';
               return (
                 <TouchableOpacity
                   key={req.id}
                   activeOpacity={isFulfilled && req.fulfilledNote ? 0.8 : 1}
                   onPress={() => { if (isFulfilled && req.fulfilledNote) downloadNote(req.fulfilledNote.id); }}
-                  style={{ ...card, borderRadius: 24, padding: 18, marginBottom: 12, borderColor: isFulfilled ? 'rgba(74,222,128,0.15)' : t.cardBorder }}
+                  style={{ ...cardStyle, borderRadius: 22, padding: 18, marginBottom: 12, borderColor: isFulfilled ? 'rgba(74,222,128,0.15)' : t.cardBorder }}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                     <View style={{ flexDirection: 'row', gap: 6 }}>
-                      <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, backgroundColor: subjectFill, borderWidth: 1, borderColor: subjectFill }}>
-                        <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 9, letterSpacing: 1.2, textTransform: 'uppercase', color: '#1a0a3a' }}>{req.subject}</Text>
+                      {/* Fix #5 + #17: use getSubjectColor (theme-aware translucent) and borderRadius 8 (read-only badge) */}
+                      <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, backgroundColor: sc.bg, borderWidth: 1, borderColor: sc.border }}>
+                        <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 9, letterSpacing: 1.2, textTransform: 'uppercase', color: sc.text }}>{req.subject}</Text>
                       </View>
                       <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(181,153,255,0.06)', borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(181,153,255,0.12)' }}>
                         <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 9, letterSpacing: 1, color: t.onSurfaceVariant }}>{req.noteType}</Text>
@@ -301,22 +356,15 @@ export default function ProfileScreen() {
         {/* ── Settings ── */}
         <View style={{ marginHorizontal: 20, marginBottom: 20 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-            <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 20, color: t.onSurface, letterSpacing: -0.2 }}>
+            {/* Fix #1: NotoSerif_700Bold */}
+            <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 20, color: t.onSurface, letterSpacing: -0.2 }}>
               Settings
             </Text>
           </View>
-          <View style={{ ...card }}>
-            {/* ── Appearance / Dark Mode toggle ── */}
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                paddingHorizontal: 20,
-                paddingVertical: 16,
-                borderBottomWidth: 1,
-                borderBottomColor: t.separator,
-              }}
-            >
+          {/* Fix #19: borderRadius 22 matches rest of app */}
+          <View style={{ ...cardStyle }}>
+            {/* Appearance / Dark Mode */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: t.separator }}>
               <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: isDark ? 'rgba(207,188,255,0.08)' : 'rgba(181,153,255,0.1)', alignItems: 'center', justifyContent: 'center', marginRight: 14 }}>
                 <Ionicons name={isDark ? 'moon-outline' : 'sunny-outline'} size={19} color={t.primaryText} />
               </View>
@@ -335,18 +383,8 @@ export default function ProfileScreen() {
               />
             </View>
 
-            {/* ── Notifications (coming soon) ── */}
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                paddingHorizontal: 20,
-                paddingVertical: 16,
-                borderBottomWidth: 1,
-                borderBottomColor: t.separator,
-                opacity: 0.45,
-              }}
-            >
+            {/* Notifications — coming soon */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: t.separator, opacity: 0.45 }}>
               <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: t.iconBg, alignItems: 'center', justifyContent: 'center', marginRight: 14 }}>
                 <Ionicons name="notifications-outline" size={19} color={t.outlineVariant} />
               </View>
@@ -367,16 +405,8 @@ export default function ProfileScreen() {
               </View>
             </View>
 
-            {/* ── About (coming soon) ── */}
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                paddingHorizontal: 20,
-                paddingVertical: 16,
-                opacity: 0.45,
-              }}
-            >
+            {/* About */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16, opacity: 0.45 }}>
               <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: t.iconBg, alignItems: 'center', justifyContent: 'center', marginRight: 14 }}>
                 <Ionicons name="information-circle-outline" size={19} color={t.outlineVariant} />
               </View>
@@ -394,17 +424,11 @@ export default function ProfileScreen() {
           onPress={handleLogout}
           activeOpacity={0.8}
           style={{
-            marginHorizontal: 20,
-            marginBottom: 8,
-            borderRadius: 20,
-            borderWidth: 1,
+            marginHorizontal: 20, marginBottom: 8,
+            borderRadius: 20, borderWidth: 1,
             borderColor: isDark ? 'rgba(255,180,171,0.25)' : 'rgba(192,57,43,0.2)',
             backgroundColor: isDark ? 'rgba(255,180,171,0.06)' : 'rgba(192,57,43,0.05)',
-            paddingVertical: 16,
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
+            paddingVertical: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
           }}
         >
           <Ionicons name="log-out-outline" size={18} color={t.error} />

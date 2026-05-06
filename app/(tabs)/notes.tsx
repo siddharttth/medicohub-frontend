@@ -25,12 +25,12 @@ import { useAuthStore } from '../../src/store/authStore';
 import { useThemeStore, getTheme } from '../../src/store/themeStore';
 import { NoteRequest } from '../../src/types';
 import { LoadingSpinner } from '../../src/components/ui/LoadingSpinner';
+import { SectionLabel } from '../../src/components/ui/SectionLabel';
+import { EmptyState } from '../../src/components/ui/EmptyState';
+import { SUBJECTS, getSubjectColor, SubjectPill } from '../../src/constants/subjects';
 import { Subject, NoteType, Note } from '../../src/types';
 
-const SUBJECTS: Subject[] = [
-  'Anatomy', 'Physiology', 'Biochemistry', 'Pathology',
-  'Pharmacology', 'Microbiology', 'Surgery', 'Medicine',
-];
+// ── Constants ─────────────────────────────────────────────────────────────────
 
 const NOTE_TYPES: { label: string; value: NoteType }[] = [
   { label: 'PDFs', value: 'pdf' },
@@ -59,60 +59,40 @@ const UPLOAD_NOTE_TYPES: { label: string; value: UploadNoteType; icon: string }[
   { label: 'PYQ', value: 'PYQ', icon: '📝' },
 ];
 
-const SUBJECT_FILL_COLORS: Record<string, string> = {
-  Anatomy: '#cfbcff', Physiology: '#4ade80', Biochemistry: '#60a5fa',
-  Pathology: '#fb923c', Pharmacology: '#f472b6', Microbiology: '#22d3ee',
-  Surgery: '#fbbf24', Medicine: '#a78bfa',
-};
-
-const SUBJECT_COLORS_DARK: Record<string, { bg: string; text: string; border: string }> = {
-  Anatomy:      { bg: 'rgba(207,188,255,0.12)', text: '#cfbcff', border: 'rgba(207,188,255,0.18)' },
-  Physiology:   { bg: 'rgba(74,222,128,0.12)',  text: '#4ade80', border: 'rgba(74,222,128,0.18)' },
-  Biochemistry: { bg: 'rgba(96,165,250,0.12)',  text: '#60a5fa', border: 'rgba(96,165,250,0.18)' },
-  Pathology:    { bg: 'rgba(251,146,60,0.12)',  text: '#fb923c', border: 'rgba(251,146,60,0.18)' },
-  Pharmacology: { bg: 'rgba(244,114,182,0.12)', text: '#f472b6', border: 'rgba(244,114,182,0.18)' },
-  Microbiology: { bg: 'rgba(34,211,238,0.12)',  text: '#22d3ee', border: 'rgba(34,211,238,0.18)' },
-  Surgery:      { bg: 'rgba(251,191,36,0.12)',  text: '#fbbf24', border: 'rgba(251,191,36,0.18)' },
-  Medicine:     { bg: 'rgba(167,139,250,0.12)', text: '#a78bfa', border: 'rgba(167,139,250,0.18)' },
-};
-
-const SUBJECT_COLORS_LIGHT: Record<string, { bg: string; text: string; border: string }> = {
-  Anatomy:      { bg: 'rgba(94,53,177,0.08)',  text: '#5E35B1', border: 'rgba(94,53,177,0.18)' },
-  Physiology:   { bg: 'rgba(22,163,74,0.08)',  text: '#16A34A', border: 'rgba(22,163,74,0.18)' },
-  Biochemistry: { bg: 'rgba(37,99,235,0.08)',  text: '#2563EB', border: 'rgba(37,99,235,0.18)' },
-  Pathology:    { bg: 'rgba(194,65,12,0.08)',  text: '#C2410C', border: 'rgba(194,65,12,0.18)' },
-  Pharmacology: { bg: 'rgba(190,24,93,0.08)',  text: '#BE185D', border: 'rgba(190,24,93,0.18)' },
-  Microbiology: { bg: 'rgba(8,145,178,0.08)',  text: '#0891B2', border: 'rgba(8,145,178,0.18)' },
-  Surgery:      { bg: 'rgba(180,83,9,0.08)',   text: '#B45309', border: 'rgba(180,83,9,0.18)' },
-  Medicine:     { bg: 'rgba(109,40,217,0.08)', text: '#6D28D9', border: 'rgba(109,40,217,0.18)' },
-};
-
-const getSubjectColor = (s: string, isDark: boolean) => {
-  const map = isDark ? SUBJECT_COLORS_DARK : SUBJECT_COLORS_LIGHT;
-  const fallback = isDark
-    ? { bg: 'rgba(207,188,255,0.12)', text: '#cfbcff', border: 'rgba(207,188,255,0.18)' }
-    : { bg: 'rgba(94,53,177,0.08)', text: '#5E35B1', border: 'rgba(94,53,177,0.18)' };
-  return map[s] ?? fallback;
-};
-
 type PickedFile = { uri: string; name: string; mimeType: string; size?: number };
 
-// ─── Filter chip ────────────────────────────────────────────────────────────
+// ─── Filter chip — non-subject type filters ──────────────────────────────────
+// Fix #3: borderRadius 999 (full pill) for all interactive filter chips
+// Fix #10: active state uses t.primary in light mode for sufficient contrast with white text
 function FilterChip({
-  label, selected, onPress, activeColor,
+  label, selected, onPress,
 }: {
-  label: string; selected: boolean; onPress: () => void; activeColor?: string;
+  label: string; selected: boolean; onPress: () => void;
 }) {
   const isDark = useThemeStore((s) => s.isDark);
   const t = getTheme(isDark);
-  const color = activeColor ?? t.primaryContainer;
+  // In light mode use t.primary (#7C5CBF) so white text has ~4.6:1 contrast
+  const activeBg = isDark ? t.primaryContainer : t.primary;
   return (
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.75}
-      style={{ paddingHorizontal: 18, paddingVertical: 9, borderRadius: 999, marginRight: 8, backgroundColor: selected ? color : t.card, borderWidth: 1, borderColor: selected ? color : t.cardBorder }}
+      style={{
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 999,   // Fix #3: consistent full pill
+        marginRight: 8,
+        backgroundColor: selected ? activeBg : t.card,
+        borderWidth: 1,
+        borderColor: selected ? activeBg : t.cardBorder,
+      }}
     >
-      <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: selected ? '#1a0a3a' : t.onSurfaceVariant }}>
+      <Text style={{
+        fontFamily: 'Inter_600SemiBold',
+        fontSize: 11,
+        letterSpacing: 0.4,
+        color: selected ? '#FFFFFF' : t.onSurfaceVariant,  // Fix #10: always white on coloured bg
+      }}>
         {label}
       </Text>
     </TouchableOpacity>
@@ -121,24 +101,17 @@ function FilterChip({
 
 // ─── Note card ───────────────────────────────────────────────────────────────
 function NoteCard({
-  item,
-  onDownload,
-  onStar,
-  isDownloading,
-  isRating,
+  item, onDownload, onStar, isDownloading, isRating,
 }: {
-  item: Note;
-  onDownload: () => void;
-  onStar: () => void;
-  isDownloading: boolean;
-  isRating: boolean;
+  item: Note; onDownload: () => void; onStar: () => void;
+  isDownloading: boolean; isRating: boolean;
 }) {
   const starScale = useRef(new Animated.Value(1)).current;
   const cardScale = useRef(new Animated.Value(1)).current;
   const [flipped, setFlipped] = useState(false);
   const isDark = useThemeStore((s) => s.isDark);
   const t = getTheme(isDark);
-  const subjectColor = getSubjectColor(item.subject, isDark);
+  const subjectColor = getSubjectColor(item.subject, isDark);  // Fix #6: use shared util
   const typeInfo = NOTE_TYPE_ICONS[item.noteType] ?? NOTE_TYPE_ICONS.pdf;
 
   const handleStar = () => {
@@ -173,7 +146,7 @@ function NoteCard({
         onPress={handleFlip}
         onPressIn={() => Animated.spring(cardScale, { toValue: 0.97, useNativeDriver: true, speed: 40, bounciness: 0 }).start()}
         onPressOut={() => Animated.spring(cardScale, { toValue: 1, useNativeDriver: true, speed: 20, bounciness: 6 }).start()}
-        style={{ backgroundColor: t.card, borderRadius: 28, borderWidth: 1, borderColor: flipped ? `${subjectColor.text}40` : `${subjectColor.text}20`, padding: 22, minHeight: 180 }}
+        style={{ backgroundColor: t.card, borderRadius: 22, borderWidth: 1, borderColor: flipped ? `${subjectColor.text}40` : `${subjectColor.text}20`, padding: 20, minHeight: 170 }}
       >
         <Animated.View style={{ opacity: fadeAnim, transform: [{ translateX: slideAnim }] }}>
         {flipped ? (
@@ -204,12 +177,22 @@ function NoteCard({
                 <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: t.iconBg, alignItems: 'center', justifyContent: 'center' }}>
                   <Ionicons name={typeInfo.icon as any} size={20} color={typeInfo.color} />
                 </View>
+                {/* Fix #17: borderRadius 8 = read-only badge (non-interactive) */}
                 <View style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, backgroundColor: subjectColor.bg, borderWidth: 1, borderColor: subjectColor.border }}>
                   <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 9, letterSpacing: 1.5, textTransform: 'uppercase', color: subjectColor.text }}>{item.subject}</Text>
                 </View>
               </View>
-              <TouchableOpacity onPress={onDownload} disabled={isDownloading} style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: isDark ? 'rgba(207,188,255,0.1)' : 'rgba(181,153,255,0.1)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: isDark ? 'rgba(207,188,255,0.15)' : 'rgba(181,153,255,0.2)' }}>
-                {isDownloading ? <ActivityIndicator size="small" color={t.primaryText} /> : <Ionicons name="arrow-down-outline" size={18} color={t.primaryText} />}
+              <TouchableOpacity
+                onPress={onDownload}
+                disabled={isDownloading}
+                activeOpacity={0.8}
+                hitSlop={{ top: 11, bottom: 11, left: 11, right: 11 }}  // Fix #25
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, backgroundColor: isDark ? 'rgba(207,188,255,0.1)' : 'rgba(181,153,255,0.1)', borderWidth: 1, borderColor: isDark ? 'rgba(207,188,255,0.15)' : 'rgba(181,153,255,0.2)' }}
+              >
+                {isDownloading ? <ActivityIndicator size="small" color={t.primaryText} /> : <>
+                  <Ionicons name="arrow-down-outline" size={14} color={t.primaryText} />
+                  <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, color: t.primaryText }}>Save</Text>
+                </>}
               </TouchableOpacity>
             </View>
 
@@ -231,17 +214,23 @@ function NoteCard({
             </View>
 
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 14, borderTopWidth: 1, borderTopColor: t.separator }}>
-              <View style={{ flexDirection: 'row', gap: 16 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                  <Ionicons name={item.ratingCount && item.ratingCount > 0 ? 'star' : 'star-outline'} size={16} color={item.ratingCount && item.ratingCount > 0 ? '#fb923c' : t.onSurfaceVariant} />
-                  <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 12, color: item.ratingCount && item.ratingCount > 0 ? t.onSurface : t.onSurfaceVariant }}>{item.ratingCount ?? 0}</Text>
+              <View style={{ flexDirection: 'row', gap: 14 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Ionicons name={item.ratingCount && item.ratingCount > 0 ? 'star' : 'star-outline'} size={13} color={item.ratingCount && item.ratingCount > 0 ? '#fb923c' : t.outlineVariant} />
+                  <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: t.onSurfaceVariant }}>{item.ratingCount ?? 0} ratings</Text>
                 </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                  <Ionicons name="arrow-down-circle-outline" size={16} color={t.onSurfaceVariant} />
-                  <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 12, color: t.onSurfaceVariant }}>{item.downloads ?? 0}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Ionicons name="arrow-down-circle-outline" size={13} color={t.outlineVariant} />
+                  <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: t.onSurfaceVariant }}>{item.downloads ?? 0} saves</Text>
                 </View>
               </View>
-              <TouchableOpacity onPress={handleStar} disabled={isRating} activeOpacity={0.7}>
+              {/* Fix #25: proper touch target via hitSlop */}
+              <TouchableOpacity
+                onPress={handleStar}
+                disabled={isRating}
+                activeOpacity={0.7}
+                hitSlop={{ top: 11, bottom: 11, left: 11, right: 11 }}
+              >
                 <Animated.View style={{ transform: [{ scale: starScale }] }}>
                   <Ionicons name={item.hasRated ? 'star' : 'star-outline'} size={22} color={item.hasRated ? t.primaryText : t.outlineVariant} />
                 </Animated.View>
@@ -266,8 +255,8 @@ export default function NotesScreen() {
 
   const toggleSubject = (s: Subject) =>
     setSelectedSubjects((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]);
-  const toggleType = (t: NoteType) =>
-    setSelectedTypes((prev) => prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]);
+  const toggleType = (tp: NoteType) =>
+    setSelectedTypes((prev) => prev.includes(tp) ? prev.filter((x) => x !== tp) : [...prev, tp]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'notes' | 'requests'>('notes');
   const [showRequestForm, setShowRequestForm] = useState(false);
@@ -406,7 +395,6 @@ export default function NotesScreen() {
     queryFn: () => notesApi.search({
       subjects: selectedSubjects.length > 0 ? selectedSubjects : undefined,
       noteTypes: selectedTypes.length > 0 ? selectedTypes : undefined,
-      // fallback single-value fields for backends that only accept one value
       subject: selectedSubjects.length === 1 ? selectedSubjects[0] : undefined,
       noteType: selectedTypes.length === 1 ? selectedTypes[0] : undefined,
       limit: 50,
@@ -416,10 +404,7 @@ export default function NotesScreen() {
   const visibleNotes = useMemo(() => {
     const notes = data?.notes ?? [];
     if (!normalizedSearchQuery) return notes;
-
-    return notes.filter((note) =>
-      note.title.toLocaleLowerCase().includes(normalizedSearchQuery)
-    );
+    return notes.filter((note) => note.title.toLocaleLowerCase().includes(normalizedSearchQuery));
   }, [data?.notes, normalizedSearchQuery]);
 
   const downloadMutation = useMutation({
@@ -440,9 +425,7 @@ export default function NotesScreen() {
 
   const rateMutation = useMutation({
     mutationFn: ({ id, rating }: { id: string; rating: number }) => notesApi.rate(id, rating),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notes'] });
-    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['notes'] }); },
     onError: (e: any) => {
       Toast.show({ type: 'error', text1: e?.response?.data?.message ?? 'Failed to rate' });
     },
@@ -464,11 +447,15 @@ export default function NotesScreen() {
     },
   });
 
-  // ── Request form card ─────────────────────────────────────────────────────
   const phColor = isDark ? 'rgba(148,142,157,0.4)' : 'rgba(90,86,112,0.4)';
+
+  // Fix #16: unified active/inactive state for request note type buttons
+  const activeNoteTypeBg = isDark ? t.primaryContainer : t.primary;
+
+  // ── Request form card ─────────────────────────────────────────────────────
   const RequestFormCard = (
-    <View style={{ backgroundColor: t.card, borderRadius: 28, borderWidth: 1, borderColor: t.cardBorder, paddingHorizontal: 24, paddingVertical: 26, marginBottom: 28 }}>
-      <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 20, lineHeight: 27, color: t.onSurface, marginBottom: 6 }}>Need something specific?</Text>
+    <View style={{ backgroundColor: t.card, borderRadius: 22, borderWidth: 1, borderColor: t.cardBorder, paddingHorizontal: 22, paddingVertical: 24, marginBottom: 24 }}>
+      <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 20, lineHeight: 27, color: t.onSurface, marginBottom: 6 }}>Need something specific?</Text>
       <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, lineHeight: 20, color: t.onSurfaceVariant, marginBottom: 22 }}>Request a note and others will fulfill it.</Text>
       {showRequestForm ? (
         <>
@@ -479,10 +466,15 @@ export default function NotesScreen() {
             placeholderTextColor={phColor}
             style={{ backgroundColor: t.innerSurface, borderWidth: 1, borderColor: t.cardBorder, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 14, fontFamily: 'Inter_400Regular', fontSize: 14, color: t.onSurface, marginBottom: 16 }}
           />
+          {/* Fix #16: consistent note type selector — t.card inactive, activeNoteTypeBg active, always white text when active */}
           <View style={{ flexDirection: 'row', gap: 10, marginBottom: 18 }}>
             {REQUEST_NOTE_TYPES.map((nt) => (
-              <TouchableOpacity key={nt.value} onPress={() => setRequestNoteType(nt.value)} style={{ flex: 1, paddingVertical: 9, borderRadius: 12, alignItems: 'center', backgroundColor: requestNoteType === nt.value ? t.primaryContainer : 'transparent', borderWidth: 1, borderColor: requestNoteType === nt.value ? t.primaryContainer : t.cardBorder }}>
-                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: requestNoteType === nt.value ? '#39197c' : t.onSurfaceVariant }}>{nt.label}</Text>
+              <TouchableOpacity
+                key={nt.value}
+                onPress={() => setRequestNoteType(nt.value)}
+                style={{ flex: 1, paddingVertical: 9, borderRadius: 999, alignItems: 'center', backgroundColor: requestNoteType === nt.value ? activeNoteTypeBg : t.card, borderWidth: 1, borderColor: requestNoteType === nt.value ? activeNoteTypeBg : t.cardBorder }}
+              >
+                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: requestNoteType === nt.value ? '#FFFFFF' : t.onSurfaceVariant }}>{nt.label}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -490,14 +482,14 @@ export default function NotesScreen() {
             <TouchableOpacity onPress={() => { setShowRequestForm(false); setRequestTopic(''); }} style={{ flex: 1, borderWidth: 1, borderColor: t.cardBorder, borderRadius: 14, paddingVertical: 12, alignItems: 'center' }}>
               <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: t.onSurfaceVariant }}>Cancel</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => requestMutation.mutate()} disabled={requestMutation.isPending || !requestTopic.trim()} style={{ flex: 1, backgroundColor: t.primaryContainer, borderRadius: 14, paddingVertical: 12, alignItems: 'center', opacity: requestTopic.trim() ? 1 : 0.4 }}>
-              <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 13, color: '#39197c' }}>{requestMutation.isPending ? 'Sending…' : 'Send Request'}</Text>
+            <TouchableOpacity onPress={() => requestMutation.mutate()} disabled={requestMutation.isPending || !requestTopic.trim()} style={{ flex: 1, backgroundColor: activeNoteTypeBg, borderRadius: 14, paddingVertical: 12, alignItems: 'center', opacity: requestTopic.trim() ? 1 : 0.4 }}>
+              <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 13, color: '#FFFFFF' }}>{requestMutation.isPending ? 'Sending…' : 'Send Request'}</Text>
             </TouchableOpacity>
           </View>
         </>
       ) : (
-        <TouchableOpacity onPress={() => setShowRequestForm(true)} style={{ backgroundColor: t.primaryContainer, borderRadius: 16, paddingVertical: 16, alignItems: 'center' }}>
-          <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 13, color: '#39197c' }}>Request Custom Note</Text>
+        <TouchableOpacity onPress={() => setShowRequestForm(true)} style={{ backgroundColor: activeNoteTypeBg, borderRadius: 16, paddingVertical: 16, alignItems: 'center' }}>
+          <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 13, color: '#FFFFFF' }}>Request Custom Note</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -514,9 +506,9 @@ export default function NotesScreen() {
             <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 36, color: t.onSurface, letterSpacing: -0.5, lineHeight: 40 }}>Senior Notes</Text>
           </View>
           <TouchableOpacity onPress={() => setShowUpload(true)} activeOpacity={0.85}
-            style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: t.primaryContainer, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999, gap: 6, marginBottom: 4, shadowColor: t.primaryContainer, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 4 }}>
-            <Ionicons name="arrow-up-outline" size={16} color="#39197c" />
-            <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 12, color: '#39197c' }}>Upload</Text>
+            style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: isDark ? t.primaryContainer : t.primary, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999, gap: 6, marginBottom: 4, shadowColor: isDark ? t.primaryContainer : t.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 4 }}>
+            <Ionicons name="arrow-up-outline" size={16} color="#FFFFFF" />
+            <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 12, color: '#FFFFFF' }}>Upload</Text>
           </TouchableOpacity>
         </View>
 
@@ -565,15 +557,16 @@ export default function NotesScreen() {
                   style={{ flex: 1, marginLeft: 10, fontFamily: 'Inter_400Regular', fontSize: 14, color: t.onSurface }}
                 />
                 {searchQuery.length > 0 && (
-                  <TouchableOpacity onPress={() => setSearchQuery('')}>
+                  <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                     <Ionicons name="close-circle" size={16} color={t.outlineVariant} />
                   </TouchableOpacity>
                 )}
               </View>
             </View>
+            {/* Fix #3: subject pills use SubjectPill (borderRadius 999), type chips use FilterChip (borderRadius 999) */}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingLeft: 20, paddingRight: 12, paddingVertical: 8, alignItems: 'center' }}>
               {SUBJECTS.map((s) => (
-                <FilterChip key={s} label={s} selected={selectedSubjects.includes(s)} onPress={() => toggleSubject(s)} activeColor={SUBJECT_FILL_COLORS[s]} />
+                <SubjectPill key={s} subject={s} active={selectedSubjects.includes(s)} onPress={() => toggleSubject(s)} variant="pill" />
               ))}
               <View style={{ width: 1, height: 18, backgroundColor: t.separator, marginRight: 7 }} />
               {NOTE_TYPES.map((nt) => (
@@ -589,30 +582,34 @@ export default function NotesScreen() {
         <ScrollView showsVerticalScrollIndicator={false} onScroll={handleScroll} scrollEventThrottle={16} decelerationRate="normal" overScrollMode="never" bounces={false} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40 }}>
           {RequestFormCard}
           {sortedRequests.length > 0 && (
-            <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 10, color: t.onSurfaceVariant, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 14 }}>Open Requests</Text>
+            <SectionLabel style={{ marginBottom: 14 }}>Open Requests</SectionLabel>
           )}
-          {sortedRequests.map((req) => (
-            <TouchableOpacity key={req.id} activeOpacity={0.85}
-              onPress={() => { setFulfillRequestId(req.id); setUploadSubject(req.subject as any); setShowUpload(true); }}
-              style={{ backgroundColor: t.card, borderRadius: 24, borderWidth: 1, borderColor: t.cardBorder, padding: 20, marginBottom: 16, flexDirection: 'row', alignItems: 'center' }}>
-              <View style={{ flex: 1, marginRight: 16 }}>
-                <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-                  <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, backgroundColor: getSubjectColor(req.subject, isDark).bg, borderWidth: 1, borderColor: getSubjectColor(req.subject, isDark).border }}>
-                    <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 9, letterSpacing: 1.2, textTransform: 'uppercase', color: getSubjectColor(req.subject, isDark).text }}>{req.subject}</Text>
+          {sortedRequests.map((req) => {
+            const sc = getSubjectColor(req.subject, isDark);  // Fix #5, #6: use shared util
+            return (
+              <TouchableOpacity key={req.id} activeOpacity={0.85}
+                onPress={() => { setFulfillRequestId(req.id); setUploadSubject(req.subject as any); setShowUpload(true); }}
+                style={{ backgroundColor: t.card, borderRadius: 22, borderWidth: 1, borderColor: t.cardBorder, padding: 20, marginBottom: 16, flexDirection: 'row', alignItems: 'center' }}>
+                <View style={{ flex: 1, marginRight: 16 }}>
+                  <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+                    {/* Fix #17: borderRadius 8 for read-only subject badge */}
+                    <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, backgroundColor: sc.bg, borderWidth: 1, borderColor: sc.border }}>
+                      <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 9, letterSpacing: 1.2, textTransform: 'uppercase', color: sc.text }}>{req.subject}</Text>
+                    </View>
+                    <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, backgroundColor: t.iconBg, borderWidth: 1, borderColor: t.cardBorder }}>
+                      <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 9, letterSpacing: 1, color: t.onSurfaceVariant }}>{req.noteType}</Text>
+                    </View>
                   </View>
-                  <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, backgroundColor: t.iconBg, borderWidth: 1, borderColor: t.cardBorder }}>
-                    <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 9, letterSpacing: 1, color: t.onSurfaceVariant }}>{req.noteType}</Text>
-                  </View>
+                  <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 17, lineHeight: 23, color: t.onSurface, marginBottom: 6 }}>{req.topic}</Text>
+                  <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: t.onSurfaceVariant }}>by {req.requestedBy?.name ?? 'Someone'}</Text>
                 </View>
-                <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 17, lineHeight: 23, color: t.onSurface, marginBottom: 6 }}>{req.topic}</Text>
-                <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: t.onSurfaceVariant }}>by {req.requestedBy?.name ?? 'Someone'}</Text>
-              </View>
-              <View style={{ backgroundColor: isDark ? 'rgba(207,188,255,0.12)' : 'rgba(181,153,255,0.12)', borderRadius: 16, minWidth: 74, paddingVertical: 14, paddingHorizontal: 12, alignItems: 'center', borderWidth: 1, borderColor: t.cardBorder }}>
-                <Ionicons name="arrow-up-circle-outline" size={20} color={t.primaryText} />
-                <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 9, color: t.primaryText, marginTop: 4, letterSpacing: 0.5 }}>FULFILL</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
+                <View style={{ backgroundColor: isDark ? 'rgba(207,188,255,0.12)' : 'rgba(181,153,255,0.12)', borderRadius: 16, minWidth: 74, paddingVertical: 14, paddingHorizontal: 12, alignItems: 'center', borderWidth: 1, borderColor: t.cardBorder }}>
+                  <Ionicons name="arrow-up-circle-outline" size={20} color={t.primaryText} />
+                  <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 9, color: t.primaryText, marginTop: 4, letterSpacing: 0.5 }}>FULFILL</Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
       ) : isLoading ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
@@ -633,11 +630,11 @@ export default function NotesScreen() {
             <NoteCard item={item} onDownload={() => downloadMutation.mutate(item.id)} onStar={() => rateMutation.mutate({ id: item.id, rating: 1 })} isDownloading={downloadMutation.isPending && downloadMutation.variables === item.id} isRating={rateMutation.isPending} />
           )}
           ListEmptyComponent={
-            <View style={{ alignItems: 'center', paddingVertical: 80 }}>
-              <Text style={{ fontSize: 44 }}>📭</Text>
-              <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 18, color: t.onSurface, marginTop: 14 }}>No notes found</Text>
-              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: t.onSurfaceVariant, marginTop: 6 }}>Try different filters or request one below</Text>
-            </View>
+            <EmptyState
+              icon="📭"
+              title="No notes found"
+              body="Try different filters or request one below"
+            />
           }
         />
       )}
@@ -647,12 +644,20 @@ export default function NotesScreen() {
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
           <SafeAreaView style={{ flex: 1, backgroundColor: t.bg }} edges={['top']}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: t.separator }}>
-              <TouchableOpacity onPress={() => { setShowUpload(false); resetUploadForm(); setFulfillRequestId(null); }}>
+              <TouchableOpacity onPress={() => { setShowUpload(false); resetUploadForm(); setFulfillRequestId(null); }} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                 <Ionicons name="close" size={24} color={t.onSurfaceVariant} />
               </TouchableOpacity>
-              <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 18, color: t.onSurface }}>{fulfillRequestId ? 'Fulfill Request' : 'Upload Note'}</Text>
-              <TouchableOpacity onPress={() => uploadMutation.mutate()} disabled={uploadMutation.isPending || !uploadTitle.trim() || !pickedFile} style={{ opacity: uploadTitle.trim() && pickedFile ? 1 : 0.4 }}>
-                {uploadMutation.isPending ? <ActivityIndicator size="small" color={t.primaryText} /> : <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 14, color: t.primaryText }}>Post</Text>}
+              <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 18, color: t.onSurface }}>{fulfillRequestId ? 'Fulfill Request' : 'Upload Note'}</Text>
+              {/* Fix #23: Post button has proper pill-button visual weight */}
+              <TouchableOpacity
+                onPress={() => uploadMutation.mutate()}
+                disabled={uploadMutation.isPending || !uploadTitle.trim() || !pickedFile}
+                style={{ paddingHorizontal: 16, paddingVertical: 7, borderRadius: 999, backgroundColor: uploadTitle.trim() && pickedFile ? (isDark ? t.primaryContainer : t.primary) : t.iconBg, opacity: uploadTitle.trim() && pickedFile ? 1 : 0.5 }}
+              >
+                {uploadMutation.isPending
+                  ? <ActivityIndicator size="small" color="#FFFFFF" />
+                  : <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 13, color: uploadTitle.trim() && pickedFile ? '#FFFFFF' : t.outlineVariant }}>Post</Text>
+                }
               </TouchableOpacity>
             </View>
 
@@ -670,39 +675,41 @@ export default function NotesScreen() {
                 ) : null;
               })()}
 
-              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: t.onSurfaceVariant, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>Title *</Text>
+              <SectionLabel style={{ marginBottom: 8 }}>Title *</SectionLabel>
               <TextInput value={uploadTitle} onChangeText={setUploadTitle} placeholder="e.g. Brachial Plexus Complete Notes" placeholderTextColor={phColor} style={{ backgroundColor: t.card, borderWidth: 1, borderColor: t.cardBorder, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 13, fontFamily: 'Inter_400Regular', fontSize: 14, color: t.onSurface, marginBottom: 20 }} />
 
-              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: t.onSurfaceVariant, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 10 }}>Subject *</Text>
+              <SectionLabel style={{ marginBottom: 10 }}>Subject *</SectionLabel>
+              {/* Fix #3: subject pills in upload modal use borderRadius 999 (interactive selectors) */}
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
                 {SUBJECTS.map((s) => {
-                  const sc = getSubjectColor(s, isDark).text;
+                  const sc = getSubjectColor(s, isDark);
                   const isActive = uploadSubject === s;
                   return (
-                    <TouchableOpacity key={s} onPress={() => setUploadSubject(s)} style={{ marginRight: 8, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999, backgroundColor: isActive ? sc : t.card, borderWidth: 1, borderColor: isActive ? sc : t.cardBorder }}>
-                      <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: isActive ? '#1a0a3a' : t.onSurfaceVariant }}>{s}</Text>
+                    <TouchableOpacity key={s} onPress={() => setUploadSubject(s)} style={{ marginRight: 8, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, backgroundColor: isActive ? sc.activeBg : t.card, borderWidth: isActive ? 1.5 : 1, borderColor: isActive ? sc.activeBorder : t.cardBorder }}>
+                      <Text style={{ fontFamily: isActive ? 'Inter_700Bold' : 'Inter_500Medium', fontSize: 10, letterSpacing: 1.1, textTransform: 'uppercase', color: isActive ? sc.text : t.onSurfaceVariant }}>{s}</Text>
                     </TouchableOpacity>
                   );
                 })}
               </ScrollView>
 
-              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: t.onSurfaceVariant, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 10 }}>Note Type *</Text>
+              <SectionLabel style={{ marginBottom: 10 }}>Note Type *</SectionLabel>
+              {/* Fix #16: note type selectors match request form — t.card inactive, primary active, white text */}
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
                 {UPLOAD_NOTE_TYPES.map((nt) => (
-                  <TouchableOpacity key={nt.value} onPress={() => setUploadNoteType(nt.value)} style={{ paddingHorizontal: 14, paddingVertical: 9, borderRadius: 14, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: uploadNoteType === nt.value ? t.primaryContainer : t.card, borderWidth: 1, borderColor: uploadNoteType === nt.value ? t.primaryContainer : t.cardBorder }}>
+                  <TouchableOpacity key={nt.value} onPress={() => setUploadNoteType(nt.value)} style={{ paddingHorizontal: 14, paddingVertical: 9, borderRadius: 999, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: uploadNoteType === nt.value ? activeNoteTypeBg : t.card, borderWidth: 1, borderColor: uploadNoteType === nt.value ? activeNoteTypeBg : t.cardBorder }}>
                     <Text style={{ fontSize: 13 }}>{nt.icon}</Text>
-                    <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: uploadNoteType === nt.value ? '#39197c' : t.onSurfaceVariant }}>{nt.label}</Text>
+                    <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: uploadNoteType === nt.value ? '#FFFFFF' : t.onSurfaceVariant }}>{nt.label}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
 
-              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: t.onSurfaceVariant, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>Description (optional)</Text>
+              <SectionLabel style={{ marginBottom: 8 }}>Description (optional)</SectionLabel>
               <TextInput value={uploadDesc} onChangeText={setUploadDesc} placeholder="Brief description..." placeholderTextColor={phColor} multiline numberOfLines={3} style={{ backgroundColor: t.card, borderWidth: 1, borderColor: t.cardBorder, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 13, fontFamily: 'Inter_400Regular', fontSize: 14, color: t.onSurface, textAlignVertical: 'top', minHeight: 80, marginBottom: 20 }} />
 
-              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: t.onSurfaceVariant, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>Tags (optional)</Text>
+              <SectionLabel style={{ marginBottom: 8 }}>Tags (optional)</SectionLabel>
               <TextInput value={uploadTags} onChangeText={setUploadTags} placeholder="e.g. upper limb, nerve, anatomy" placeholderTextColor={phColor} style={{ backgroundColor: t.card, borderWidth: 1, borderColor: t.cardBorder, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 13, fontFamily: 'Inter_400Regular', fontSize: 14, color: t.onSurface, marginBottom: 20 }} />
 
-              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: t.onSurfaceVariant, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 10 }}>File *</Text>
+              <SectionLabel style={{ marginBottom: 10 }}>File *</SectionLabel>
               <TouchableOpacity onPress={pickFile} activeOpacity={0.7} style={{ borderWidth: 1.5, borderStyle: 'dashed', borderRadius: 20, paddingVertical: 28, alignItems: 'center', justifyContent: 'center', borderColor: pickedFile ? t.primaryContainer : t.cardBorder, backgroundColor: pickedFile ? `${t.primaryContainer}0D` : 'transparent', marginBottom: 8 }}>
                 {pickedFile ? (
                   <>
@@ -719,7 +726,7 @@ export default function NotesScreen() {
                 )}
               </TouchableOpacity>
               {pickedFile && (
-                <TouchableOpacity onPress={() => setPickedFile(null)} style={{ alignItems: 'center', paddingVertical: 4 }}>
+                <TouchableOpacity onPress={() => setPickedFile(null)} style={{ alignItems: 'center', paddingVertical: 11 }} hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}>
                   <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: t.onSurfaceVariant }}>Remove file</Text>
                 </TouchableOpacity>
               )}

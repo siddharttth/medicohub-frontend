@@ -86,7 +86,7 @@ export const lightTheme = {
   innerSurface: '#F2F4FF',
 };
 
-export type AppTheme = typeof darkTheme;
+export type AppTheme = Omit<typeof darkTheme, 'statusBar'> & { statusBar: 'light' | 'dark' };
 
 export function getTheme(isDark: boolean): AppTheme {
   return isDark ? darkTheme : lightTheme;

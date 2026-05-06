@@ -15,18 +15,8 @@ import { dropsApi } from '../../src/api/drops';
 import { aiApi } from '../../src/api/ai';
 import { useSocket } from '../../src/hooks/useSocket';
 import { MessageBubble } from '../../src/components/drops/MessageBubble';
+import { SUBJECTS, SubjectPill } from '../../src/constants/subjects';
 import { Message, Subject } from '../../src/types';
-
-const SUBJECTS: Subject[] = [
-  'Anatomy', 'Physiology', 'Biochemistry', 'Pathology',
-  'Pharmacology', 'Microbiology', 'Surgery', 'Medicine',
-];
-
-const SUBJECT_COLORS: Record<string, string> = {
-  Anatomy: '#cfbcff', Physiology: '#4ade80', Biochemistry: '#60a5fa',
-  Pathology: '#fb923c', Pharmacology: '#f472b6', Microbiology: '#22d3ee',
-  Surgery: '#fbbf24', Medicine: '#a78bfa',
-};
 
 // ─── Typing indicator ────────────────────────────────────────────────────────
 const TypingIndicator = () => {
@@ -73,11 +63,9 @@ export default function DropsScreen() {
   const t = getTheme(isDark);
   const { socket } = useSocket();
 
-  // Messages for the current subject from cache
   const messages = getMessages(selectedSubject);
   const hasCached = messages.length > 0;
 
-  // Track which subjects have been fetched this session to avoid re-fetching
   const fetchedRef = useRef<Set<string>>(new Set());
 
   const fetchMessages = useCallback(async (subject: Subject) => {
@@ -87,19 +75,15 @@ export default function DropsScreen() {
     return res;
   }, [setMessages]);
 
-  // Background-refresh: if already cached show immediately, refetch silently
   const { isFetching } = useQuery({
     queryKey: ['drops', 'messages', selectedSubject],
     queryFn: () => fetchMessages(selectedSubject),
-    // If we have cached data, don't show loading — just refresh in bg
     staleTime: 60_000,
     refetchOnWindowFocus: false,
   });
 
-  // Show spinner only on first load (no cache yet for this subject)
   const showSpinner = isFetching && !hasCached;
 
-  // Track subject + join room so backend delivers 'new-drop' events
   useEffect(() => {
     if (socket) {
       (socket as any)._currentSubject = selectedSubject;
@@ -143,11 +127,10 @@ export default function DropsScreen() {
     aiMutation.mutate(text);
   };
 
-  const activeColor = SUBJECT_COLORS[selectedSubject] ?? '#cfbcff';
-
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.bg }} edges={['top']}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }} keyboardVerticalOffset={0}>
+
         {/* ── Header ── */}
         <View style={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 16 }}>
           <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }}>
@@ -168,29 +151,20 @@ export default function DropsScreen() {
           </View>
         </View>
 
-        {/* ── Subject pills ── */}
+        {/* ── Subject pills — Fix #2: shared SubjectPill; Fix #8: padding matches exam (16/8) ── */}
+        {/* Fix #9: removed misleading static underline indicator */}
         <View style={{ marginBottom: 12 }}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingLeft: 20, paddingRight: 8 }}>
-            {SUBJECTS.map((s) => {
-              const isActive = selectedSubject === s;
-              const color = SUBJECT_COLORS[s];
-              return (
-                <TouchableOpacity
-                  key={s}
-                  onPress={() => setSelectedSubject(s)}
-                  activeOpacity={0.75}
-                  style={{ paddingHorizontal: 18, paddingVertical: 9, borderRadius: 999, marginRight: 8, backgroundColor: isActive ? color : t.card, borderWidth: 1, borderColor: isActive ? color : t.cardBorder }}
-                >
-                  <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: isActive ? '#1a0a3a' : t.onSurfaceVariant }}>
-                    {s}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
+            {SUBJECTS.map((s) => (
+              <SubjectPill
+                key={s}
+                subject={s}
+                active={selectedSubject === s}
+                variant="pill"
+                onPress={() => setSelectedSubject(s)}
+              />
+            ))}
           </ScrollView>
-          <View style={{ height: 1.5, marginTop: 12, marginHorizontal: 20, backgroundColor: t.separator, borderRadius: 1, overflow: 'hidden' }}>
-            <View style={{ width: 48, height: '100%', backgroundColor: activeColor, borderRadius: 1, opacity: 0.6 }} />
-          </View>
         </View>
 
         {/* ── Messages ── */}
@@ -212,7 +186,7 @@ export default function DropsScreen() {
             ListHeaderComponent={isTyping ? <TypingIndicator /> : null}
             ListEmptyComponent={
               <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 60, paddingHorizontal: 32 }}>
-                <View style={{ width: 72, height: 72, borderRadius: 24, backgroundColor: `${activeColor}12`, borderWidth: 1, borderColor: `${activeColor}20`, alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+                <View style={{ width: 72, height: 72, borderRadius: 24, backgroundColor: 'rgba(207,188,255,0.1)', borderWidth: 1, borderColor: 'rgba(207,188,255,0.18)', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
                   <Text style={{ fontSize: 32 }}>💬</Text>
                 </View>
                 <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 22, color: t.onSurface, letterSpacing: -0.3, marginBottom: 8, textAlign: 'center' }}>
@@ -220,7 +194,7 @@ export default function DropsScreen() {
                 </Text>
                 <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: t.onSurfaceVariant, textAlign: 'center', lineHeight: 21, marginBottom: 28 }}>
                   Be the first to drop something in{' '}
-                  <Text style={{ fontFamily: 'Inter_600SemiBold', color: activeColor }}>{selectedSubject}</Text>
+                  <Text style={{ fontFamily: 'Inter_600SemiBold', color: t.primaryText }}>{selectedSubject}</Text>
                   . Ask a doubt, share a tip, or just say hi 👋
                 </Text>
                 {[
@@ -243,7 +217,8 @@ export default function DropsScreen() {
         )}
 
         {/* ── Input bar ── */}
-        <View style={{ paddingHorizontal: 16, paddingVertical: 12, paddingBottom: 16, borderTopWidth: 1, borderTopColor: t.separator, backgroundColor: t.bg, flexDirection: 'row', alignItems: 'flex-end', gap: 8 }}>
+        {/* Fix #22: explicit paddingTop/paddingBottom instead of conflicting paddingVertical + paddingBottom */}
+        <View style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 16, borderTopWidth: 1, borderTopColor: t.separator, backgroundColor: t.bg, flexDirection: 'row', alignItems: 'flex-end', gap: 8 }}>
           <View style={{ flex: 1, backgroundColor: t.card, borderWidth: 1, borderColor: t.cardBorder, borderRadius: 22, paddingHorizontal: 18, paddingVertical: 11, minHeight: 46, justifyContent: 'center' }}>
             <TextInput
               value={inputText}
@@ -255,15 +230,28 @@ export default function DropsScreen() {
               style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: t.onSurface, maxHeight: 100, padding: 0 }}
             />
           </View>
-          <TouchableOpacity onPress={handleAskAI} disabled={aiMutation.isPending} activeOpacity={0.8}
-            style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: 'rgba(74,222,128,0.1)', borderWidth: 1, borderColor: 'rgba(74,222,128,0.2)', alignItems: 'center', justifyContent: 'center' }}>
-            {aiMutation.isPending ? <ActivityIndicator size="small" color="#4ade80" /> : <Text style={{ fontSize: 20 }}>🤖</Text>}
+          {/* Fix #13: replace robot emoji with Ionicons sparkles for consistent icon system */}
+          <TouchableOpacity
+            onPress={handleAskAI}
+            disabled={aiMutation.isPending}
+            activeOpacity={0.8}
+            style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: 'rgba(74,222,128,0.1)', borderWidth: 1, borderColor: 'rgba(74,222,128,0.2)', alignItems: 'center', justifyContent: 'center' }}
+          >
+            {aiMutation.isPending
+              ? <ActivityIndicator size="small" color="#4ade80" />
+              : <Ionicons name="sparkles-outline" size={20} color="#4ade80" />
+            }
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleSend} disabled={sendMutation.isPending || !inputText.trim()} activeOpacity={0.8}
-            style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: inputText.trim() ? t.primaryContainer : t.card, borderWidth: 1, borderColor: inputText.trim() ? t.primaryContainer : t.cardBorder, alignItems: 'center', justifyContent: 'center', shadowColor: inputText.trim() ? t.primaryContainer : 'transparent', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.35, shadowRadius: 10 }}>
+          {/* Fix #7: use t.onPrimary instead of hardcoded '#39197c' for send icon */}
+          <TouchableOpacity
+            onPress={handleSend}
+            disabled={sendMutation.isPending || !inputText.trim()}
+            activeOpacity={0.8}
+            style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: inputText.trim() ? t.primaryContainer : t.card, borderWidth: 1, borderColor: inputText.trim() ? t.primaryContainer : t.cardBorder, alignItems: 'center', justifyContent: 'center', shadowColor: inputText.trim() ? t.primaryContainer : 'transparent', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.35, shadowRadius: 10 }}
+          >
             {sendMutation.isPending
-              ? <ActivityIndicator size="small" color="#39197c" />
-              : <Ionicons name="send" size={18} color={inputText.trim() ? '#39197c' : t.outlineVariant} />
+              ? <ActivityIndicator size="small" color={t.onPrimary} />
+              : <Ionicons name="send" size={18} color={inputText.trim() ? t.onPrimary : t.outlineVariant} />
             }
           </TouchableOpacity>
         </View>

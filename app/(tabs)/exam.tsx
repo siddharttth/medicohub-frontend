@@ -460,7 +460,7 @@ export default function ExamScreen() {
 
   const activePacks = selectedSubject ? getActivePacks(selectedSubject) : [];
   const vivaQuestions = selectedSubject ? getVivaQuestions(selectedSubject) : [];
-  const viewingPack = viewingPackIndex !== null ? activePacks[viewingPackIndex]?.pack ?? null : null;
+
   const subjectColor = selectedSubject ? (SUBJECT_COLORS[selectedSubject] ?? '#cfbcff') : '#cfbcff';
   const subjectDarkColor = selectedSubject ? (SUBJECT_DARK_COLORS[selectedSubject] ?? '#5E35B1') : '#5E35B1';
   const subjectTextColor = isDark ? subjectColor : subjectDarkColor;
@@ -706,37 +706,60 @@ export default function ExamScreen() {
               </View>
             </View>
 
-            {/* ── Exam type selector ── */}
-            <View style={{ paddingHorizontal: 20, marginBottom: 20 }}>
-              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: t.onSurfaceVariant, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Pack Type</Text>
-              <View style={{ flexDirection: 'row', gap: 8 }}>
-                {EXAM_TYPES.map((et) => {
-                  const isActive = selectedExamType === et.value;
-                  return (
-                    <TouchableOpacity key={et.value} onPress={() => setSelectedExamType(et.value)} activeOpacity={0.8}
-                      style={{ flex: 1, paddingVertical: 12, borderRadius: 16, alignItems: 'center', backgroundColor: isActive ? `${subjectColor}${isDark ? '28' : '30'}` : t.card, borderWidth: 1, borderColor: isActive ? `${subjectColor}${isDark ? '55' : '70'}` : t.cardBorder }}>
-                      <Text style={{ fontSize: 16, marginBottom: 4 }}>{et.icon}</Text>
-                      <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, letterSpacing: 0.8, color: isActive ? subjectTextColor : t.onSurfaceVariant }}>{et.label}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: t.outlineVariant, marginTop: 8, textAlign: 'center' }}>
-                {EXAM_TYPES.find((et) => et.value === selectedExamType)?.desc}
-              </Text>
-            </View>
+            {/* ── Pack type + generate — unified card ── */}
+            <View style={{ marginHorizontal: 20, marginBottom: 20, backgroundColor: t.card, borderRadius: 24, borderWidth: 1, borderColor: t.cardBorder, overflow: 'hidden' }}>
+              {/* Type selector rows */}
+              {EXAM_TYPES.map((et) => {
+                const isActive = selectedExamType === et.value;
+                return (
+                  <TouchableOpacity key={et.value} onPress={() => setSelectedExamType(et.value)} activeOpacity={0.75}
+                    style={{
+                      flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14,
+                      backgroundColor: isActive ? `${subjectColor}${isDark ? '20' : '22'}` : 'transparent',
+                      borderBottomWidth: 1,
+                      borderBottomColor: isActive ? `${subjectColor}${isDark ? '28' : '35'}` : t.separator,
+                    }}>
+                    {/* Selection indicator */}
+                    <View style={{
+                      width: 20, height: 20, borderRadius: 10, marginRight: 14,
+                      borderWidth: 1.5,
+                      borderColor: isActive ? subjectColor : t.outlineVariant,
+                      backgroundColor: isActive ? `${subjectColor}${isDark ? '35' : '40'}` : 'transparent',
+                      alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      {isActive && <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: subjectColor }} />}
+                    </View>
+                    <Text style={{ fontSize: 18, marginRight: 12 }}>{et.icon}</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: isActive ? subjectTextColor : t.onSurface, marginBottom: 1 }}>{et.label}</Text>
+                      <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: isActive ? (isDark ? `${subjectColor}aa` : subjectTextColor) : t.outlineVariant, opacity: isActive ? 0.85 : 1 }}>{et.desc}</Text>
+                    </View>
+                    {isActive && (
+                      <Ionicons name="checkmark-circle" size={18} color={subjectColor} style={{ marginLeft: 8 }} />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
 
-            {/* ── Generate button ── */}
-            <TouchableOpacity onPress={() => { if (!limitReached && !isGenerating) setShowTopicsModal(true); }} disabled={limitReached || isGenerating} activeOpacity={0.85}
-              style={{ marginHorizontal: 20, marginBottom: 20, borderRadius: 28, overflow: 'hidden', opacity: (limitReached || isGenerating) ? 0.55 : 1 }}>
-              <LinearGradient colors={[`${subjectColor}${isDark ? '55' : '70'}`, `${subjectColor}${isDark ? '30' : '40'}`]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                style={{ padding: 22, borderRadius: 28, borderWidth: 1, borderColor: `${subjectColor}${isDark ? '50' : '90'}`, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-                {isGenerating
-                  ? <><ActivityIndicator color={subjectTextColor} /><Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 16, color: isDark ? '#ffffff' : t.onSurface, letterSpacing: -0.2 }}>Generating in background…</Text></>
-                  : <><Text style={{ fontSize: 20 }}>🧠</Text><Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 18, color: isDark ? '#ffffff' : t.onSurface, letterSpacing: -0.2 }}>{limitReached ? 'Daily Limit Reached' : `Generate ${selectedSubject} Pack`}</Text></>
-                }
-              </LinearGradient>
-            </TouchableOpacity>
+              {/* Generate CTA — anchored to the bottom of the card */}
+              <TouchableOpacity
+                onPress={() => { if (!limitReached && !isGenerating) setShowTopicsModal(true); }}
+                disabled={limitReached || isGenerating}
+                activeOpacity={0.85}
+                style={{ opacity: (limitReached || isGenerating) ? 0.55 : 1 }}
+              >
+                <LinearGradient
+                  colors={[`${subjectColor}${isDark ? '55' : '70'}`, `${subjectColor}${isDark ? '30' : '40'}`]}
+                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                  style={{ paddingVertical: 18, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 }}
+                >
+                  {isGenerating
+                    ? <><ActivityIndicator color={subjectTextColor} /><Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 16, color: isDark ? '#ffffff' : t.onSurface, letterSpacing: -0.2 }}>Generating in background…</Text></>
+                    : <><Text style={{ fontSize: 18 }}>🧠</Text><Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 16, color: isDark ? '#ffffff' : t.onSurface, letterSpacing: -0.2 }}>{limitReached ? 'Daily Limit Reached' : `Generate ${selectedSubject} Pack`}</Text><Ionicons name="arrow-forward" size={16} color={isDark ? '#ffffff' : t.onSurface} style={{ marginLeft: 2 }} /></>
+                  }
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
 
             {/* ── Saved packs ── */}
             {activePacks.length > 0 && (

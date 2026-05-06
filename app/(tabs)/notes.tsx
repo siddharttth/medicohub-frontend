@@ -52,11 +52,11 @@ const NOTE_TYPE_ICONS: Record<NoteType, { icon: string; color: string }> = {
   pyq: { icon: 'layers-outline', color: '#60a5fa' },
 };
 
-const UPLOAD_NOTE_TYPES: { label: string; value: UploadNoteType; icon: string }[] = [
-  { label: 'PDF', value: 'PDF', icon: '📄' },
-  { label: 'Handwritten', value: 'Handwritten', icon: '✍️' },
-  { label: 'Diagram', value: 'Diagram', icon: '🎨' },
-  { label: 'PYQ', value: 'PYQ', icon: '📝' },
+const UPLOAD_NOTE_TYPES: { label: string; value: UploadNoteType; iconName: React.ComponentProps<typeof Ionicons>['name'] }[] = [
+  { label: 'PDF', value: 'PDF', iconName: 'document-text-outline' },
+  { label: 'Handwritten', value: 'Handwritten', iconName: 'pencil-outline' },
+  { label: 'Diagram', value: 'Diagram', iconName: 'color-palette-outline' },
+  { label: 'PYQ', value: 'PYQ', iconName: 'layers-outline' },
 ];
 
 type PickedFile = { uri: string; name: string; mimeType: string; size?: number };
@@ -355,7 +355,7 @@ export default function NotesScreen() {
       }
       Toast.show({
         type: 'success',
-        text1: wasFulfilling ? 'Request fulfilled! 🎉' : 'Note uploaded!',
+        text1: wasFulfilling ? 'Request fulfilled!' : 'Note uploaded!',
         text2: wasFulfilling ? "The note is now in the requester's profile." : 'Thanks for contributing.',
       });
       setShowUpload(false); resetUploadForm();
@@ -631,7 +631,7 @@ export default function NotesScreen() {
           )}
           ListEmptyComponent={
             <EmptyState
-              icon="📭"
+              iconName="document-outline"
               title="No notes found"
               body="Try different filters or request one below"
             />
@@ -665,8 +665,10 @@ export default function NotesScreen() {
               {fulfillRequestId && (() => {
                 const req = sortedRequests.find((r) => r.id === fulfillRequestId);
                 return req ? (
-                  <View style={{ backgroundColor: t.card, borderRadius: 16, padding: 14, marginBottom: 16, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: t.cardBorder }}>
-                    <Text style={{ fontSize: 18, marginRight: 10 }}>📬</Text>
+                  <View style={{ backgroundColor: t.card, borderRadius: 16, padding: 14, marginBottom: 16, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: t.cardBorder, gap: 12 }}>
+                    <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: isDark ? 'rgba(207,188,255,0.08)' : 'rgba(181,153,255,0.1)', alignItems: 'center', justifyContent: 'center' }}>
+                      <Ionicons name="time-outline" size={18} color={t.onSurfaceVariant} />
+                    </View>
                     <View style={{ flex: 1 }}>
                       <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: t.onSurface }}>{req.topic}</Text>
                       <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: t.onSurfaceVariant }}>{req.subject} · requested by {req.requestedBy?.name}</Text>
@@ -697,7 +699,7 @@ export default function NotesScreen() {
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
                 {UPLOAD_NOTE_TYPES.map((nt) => (
                   <TouchableOpacity key={nt.value} onPress={() => setUploadNoteType(nt.value)} style={{ paddingHorizontal: 14, paddingVertical: 9, borderRadius: 999, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: uploadNoteType === nt.value ? activeNoteTypeBg : t.card, borderWidth: 1, borderColor: uploadNoteType === nt.value ? activeNoteTypeBg : t.cardBorder }}>
-                    <Text style={{ fontSize: 13 }}>{nt.icon}</Text>
+                    <Ionicons name={nt.iconName} size={14} color={uploadNoteType === nt.value ? '#FFFFFF' : t.onSurfaceVariant} />
                     <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: uploadNoteType === nt.value ? '#FFFFFF' : t.onSurfaceVariant }}>{nt.label}</Text>
                   </TouchableOpacity>
                 ))}

@@ -28,10 +28,10 @@ const SUBJECT_FILL_COLORS: Record<string, string> = {
   Surgery: '#fbbf24', Medicine: '#a78bfa',
 };
 
-const EXAM_TYPES: { label: string; value: ExamType; icon: string; desc: string }[] = [
-  { label: 'Full Pack', value: 'full-pack', icon: '📦', desc: '10 MCQs + Short + Long Qs' },
-  { label: 'Quick Review', value: 'quick-review', icon: '⚡', desc: '15 high-yield short Qs' },
-  { label: 'Viva Only', value: 'viva-only', icon: '🎙️', desc: '15 examiner-style viva Qs' },
+const EXAM_TYPES: { label: string; value: ExamType; iconName: React.ComponentProps<typeof Ionicons>['name']; desc: string }[] = [
+  { label: 'Full Pack', value: 'full-pack', iconName: 'layers-outline', desc: '10 MCQs + Short + Long Qs' },
+  { label: 'Quick Review', value: 'quick-review', iconName: 'flash-outline', desc: '15 high-yield short Qs' },
+  { label: 'Viva Only', value: 'viva-only', iconName: 'mic-outline', desc: '15 examiner-style viva Qs' },
 ];
 
 const MAX_PACKS = 3;
@@ -121,7 +121,7 @@ function PackCard({ stored, onSelect, active, subjectColor }: {
   const isPending = stored.pack.status === 'pending';
   const isFailed = stored.pack.status === 'failed';
 
-  const typeIcon = EXAM_TYPES.find((et) => et.value === stored.examType)?.icon ?? '📦';
+  const typeIconName = EXAM_TYPES.find((et) => et.value === stored.examType)?.iconName ?? 'layers-outline';
   const typeLabel = stored.examType.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
   return (
@@ -135,7 +135,9 @@ function PackCard({ stored, onSelect, active, subjectColor }: {
         <View style={{ width: 36, height: 36, borderRadius: 11, backgroundColor: active ? `${subjectColor}${isDark ? '30' : '35'}` : t.iconBg, borderWidth: 1, borderColor: active ? `${subjectColor}${isDark ? '45' : '55'}` : t.cardBorder, alignItems: 'center', justifyContent: 'center', marginRight: 12, flexShrink: 0 }}>
           {isPending
             ? <ActivityIndicator size="small" color={subjectTextColor} />
-            : <Text style={{ fontSize: 16 }}>{isFailed ? '⚠️' : typeIcon}</Text>
+            : isFailed
+              ? <Ionicons name="warning-outline" size={18} color={t.error} />
+              : <Ionicons name={typeIconName} size={18} color={active ? subjectTextColor : t.onSurfaceVariant} />
           }
         </View>
 
@@ -167,7 +169,7 @@ function PackCard({ stored, onSelect, active, subjectColor }: {
         <View style={{ backgroundColor: t.card, borderTopWidth: 1, borderTopColor: `${subjectColor}${isDark ? '25' : '35'}`, padding: 20 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 18 }}>
             <View style={{ width: 28, height: 28, borderRadius: 9, backgroundColor: `${subjectColor}${isDark ? '20' : '28'}`, alignItems: 'center', justifyContent: 'center' }}>
-              <Text style={{ fontSize: 14 }}>✨</Text>
+              <Ionicons name="checkmark-circle" size={16} color={subjectTextColor} />
             </View>
             <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 14, color: subjectTextColor, letterSpacing: -0.2 }}>
               {stored.pack.subject} — {typeLabel}
@@ -553,7 +555,7 @@ export default function ExamScreen() {
           setPendingPackId(null);
           setIsGenerating(false);
           queryClient.invalidateQueries({ queryKey: ['exam-usage'] });
-          Toast.show({ type: 'success', text1: 'Pack ready! 💪' });
+          Toast.show({ type: 'success', text1: 'Pack ready!' });
           if (selectedSubject) {
             examApi.getMyPacks(selectedSubject).then((packs) => setPacksForSubject(selectedSubject, packs)).catch(() => {});
           }
@@ -726,7 +728,7 @@ export default function ExamScreen() {
                       borderColor: isActive ? subjectColor : t.outlineVariant,
                       backgroundColor: 'transparent',
                     }} />
-                    <Text style={{ fontSize: 17, marginRight: 10 }}>{et.icon}</Text>
+                    <Ionicons name={et.iconName} size={17} color={isActive ? subjectTextColor : t.onSurfaceVariant} style={{ marginRight: 10 }} />
                     <View style={{ flex: 1 }}>
                       <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: isActive ? subjectTextColor : t.onSurface }}>
                         {et.label}
@@ -772,7 +774,7 @@ export default function ExamScreen() {
                     </>
                   ) : (
                     <>
-                      <Text style={{ fontSize: 17 }}>🧠</Text>
+                      <Ionicons name="flash" size={17} color={isDark ? '#ffffff' : t.onSurface} />
                       <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 15, color: isDark ? '#ffffff' : t.onSurface }}>
                         Generate {selectedSubject} Pack
                       </Text>
@@ -818,7 +820,7 @@ export default function ExamScreen() {
                     </Text>
                   )}
                 </View>
-                <Text style={{ fontSize: 20 }}>🎙️</Text>
+                <Ionicons name="mic-outline" size={20} color={t.onSurfaceVariant} />
               </View>
 
               {/* Fix #15: Viva CTA also uses Inter_700Bold 15px — matches Generate CTA */}
@@ -879,7 +881,7 @@ export default function ExamScreen() {
             <View style={{ backgroundColor: t.card, borderRadius: 22, borderWidth: 1, borderColor: t.cardBorder, padding: 24, marginBottom: 16, overflow: 'hidden' }}>
               <View style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, borderRadius: 80, backgroundColor: isDark ? 'rgba(207,188,255,0.06)' : 'rgba(181,153,255,0.06)' }} />
               <View style={{ width: 48, height: 48, borderRadius: 16, backgroundColor: isDark ? 'rgba(207,188,255,0.12)' : 'rgba(181,153,255,0.12)', borderWidth: 1, borderColor: isDark ? 'rgba(207,188,255,0.2)' : 'rgba(181,153,255,0.25)', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
-                <Text style={{ fontSize: 24 }}>🧠</Text>
+                <Ionicons name="school-outline" size={24} color={isDark ? '#cfbcff' : '#7C5CBF'} />
               </View>
               <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: t.onSurfaceVariant, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>AI-Powered</Text>
               <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 24, color: t.onSurface, letterSpacing: -0.4, lineHeight: 30, marginBottom: 10 }}>Your personal{'\n'}exam coach</Text>
@@ -888,15 +890,15 @@ export default function ExamScreen() {
               </Text>
             </View>
 
-            {[
-              { icon: '📦', color: '#cfbcff', label: 'Full Pack', desc: '10 MCQs · 10 Short Qs · 10 Long Qs for a complete 100-mark paper' },
-              { icon: '⚡', color: '#fbbf24', label: 'Quick Review', desc: '15 high-yield short Q&As — perfect for last-minute revision before exams' },
-              { icon: '🎙️', color: '#4ade80', label: 'Viva Only Pack', desc: '15 examiner-style viva questions with crisp answers to ace your orals' },
-              { icon: '🔁', color: '#60a5fa', label: 'Viva Practice', desc: 'One question at a time — practice answering without peeking, then reveal the answer' },
-            ].map((f) => (
+            {([
+              { iconName: 'layers-outline' as const, color: '#cfbcff', label: 'Full Pack', desc: '10 MCQs · 10 Short Qs · 10 Long Qs for a complete 100-mark paper' },
+              { iconName: 'flash-outline' as const, color: '#fbbf24', label: 'Quick Review', desc: '15 high-yield short Q&As — perfect for last-minute revision before exams' },
+              { iconName: 'mic-outline' as const, color: '#4ade80', label: 'Viva Only Pack', desc: '15 examiner-style viva questions with crisp answers to ace your orals' },
+              { iconName: 'refresh-outline' as const, color: '#60a5fa', label: 'Viva Practice', desc: 'One question at a time — practice answering without peeking, then reveal the answer' },
+            ] as const).map((f) => (
               <View key={f.label} style={{ backgroundColor: t.card, borderRadius: 18, borderWidth: 1, borderColor: t.cardBorder, padding: 16, marginBottom: 10, flexDirection: 'row', alignItems: 'flex-start', gap: 14 }}>
                 <View style={{ width: 40, height: 40, borderRadius: 13, backgroundColor: `${f.color}15`, borderWidth: 1, borderColor: `${f.color}25`, alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Text style={{ fontSize: 18 }}>{f.icon}</Text>
+                  <Ionicons name={f.iconName} size={20} color={f.color} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: t.onSurface, marginBottom: 3 }}>{f.label}</Text>
@@ -906,7 +908,7 @@ export default function ExamScreen() {
             ))}
 
             <View style={{ marginTop: 4, backgroundColor: isDark ? 'rgba(207,188,255,0.05)' : 'rgba(181,153,255,0.07)', borderRadius: 14, borderWidth: 1, borderColor: t.cardBorder, padding: 14, flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
-              <Text style={{ fontSize: 16 }}>💡</Text>
+              <Ionicons name="information-circle-outline" size={16} color={t.onSurfaceVariant} style={{ marginTop: 1 }} />
               <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: t.onSurfaceVariant, lineHeight: 18, flex: 1 }}>
                 <Text style={{ fontFamily: 'Inter_600SemiBold', color: t.primaryText }}>Pro tip: </Text>
                 Enter specific topics like "Krebs cycle, Glycolysis" instead of just "Biochemistry" to get laser-focused exam questions.

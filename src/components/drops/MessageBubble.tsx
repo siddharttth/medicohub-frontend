@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Message } from '../../types';
 import { format } from 'date-fns';
 import { useThemeStore, getTheme } from '../../store/themeStore';
@@ -67,7 +68,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, currentUs
               justifyContent: 'center',
             }}
           >
-            <Text style={{ fontSize: 11 }}>🤖</Text>
+            <Ionicons name="sparkles" size={12} color="#4ade80" />
           </View>
           <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, color: '#4ade80', letterSpacing: 0.3 }}>
             MedicoAI
@@ -114,7 +115,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, currentUs
             justifyContent: 'center',
           }}
         >
-          <Text style={{ fontSize: 10 }}>👤</Text>
+          <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 9, color: t.onSurfaceVariant }}>{senderName.charAt(0).toUpperCase()}</Text>
         </View>
         <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, color: t.onSurfaceVariant, letterSpacing: 0.3 }}>
           {senderName}

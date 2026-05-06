@@ -171,9 +171,9 @@ export default function ProfileScreen() {
               Profile
             </Text>
           </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(181,153,255,0.08)', borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(181,153,255,0.2)', borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8, marginTop: 6 }}>
-            <Text style={{ fontSize: 16 }}>🔥</Text>
-            <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 14, color: t.onSurface, marginLeft: 6 }}>{streakDays}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,100,0,0.08)', borderWidth: 1, borderColor: 'rgba(255,100,0,0.18)', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7, marginTop: 6, gap: 6 }}>
+            <Ionicons name="flame-outline" size={15} color="#ff6400" />
+            <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 13, color: '#ff6400' }}>{streakDays} day streak</Text>
           </View>
         </View>
 
@@ -232,7 +232,7 @@ export default function ProfileScreen() {
             <AchievementSkeleton />
           ) : achievementList.length === 0 ? (
             <View style={{ ...cardStyle }}>
-              <CardEmptyState icon="🏅" title="No achievements yet" body="Keep studying to unlock them!" />
+              <CardEmptyState iconName="ribbon-outline" title="No achievements yet" body="Keep studying to unlock them!" />
             </View>
           ) : (
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12 }}>
@@ -296,7 +296,7 @@ export default function ProfileScreen() {
             <RequestSkeleton />
           ) : requestList.length === 0 ? (
             <View style={{ ...cardStyle }}>
-              <CardEmptyState icon="📬" title="No requests yet" body="Request notes from the Notes tab" />
+              <CardEmptyState iconName="document-text-outline" title="No requests yet" body="Request notes from the Notes tab" />
             </View>
           ) : (
             (showAllRequests ? requestList : requestList.slice(0, 2)).map((req) => {
@@ -321,9 +321,12 @@ export default function ProfileScreen() {
                       </View>
                     </View>
                     <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: isFulfilled ? 'rgba(74,222,128,0.1)' : 'rgba(251,191,36,0.1)', borderWidth: 1, borderColor: isFulfilled ? 'rgba(74,222,128,0.2)' : 'rgba(251,191,36,0.2)' }}>
-                      <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 9, letterSpacing: 0.8, color: isFulfilled ? '#4ade80' : '#fbbf24' }}>
-                        {isFulfilled ? '✓ FULFILLED' : '⏳ PENDING'}
-                      </Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                        <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: isFulfilled ? '#4ade80' : '#fbbf24' }} />
+                        <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 9, letterSpacing: 0.8, color: isFulfilled ? '#4ade80' : '#fbbf24' }}>
+                          {isFulfilled ? 'FULFILLED' : 'PENDING'}
+                        </Text>
+                      </View>
                     </View>
                   </View>
 

@@ -26,9 +26,9 @@ const getGreeting = () => {
 
 // ── Stat card ────────────────────────────────────────────────────────────────
 function StatCard({
-  icon, value, label, cardBg, cardBorder, textColor, subColor,
+  iconName, value, label, cardBg, cardBorder, textColor, subColor,
 }: {
-  icon: string; value: string; label: string;
+  iconName: React.ComponentProps<typeof Ionicons>['name']; value: string; label: string;
   cardBg: string; cardBorder: string; textColor: string; subColor: string;
 }) {
   const scale = useRef(new Animated.Value(1)).current;
@@ -43,7 +43,7 @@ function StatCard({
         onPressOut={onPressOut}
         style={{ backgroundColor: cardBg, borderRadius: 18, borderWidth: 1, borderColor: cardBorder, paddingVertical: 16, paddingHorizontal: 6, alignItems: 'center' }}
       >
-        <Text style={{ fontSize: 22, marginBottom: 8 }}>{icon}</Text>
+        <Ionicons name={iconName} size={22} color={textColor} style={{ marginBottom: 8, opacity: 0.75 }} />
         <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 18, color: textColor, marginBottom: 4, letterSpacing: -0.3 }}>{value}</Text>
         <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 10, color: subColor, letterSpacing: 1, textTransform: 'uppercase' }}>{label}</Text>
       </TouchableOpacity>
@@ -220,16 +220,16 @@ export default function HomeScreen() {
             {getGreeting()}
           </Text>
           <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 36, color: t.onSurface, letterSpacing: -0.5, lineHeight: 42 }}>
-            {firstName} 👋
+            {firstName}
           </Text>
         </View>
 
         {/* ── Stats row — personal context above the fold ── */}
         <View style={{ flexDirection: 'row', marginHorizontal: 20, gap: 8, marginBottom: 24 }}>
-          <StatCard icon="🔥" value={String(streakDays)} label="Streak" cardBg={t.card} cardBorder={t.cardBorder} textColor={t.onSurface} subColor={t.onSurfaceVariant} />
-          <StatCard icon="📋" value={String(notesShared)} label="Shared" cardBg={t.card} cardBorder={t.cardBorder} textColor={t.onSurface} subColor={t.onSurfaceVariant} />
-          <StatCard icon="⏱" value={`${studyHours}h`} label="Hours" cardBg={t.card} cardBorder={t.cardBorder} textColor={t.onSurface} subColor={t.onSurfaceVariant} />
-          <StatCard icon="📥" value={String(saves)} label="Saves" cardBg={t.card} cardBorder={t.cardBorder} textColor={t.onSurface} subColor={t.onSurfaceVariant} />
+          <StatCard iconName="flame-outline" value={String(streakDays)} label="Streak" cardBg={t.card} cardBorder={t.cardBorder} textColor={t.onSurface} subColor={t.onSurfaceVariant} />
+          <StatCard iconName="share-social-outline" value={String(notesShared)} label="Shared" cardBg={t.card} cardBorder={t.cardBorder} textColor={t.onSurface} subColor={t.onSurfaceVariant} />
+          <StatCard iconName="time-outline" value={`${studyHours}h`} label="Hours" cardBg={t.card} cardBorder={t.cardBorder} textColor={t.onSurface} subColor={t.onSurfaceVariant} />
+          <StatCard iconName="bookmark-outline" value={String(saves)} label="Saves" cardBg={t.card} cardBorder={t.cardBorder} textColor={t.onSurface} subColor={t.onSurfaceVariant} />
         </View>
 
         {/* ── Hero CTA card ── */}
@@ -244,7 +244,7 @@ export default function HomeScreen() {
               <View style={{ flex: 1, marginRight: 16 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                   <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: isDark ? 'rgba(207,188,255,0.18)' : 'rgba(94,53,177,0.12)', alignItems: 'center', justifyContent: 'center' }}>
-                    <Text style={{ fontSize: 18 }}>⚡</Text>
+                    <Ionicons name="flash-outline" size={20} color={isDark ? '#cfbcff' : '#5E35B1'} />
                   </View>
                   <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 11, color: isDark ? 'rgba(207,188,255,0.6)' : 'rgba(94,53,177,0.6)', letterSpacing: 1.5, textTransform: 'uppercase' }}>
                     AI-Powered
@@ -302,8 +302,10 @@ export default function HomeScreen() {
                 />
               ))
             ) : (
-              <View style={{ width: CARD_W, backgroundColor: t.card, borderRadius: 22, borderWidth: 1, borderColor: t.cardBorder, padding: 20 }}>
-                <Text style={{ fontSize: 28, marginBottom: 10 }}>📭</Text>
+              <View style={{ width: CARD_W, backgroundColor: t.card, borderRadius: 22, borderWidth: 1, borderColor: t.cardBorder, padding: 20, alignItems: 'flex-start' }}>
+                <View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: isDark ? 'rgba(207,188,255,0.08)' : 'rgba(181,153,255,0.1)', borderWidth: 1, borderColor: isDark ? 'rgba(207,188,255,0.15)' : 'rgba(181,153,255,0.2)', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
+                  <Ionicons name="document-outline" size={22} color={t.onSurfaceVariant} />
+                </View>
                 <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: t.onSurface, marginBottom: 4 }}>No notes yet</Text>
                 <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: t.onSurfaceVariant, lineHeight: 18 }}>Explore the notes tab to discover study material.</Text>
               </View>

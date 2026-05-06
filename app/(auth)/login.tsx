@@ -54,7 +54,7 @@ export default function Login() {
         >
           {/* Logo mark */}
           <View style={{ width: 52, height: 52, borderRadius: 16, backgroundColor: isDark ? 'rgba(207,188,255,0.12)' : 'rgba(181,153,255,0.12)', borderWidth: 1, borderColor: isDark ? 'rgba(207,188,255,0.2)' : 'rgba(181,153,255,0.25)', alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
-            <Text style={{ fontSize: 24 }}>🩺</Text>
+            <Ionicons name="pulse-outline" size={26} color={isDark ? '#cfbcff' : '#7C5CBF'} />
           </View>
 
           {/* Headline */}

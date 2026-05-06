@@ -187,7 +187,7 @@ export default function DropsScreen() {
             ListEmptyComponent={
               <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 60, paddingHorizontal: 32 }}>
                 <View style={{ width: 72, height: 72, borderRadius: 24, backgroundColor: 'rgba(207,188,255,0.1)', borderWidth: 1, borderColor: 'rgba(207,188,255,0.18)', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
-                  <Text style={{ fontSize: 32 }}>💬</Text>
+                  <Ionicons name="chatbubbles-outline" size={32} color={isDark ? '#cfbcff' : '#7C5CBF'} />
                 </View>
                 <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 22, color: t.onSurface, letterSpacing: -0.3, marginBottom: 8, textAlign: 'center' }}>
                   No messages yet
@@ -195,7 +195,7 @@ export default function DropsScreen() {
                 <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: t.onSurfaceVariant, textAlign: 'center', lineHeight: 21, marginBottom: 28 }}>
                   Be the first to drop something in{' '}
                   <Text style={{ fontFamily: 'Inter_600SemiBold', color: t.primaryText }}>{selectedSubject}</Text>
-                  . Ask a doubt, share a tip, or just say hi 👋
+                  . Ask a doubt, share a tip, or start a discussion.
                 </Text>
                 {[
                   `Any good notes for ${selectedSubject}?`,

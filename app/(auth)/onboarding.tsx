@@ -21,10 +21,10 @@ const YEARS = [
   { label: 'Final Year', value: 'Final' },
 ];
 
-const FEATURES = [
-  { icon: '🧠', label: 'AI Exam Mode', desc: 'Topic-based packs: MCQs, short Qs, viva — generated from your actual syllabus.' },
-  { icon: '📚', label: 'Senior Notes', desc: 'Curated PDFs, handwritten notes & PYQs from seniors who\'ve been there.' },
-  { icon: '💬', label: 'Medico Drops', desc: 'Real-time batch chat. Doubts, wins, and memes — all in one place.' },
+const FEATURES: { iconName: React.ComponentProps<typeof Ionicons>['name']; label: string; desc: string }[] = [
+  { iconName: 'flash-outline', label: 'AI Exam Mode', desc: 'Topic-based packs: MCQs, short Qs, viva — generated from your actual syllabus.' },
+  { iconName: 'document-text-outline', label: 'Senior Notes', desc: 'Curated PDFs, handwritten notes & PYQs from seniors who\'ve been there.' },
+  { iconName: 'chatbubbles-outline', label: 'Medico Drops', desc: 'Real-time batch chat. Doubts, wins, and memes — all in one place.' },
 ];
 
 const FEATURE_COLORS = ['#cfbcff', '#4ade80', '#60a5fa'];
@@ -187,7 +187,7 @@ export default function Onboarding() {
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
               style={{ width: 68, height: 68, borderRadius: 24, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: isDark ? 'rgba(207,188,255,0.2)' : 'rgba(167,139,250,0.3)' }}
             >
-              <Text style={{ fontSize: 32 }}>🩺</Text>
+              <Ionicons name="pulse-outline" size={34} color={isDark ? '#cfbcff' : '#7C5CBF'} />
             </LinearGradient>
           </View>
 
@@ -257,7 +257,7 @@ export default function Onboarding() {
                 backgroundColor: `${FEATURE_COLORS[i]}${isDark ? '18' : '18'}`,
                 borderWidth: 1, borderColor: `${FEATURE_COLORS[i]}${isDark ? '30' : '35'}`,
               }}>
-                <Text style={{ fontSize: 22 }}>{f.icon}</Text>
+                <Ionicons name={f.iconName} size={22} color={FEATURE_COLORS[i]} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: t.onSurface, marginBottom: 3 }}>{f.label}</Text>

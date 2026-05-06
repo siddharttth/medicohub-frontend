@@ -483,13 +483,13 @@ export default function NotesScreen() {
               <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: t.onSurfaceVariant }}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => requestMutation.mutate()} disabled={requestMutation.isPending || !requestTopic.trim()} style={{ flex: 1, backgroundColor: activeNoteTypeBg, borderRadius: 14, paddingVertical: 12, alignItems: 'center', opacity: requestTopic.trim() ? 1 : 0.4 }}>
-              <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 13, color: '#FFFFFF' }}>{requestMutation.isPending ? 'Sending…' : 'Send Request'}</Text>
+              <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 13, color: isDark ? '#000000' : '#FFFFFF' }}>{requestMutation.isPending ? 'Sending…' : 'Send Request'}</Text>
             </TouchableOpacity>
           </View>
         </>
       ) : (
         <TouchableOpacity onPress={() => setShowRequestForm(true)} style={{ backgroundColor: activeNoteTypeBg, borderRadius: 16, paddingVertical: 16, alignItems: 'center' }}>
-          <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 13, color: '#FFFFFF' }}>Request Custom Note</Text>
+          <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 13, color: isDark ? '#000000' : '#FFFFFF' }}>Request Custom Note</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -507,8 +507,8 @@ export default function NotesScreen() {
           </View>
           <TouchableOpacity onPress={() => setShowUpload(true)} activeOpacity={0.85}
             style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: isDark ? t.primaryContainer : t.primary, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999, gap: 6, marginBottom: 4, shadowColor: isDark ? t.primaryContainer : t.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 4 }}>
-            <Ionicons name="arrow-up-outline" size={16} color="#FFFFFF" />
-            <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 12, color: '#FFFFFF' }}>Upload</Text>
+            <Ionicons name="arrow-up-outline" size={16} color={isDark ? '#000000' : '#FFFFFF'} />
+            <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 12, color: isDark ? '#000000' : '#FFFFFF' }}>Upload</Text>
           </TouchableOpacity>
         </View>
 

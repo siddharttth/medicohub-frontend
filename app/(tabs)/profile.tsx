@@ -16,6 +16,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { useAuthStore } from '../../src/store/authStore';
+import { useThemeStore, getTheme } from '../../src/store/themeStore';
 import { usersApi } from '../../src/api/users';
 import { achievementsApi } from '../../src/api/achievements';
 import { authApi } from '../../src/api/auth';
@@ -34,6 +35,10 @@ export default function ProfileScreen() {
   const { signOut } = useAuth();
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [showAllRequests, setShowAllRequests] = useState(false);
+
+  const isDark = useThemeStore((s) => s.isDark);
+  const setDark = useThemeStore((s) => s.setDark);
+  const t = getTheme(isDark);
 
   const downloadNote = async (noteId: string) => {
     try {
@@ -87,37 +92,35 @@ export default function ProfileScreen() {
   const initials = user?.name?.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2) ?? 'MH';
   const streakDays = stats?.streakDays ?? user?.streakDays ?? 0;
 
-  // ─── Shared card style ──────────────────────────────────────────────────────
   const card = {
-    backgroundColor: '#10121e',
+    backgroundColor: t.card,
     borderRadius: 28,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
+    borderColor: t.cardBorder,
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#070810' }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: t.bg }} edges={['top']}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
 
         {/* ── Header ── */}
         <View style={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 8, flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
           <View>
-            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: '#948e9d', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 6 }}>
+            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: t.onSurfaceVariant, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 6 }}>
               My Account
             </Text>
-            <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 36, color: '#e1e3e4', letterSpacing: -0.5, lineHeight: 40 }}>
+            <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 36, color: t.onSurface, letterSpacing: -0.5, lineHeight: 40 }}>
               Profile
             </Text>
           </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8, marginTop: 6 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(181,153,255,0.08)', borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(181,153,255,0.2)', borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8, marginTop: 6 }}>
             <Text style={{ fontSize: 16 }}>🔥</Text>
-            <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 14, color: '#e1e3e4', marginLeft: 6 }}>{streakDays}</Text>
+            <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 14, color: t.onSurface, marginLeft: 6 }}>{streakDays}</Text>
           </View>
         </View>
 
         {/* ── Avatar card ── */}
         <View style={{ marginHorizontal: 20, marginTop: 20, marginBottom: 20, ...card, padding: 28, alignItems: 'center' }}>
-          {/* Avatar */}
           <View
             style={{
               width: 90,
@@ -126,15 +129,15 @@ export default function ProfileScreen() {
               padding: 3,
               marginBottom: 16,
               borderWidth: 2,
-              borderColor: 'rgba(207,188,255,0.4)',
-              shadowColor: '#cfbcff',
+              borderColor: isDark ? 'rgba(207,188,255,0.4)' : 'rgba(181,153,255,0.5)',
+              shadowColor: t.primaryContainer,
               shadowOffset: { width: 0, height: 0 },
-              shadowOpacity: 0.25,
+              shadowOpacity: isDark ? 0.25 : 0.2,
               shadowRadius: 16,
             }}
           >
             <LinearGradient
-              colors={['#2d1060', '#b599ff']}
+              colors={t.avatarGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={{ width: '100%', height: '100%', borderRadius: 42, alignItems: 'center', justifyContent: 'center' }}
@@ -143,25 +146,22 @@ export default function ProfileScreen() {
             </LinearGradient>
           </View>
 
-          {/* Name */}
-          <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 24, color: '#e1e3e4', letterSpacing: -0.3, marginBottom: 6 }}>
+          <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 24, color: t.onSurface, letterSpacing: -0.3, marginBottom: 6 }}>
             {user?.name ?? 'MedicoHub User'}
           </Text>
 
-          {/* Email */}
-          <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: '#948e9d', marginBottom: 4 }}>
+          <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: t.onSurfaceVariant, marginBottom: 4 }}>
             {user?.email ?? ''}
           </Text>
 
-          {/* College + Year badges */}
           <View style={{ flexDirection: 'row', gap: 8, marginTop: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
             {user?.college && (
-              <View style={{ paddingHorizontal: 12, paddingVertical: 5, borderRadius: 999, backgroundColor: 'rgba(207,188,255,0.1)', borderWidth: 1, borderColor: 'rgba(207,188,255,0.18)' }}>
-                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, color: '#cfbcff' }}>{user.college}</Text>
+              <View style={{ paddingHorizontal: 12, paddingVertical: 5, borderRadius: 999, backgroundColor: isDark ? 'rgba(207,188,255,0.1)' : 'rgba(181,153,255,0.1)', borderWidth: 1, borderColor: isDark ? 'rgba(207,188,255,0.18)' : 'rgba(181,153,255,0.25)' }}>
+                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, color: t.primaryText }}>{user.college}</Text>
               </View>
             )}
-            <View style={{ paddingHorizontal: 12, paddingVertical: 5, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' }}>
-              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, color: '#948e9d' }}>Year {user?.year ?? '1'} · MBBS</Text>
+            <View style={{ paddingHorizontal: 12, paddingVertical: 5, borderRadius: 999, backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(181,153,255,0.06)', borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(181,153,255,0.15)' }}>
+              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, color: t.onSurfaceVariant }}>Year {user?.year ?? '1'} · MBBS</Text>
             </View>
           </View>
         </View>
@@ -169,10 +169,10 @@ export default function ProfileScreen() {
         {/* ── Achievements ── */}
         <View style={{ marginHorizontal: 20, marginBottom: 20 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-            <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 20, color: '#e1e3e4', letterSpacing: -0.2 }}>Achievements</Text>
+            <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 20, color: t.onSurface, letterSpacing: -0.2 }}>Achievements</Text>
             {achievements.length > 0 && (
-              <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: 'rgba(207,188,255,0.1)', borderWidth: 1, borderColor: 'rgba(207,188,255,0.18)' }}>
-                <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 10, color: '#cfbcff', letterSpacing: 1 }}>{achievements.length} TOTAL</Text>
+              <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: isDark ? 'rgba(207,188,255,0.1)' : 'rgba(181,153,255,0.1)', borderWidth: 1, borderColor: isDark ? 'rgba(207,188,255,0.18)' : 'rgba(181,153,255,0.25)' }}>
+                <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 10, color: t.primaryText, letterSpacing: 1 }}>{achievements.length} TOTAL</Text>
               </View>
             )}
           </View>
@@ -180,8 +180,8 @@ export default function ProfileScreen() {
           {achievements.length === 0 ? (
             <View style={{ ...card, padding: 28, alignItems: 'center' }}>
               <Text style={{ fontSize: 36, marginBottom: 12 }}>🏅</Text>
-              <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 16, color: '#e1e3e4', marginBottom: 6 }}>No achievements yet</Text>
-              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: '#948e9d' }}>Keep studying to unlock them!</Text>
+              <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 16, color: t.onSurface, marginBottom: 6 }}>No achievements yet</Text>
+              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: t.onSurfaceVariant }}>Keep studying to unlock them!</Text>
             </View>
           ) : (
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12 }}>
@@ -197,24 +197,24 @@ export default function ProfileScreen() {
                       padding: 18,
                       alignItems: 'center',
                       opacity: isUnlocked ? 1 : 0.45,
-                      borderColor: isUnlocked ? 'rgba(207,188,255,0.15)' : 'rgba(255,255,255,0.05)',
+                      borderColor: isUnlocked ? (isDark ? 'rgba(207,188,255,0.15)' : 'rgba(181,153,255,0.2)') : t.cardBorder,
                     }}
                   >
                     <Text style={{ fontSize: 32, marginBottom: 10 }}>{achievement.icon}</Text>
-                    <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 14, color: '#e1e3e4', textAlign: 'center', marginBottom: 6 }}>
+                    <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 14, color: t.onSurface, textAlign: 'center', marginBottom: 6 }}>
                       {achievement.title}
                     </Text>
-                    <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: '#948e9d', textAlign: 'center', lineHeight: 16 }} numberOfLines={2}>
+                    <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: t.onSurfaceVariant, textAlign: 'center', lineHeight: 16 }} numberOfLines={2}>
                       {achievement.description}
                     </Text>
                     {achievement.progress && (
-                      <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: '#494551', marginTop: 8 }}>
+                      <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: t.outlineVariant, marginTop: 8 }}>
                         {achievement.progress.current}/{achievement.progress.target}
                       </Text>
                     )}
                     {isUnlocked && (
-                      <View style={{ marginTop: 10, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: 'rgba(207,188,255,0.12)', borderWidth: 1, borderColor: 'rgba(207,188,255,0.2)' }}>
-                        <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 9, color: '#cfbcff', letterSpacing: 1 }}>UNLOCKED</Text>
+                      <View style={{ marginTop: 10, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: isDark ? 'rgba(207,188,255,0.12)' : 'rgba(181,153,255,0.12)', borderWidth: 1, borderColor: isDark ? 'rgba(207,188,255,0.2)' : 'rgba(181,153,255,0.3)' }}>
+                        <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 9, color: t.primaryText, letterSpacing: 1 }}>UNLOCKED</Text>
                       </View>
                     )}
                   </View>
@@ -227,12 +227,12 @@ export default function ProfileScreen() {
         {/* ── My Note Requests ── */}
         <View style={{ marginHorizontal: 20, marginBottom: 20 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-            <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 20, color: '#e1e3e4', letterSpacing: -0.2 }}>
+            <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 20, color: t.onSurface, letterSpacing: -0.2 }}>
               My Requests
             </Text>
             {myRequests.length > 2 && (
               <TouchableOpacity onPress={() => setShowAllRequests((v) => !v)} activeOpacity={0.7}>
-                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: '#cfbcff' }}>
+                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: t.primaryText }}>
                   {showAllRequests ? 'Show less' : `See all ${myRequests.length}`}
                 </Text>
               </TouchableOpacity>
@@ -242,8 +242,8 @@ export default function ProfileScreen() {
           {myRequests.length === 0 ? (
             <View style={{ ...card, padding: 28, alignItems: 'center' }}>
               <Text style={{ fontSize: 36, marginBottom: 12 }}>📬</Text>
-              <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 16, color: '#e1e3e4', marginBottom: 6 }}>No requests yet</Text>
-              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: '#948e9d' }}>Request notes from the Notes tab</Text>
+              <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 16, color: t.onSurface, marginBottom: 6 }}>No requests yet</Text>
+              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: t.onSurfaceVariant }}>Request notes from the Notes tab</Text>
             </View>
           ) : (
             (showAllRequests ? myRequests : myRequests.slice(0, 2)).map((req) => {
@@ -254,20 +254,17 @@ export default function ProfileScreen() {
                   key={req.id}
                   activeOpacity={isFulfilled && req.fulfilledNote ? 0.8 : 1}
                   onPress={() => { if (isFulfilled && req.fulfilledNote) downloadNote(req.fulfilledNote.id); }}
-                  style={{ ...card, borderRadius: 24, padding: 18, marginBottom: 12, borderColor: isFulfilled ? 'rgba(74,222,128,0.15)' : 'rgba(255,255,255,0.06)' }}
+                  style={{ ...card, borderRadius: 24, padding: 18, marginBottom: 12, borderColor: isFulfilled ? 'rgba(74,222,128,0.15)' : t.cardBorder }}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                     <View style={{ flexDirection: 'row', gap: 6 }}>
-                      {/* Subject badge */}
                       <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, backgroundColor: `${subjectColor}18`, borderWidth: 1, borderColor: `${subjectColor}28` }}>
                         <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 9, letterSpacing: 1.2, textTransform: 'uppercase', color: subjectColor }}>{req.subject}</Text>
                       </View>
-                      {/* Type badge */}
-                      <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)' }}>
-                        <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 9, letterSpacing: 1, color: '#948e9d' }}>{req.noteType}</Text>
+                      <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(181,153,255,0.06)', borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(181,153,255,0.12)' }}>
+                        <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 9, letterSpacing: 1, color: t.onSurfaceVariant }}>{req.noteType}</Text>
                       </View>
                     </View>
-                    {/* Status badge */}
                     <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: isFulfilled ? 'rgba(74,222,128,0.1)' : 'rgba(251,191,36,0.1)', borderWidth: 1, borderColor: isFulfilled ? 'rgba(74,222,128,0.2)' : 'rgba(251,191,36,0.2)' }}>
                       <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 9, letterSpacing: 0.8, color: isFulfilled ? '#4ade80' : '#fbbf24' }}>
                         {isFulfilled ? '✓ FULFILLED' : '⏳ PENDING'}
@@ -275,22 +272,22 @@ export default function ProfileScreen() {
                     </View>
                   </View>
 
-                  <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 16, color: '#e1e3e4', marginBottom: isFulfilled && req.fulfilledNote ? 12 : 0 }}>
+                  <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 16, color: t.onSurface, marginBottom: isFulfilled && req.fulfilledNote ? 12 : 0 }}>
                     {req.topic}
                   </Text>
 
                   {isFulfilled && req.fulfilledNote && (
-                    <View style={{ backgroundColor: '#070810', borderRadius: 16, padding: 14, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(74,222,128,0.12)' }}>
+                    <View style={{ backgroundColor: t.innerSurface, borderRadius: 16, padding: 14, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(74,222,128,0.12)' }}>
                       <View style={{ flex: 1 }}>
-                        <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: '#948e9d', marginBottom: 3 }}>Note uploaded:</Text>
-                        <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: '#cfbcff', marginBottom: 2 }}>{req.fulfilledNote.title}</Text>
-                        <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: '#948e9d' }}>by {req.fulfilledNote.author?.name ?? 'Senior'}</Text>
+                        <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: t.onSurfaceVariant, marginBottom: 3 }}>Note uploaded:</Text>
+                        <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: t.primaryText, marginBottom: 2 }}>{req.fulfilledNote.title}</Text>
+                        <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: t.onSurfaceVariant }}>by {req.fulfilledNote.author?.name ?? 'Senior'}</Text>
                       </View>
                       {downloadingId === req.fulfilledNote.id ? (
-                        <ActivityIndicator size="small" color="#cfbcff" />
+                        <ActivityIndicator size="small" color={t.primaryText} />
                       ) : (
-                        <View style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: 'rgba(207,188,255,0.1)', borderWidth: 1, borderColor: 'rgba(207,188,255,0.18)', alignItems: 'center', justifyContent: 'center' }}>
-                          <Ionicons name="arrow-down-outline" size={16} color="#cfbcff" />
+                        <View style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: isDark ? 'rgba(207,188,255,0.1)' : 'rgba(181,153,255,0.1)', borderWidth: 1, borderColor: isDark ? 'rgba(207,188,255,0.18)' : 'rgba(181,153,255,0.25)', alignItems: 'center', justifyContent: 'center' }}>
+                          <Ionicons name="arrow-down-outline" size={16} color={t.primaryText} />
                         </View>
                       )}
                     </View>
@@ -302,50 +299,93 @@ export default function ProfileScreen() {
         </View>
 
         {/* ── Settings ── */}
-        <View style={{ marginHorizontal: 20, marginBottom: 20, opacity: 0.45 }}>
+        <View style={{ marginHorizontal: 20, marginBottom: 20 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-            <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 20, color: '#e1e3e4', letterSpacing: -0.2 }}>
+            <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 20, color: t.onSurface, letterSpacing: -0.2 }}>
               Settings
             </Text>
-            <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.06)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' }}>
-              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 9, color: '#494551', letterSpacing: 1, textTransform: 'uppercase' }}>Coming soon</Text>
-            </View>
           </View>
           <View style={{ ...card }}>
-            {[
-              { icon: 'notifications-outline' as const, label: 'Notifications', sublabel: 'Study reminders & updates', hasToggle: true },
-              { icon: 'information-circle-outline' as const, label: 'About MedicoHub', sublabel: 'Version 1.0.0', hasToggle: false },
-            ].map((item, i, arr) => (
-              <View
-                key={item.label}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  paddingHorizontal: 20,
-                  paddingVertical: 16,
-                  borderBottomWidth: i < arr.length - 1 ? 1 : 0,
-                  borderBottomColor: 'rgba(255,255,255,0.05)',
-                }}
-              >
-                <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.04)', alignItems: 'center', justifyContent: 'center', marginRight: 14 }}>
-                  <Ionicons name={item.icon} size={19} color="#494551" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: '#494551' }}>{item.label}</Text>
-                  <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: '#323536', marginTop: 2 }}>{item.sublabel}</Text>
-                </View>
-                {item.hasToggle ? (
-                  <Switch
-                    value={false}
-                    disabled
-                    thumbColor="#323536"
-                    trackColor={{ false: '#1d2021', true: '#1d2021' }}
-                  />
-                ) : (
-                  <Ionicons name="chevron-forward" size={16} color="#323536" />
-                )}
+            {/* ── Appearance / Dark Mode toggle ── */}
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingHorizontal: 20,
+                paddingVertical: 16,
+                borderBottomWidth: 1,
+                borderBottomColor: t.separator,
+              }}
+            >
+              <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: isDark ? 'rgba(207,188,255,0.08)' : 'rgba(181,153,255,0.1)', alignItems: 'center', justifyContent: 'center', marginRight: 14 }}>
+                <Ionicons name={isDark ? 'moon-outline' : 'sunny-outline'} size={19} color={t.primaryText} />
               </View>
-            ))}
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: t.onSurface }}>Appearance</Text>
+                <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: t.onSurfaceVariant, marginTop: 2 }}>
+                  {isDark ? 'Dark mode' : 'Light mode'}
+                </Text>
+              </View>
+              <Switch
+                value={!isDark}
+                onValueChange={(isLight) => setDark(!isLight)}
+                thumbColor={isDark ? '#cfbcff' : '#B599FF'}
+                trackColor={{ false: '#2d1060', true: 'rgba(181,153,255,0.35)' }}
+                ios_backgroundColor={isDark ? '#2d1060' : 'rgba(181,153,255,0.2)'}
+              />
+            </View>
+
+            {/* ── Notifications (coming soon) ── */}
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingHorizontal: 20,
+                paddingVertical: 16,
+                borderBottomWidth: 1,
+                borderBottomColor: t.separator,
+                opacity: 0.45,
+              }}
+            >
+              <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: t.iconBg, alignItems: 'center', justifyContent: 'center', marginRight: 14 }}>
+                <Ionicons name="notifications-outline" size={19} color={t.outlineVariant} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: t.outlineVariant }}>Notifications</Text>
+                <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: t.outlineFaint, marginTop: 2 }}>Study reminders & updates</Text>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View style={{ paddingHorizontal: 7, paddingVertical: 3, borderRadius: 999, backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(181,153,255,0.08)', borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(181,153,255,0.15)' }}>
+                  <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 8, color: t.outlineVariant, letterSpacing: 1, textTransform: 'uppercase' }}>Soon</Text>
+                </View>
+                <Switch
+                  value={false}
+                  disabled
+                  thumbColor={t.outlineFaint}
+                  trackColor={{ false: isDark ? '#1d2021' : '#D8D6E8', true: isDark ? '#1d2021' : '#D8D6E8' }}
+                />
+              </View>
+            </View>
+
+            {/* ── About (coming soon) ── */}
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingHorizontal: 20,
+                paddingVertical: 16,
+                opacity: 0.45,
+              }}
+            >
+              <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: t.iconBg, alignItems: 'center', justifyContent: 'center', marginRight: 14 }}>
+                <Ionicons name="information-circle-outline" size={19} color={t.outlineVariant} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: t.outlineVariant }}>About MedicoHub</Text>
+                <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: t.outlineFaint, marginTop: 2 }}>Version 1.0.0</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color={t.outlineFaint} />
+            </View>
           </View>
         </View>
 
@@ -358,8 +398,8 @@ export default function ProfileScreen() {
             marginBottom: 8,
             borderRadius: 20,
             borderWidth: 1,
-            borderColor: 'rgba(255,180,171,0.25)',
-            backgroundColor: 'rgba(255,180,171,0.06)',
+            borderColor: isDark ? 'rgba(255,180,171,0.25)' : 'rgba(192,57,43,0.2)',
+            backgroundColor: isDark ? 'rgba(255,180,171,0.06)' : 'rgba(192,57,43,0.05)',
             paddingVertical: 16,
             flexDirection: 'row',
             alignItems: 'center',
@@ -367,8 +407,8 @@ export default function ProfileScreen() {
             gap: 8,
           }}
         >
-          <Ionicons name="log-out-outline" size={18} color="#ffb4ab" />
-          <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: '#ffb4ab' }}>Logout</Text>
+          <Ionicons name="log-out-outline" size={18} color={t.error} />
+          <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: t.error }}>Logout</Text>
         </TouchableOpacity>
 
       </ScrollView>

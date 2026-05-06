@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { Message } from '../../types';
 import { format } from 'date-fns';
+import { useThemeStore, getTheme } from '../../store/themeStore';
 
 interface MessageBubbleProps {
   message: Message;
@@ -9,6 +10,8 @@ interface MessageBubbleProps {
 }
 
 export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, currentUserId }) => {
+  const isDark = useThemeStore((s) => s.isDark);
+  const t = getTheme(isDark);
   const senderId = message.sender?.id ?? '';
   const senderName = message.sender?.name ?? 'Unknown';
   const isCurrentUser = senderId === currentUserId;
@@ -23,14 +26,14 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, currentUs
         <View
           style={{
             maxWidth: '78%',
-            backgroundColor: '#cfbcff',
+            backgroundColor: t.primaryContainer,
             paddingHorizontal: 16,
             paddingVertical: 11,
             borderTopLeftRadius: 22,
             borderBottomLeftRadius: 22,
             borderTopRightRadius: 6,
             borderBottomRightRadius: 22,
-            shadowColor: '#cfbcff',
+            shadowColor: t.primaryContainer,
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.2,
             shadowRadius: 8,
@@ -40,7 +43,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, currentUs
             {body}
           </Text>
         </View>
-        <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 10, color: '#494551', marginTop: 4 }}>
+        <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 10, color: t.onSurfaceVariant, marginTop: 4 }}>
           {time}
         </Text>
       </View>
@@ -73,7 +76,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, currentUs
         <View
           style={{
             maxWidth: '78%',
-            backgroundColor: 'rgba(74,222,128,0.08)',
+            backgroundColor: isDark ? 'rgba(74,222,128,0.08)' : 'rgba(74,222,128,0.1)',
             borderWidth: 1,
             borderColor: 'rgba(74,222,128,0.2)',
             paddingHorizontal: 16,
@@ -84,18 +87,18 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, currentUs
             borderBottomLeftRadius: 22,
           }}
         >
-          <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: '#e1e3e4', lineHeight: 21 }}>
+          <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: t.onSurface, lineHeight: 21 }}>
             {body}
           </Text>
         </View>
-        <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 10, color: '#494551', marginTop: 4 }}>
+        <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 10, color: t.onSurfaceVariant, marginTop: 4 }}>
           {time}
         </Text>
       </View>
     );
   }
 
-  // Other user message — left-aligned, dark surface
+  // Other user message — left-aligned, card surface
   return (
     <View style={{ alignItems: 'flex-start', marginBottom: 10, paddingHorizontal: 20 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5, gap: 6 }}>
@@ -104,25 +107,25 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, currentUs
             width: 22,
             height: 22,
             borderRadius: 11,
-            backgroundColor: 'rgba(255,255,255,0.06)',
+            backgroundColor: t.iconBg,
             borderWidth: 1,
-            borderColor: 'rgba(255,255,255,0.1)',
+            borderColor: t.cardBorder,
             alignItems: 'center',
             justifyContent: 'center',
           }}
         >
           <Text style={{ fontSize: 10 }}>👤</Text>
         </View>
-        <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, color: '#948e9d', letterSpacing: 0.3 }}>
+        <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, color: t.onSurfaceVariant, letterSpacing: 0.3 }}>
           {senderName}
         </Text>
       </View>
       <View
         style={{
           maxWidth: '78%',
-          backgroundColor: '#10121e',
+          backgroundColor: t.card,
           borderWidth: 1,
-          borderColor: 'rgba(255,255,255,0.07)',
+          borderColor: t.cardBorder,
           paddingHorizontal: 16,
           paddingVertical: 11,
           borderTopRightRadius: 22,
@@ -131,11 +134,11 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, currentUs
           borderBottomLeftRadius: 22,
         }}
       >
-        <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: '#e1e3e4', lineHeight: 21 }}>
+        <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: t.onSurface, lineHeight: 21 }}>
           {body}
         </Text>
       </View>
-      <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 10, color: '#494551', marginTop: 4 }}>
+      <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 10, color: t.onSurfaceVariant, marginTop: 4 }}>
         {time}
       </Text>
     </View>

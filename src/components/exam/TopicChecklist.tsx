@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Topic } from '../../types';
+import { useThemeStore, getTheme } from '../../store/themeStore';
 
 interface TopicChecklistProps {
   topics: Topic[];
@@ -18,6 +19,9 @@ export const TopicChecklist: React.FC<TopicChecklistProps> = ({
   onEdit,
   onDelete,
 }) => {
+  const isDark = useThemeStore((s) => s.isDark);
+  const t = getTheme(isDark);
+
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
   const [newTopicText, setNewTopicText] = useState('');
@@ -52,15 +56,15 @@ export const TopicChecklist: React.FC<TopicChecklistProps> = ({
   };
 
   const yieldColor = (y: string) => {
-    if (y === 'high') return '#cfbcff';
-    if (y === 'medium') return '#948e9d';
-    return '#494551';
+    if (y === 'high') return t.primaryText;
+    if (y === 'medium') return t.onSurfaceVariant;
+    return t.outlineVariant;
   };
 
   return (
     <View>
       {topics.length === 0 && !showAddInput && (
-        <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: '#948e9d', textAlign: 'center', paddingVertical: 20 }}>
+        <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: t.onSurfaceVariant, textAlign: 'center', paddingVertical: 20 }}>
           No topics yet — generate a pack or add your own.
         </Text>
       )}
@@ -70,7 +74,7 @@ export const TopicChecklist: React.FC<TopicChecklistProps> = ({
           key={item.id}
           style={{
             borderBottomWidth: index < topics.length - 1 ? 1 : 0,
-            borderBottomColor: 'rgba(255,255,255,0.05)',
+            borderBottomColor: t.separator,
           }}
         >
           {editingId === item.id ? (
@@ -83,10 +87,10 @@ export const TopicChecklist: React.FC<TopicChecklistProps> = ({
                   flex: 1,
                   fontFamily: 'Inter_400Regular',
                   fontSize: 14,
-                  color: '#e1e3e4',
-                  backgroundColor: 'rgba(255,255,255,0.04)',
+                  color: t.onSurface,
+                  backgroundColor: t.iconBg,
                   borderWidth: 1,
-                  borderColor: 'rgba(207,188,255,0.3)',
+                  borderColor: t.cardBorder,
                   borderRadius: 12,
                   paddingHorizontal: 12,
                   paddingVertical: 8,
@@ -95,13 +99,13 @@ export const TopicChecklist: React.FC<TopicChecklistProps> = ({
                 returnKeyType="done"
               />
               <TouchableOpacity onPress={handleSaveEdit} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <Ionicons name="checkmark-circle" size={22} color="#cfbcff" />
+                <Ionicons name="checkmark-circle" size={22} color={t.primaryText} />
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => { setEditingId(null); setEditText(''); }}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
-                <Ionicons name="close-circle" size={22} color="#948e9d" />
+                <Ionicons name="close-circle" size={22} color={t.onSurfaceVariant} />
               </TouchableOpacity>
             </View>
           ) : (
@@ -112,9 +116,9 @@ export const TopicChecklist: React.FC<TopicChecklistProps> = ({
                 style={{
                   width: 22, height: 22, borderRadius: 6, marginRight: 10,
                   alignItems: 'center', justifyContent: 'center',
-                  backgroundColor: item.completed ? '#cfbcff' : 'transparent',
+                  backgroundColor: item.completed ? t.primaryContainer : 'transparent',
                   borderWidth: 2,
-                  borderColor: item.completed ? '#cfbcff' : '#494551',
+                  borderColor: item.completed ? t.primaryContainer : t.outlineVariant,
                 }}
               >
                 {item.completed && (
@@ -128,7 +132,7 @@ export const TopicChecklist: React.FC<TopicChecklistProps> = ({
                   fontFamily: 'Inter_400Regular',
                   fontSize: 14,
                   lineHeight: 20,
-                  color: item.completed ? '#494551' : '#c8cdd0',
+                  color: item.completed ? t.outlineVariant : t.onSurface,
                   textDecorationLine: item.completed ? 'line-through' : 'none',
                 }}
               >
@@ -149,7 +153,7 @@ export const TopicChecklist: React.FC<TopicChecklistProps> = ({
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 4 }}
                 style={{ marginLeft: 10 }}
               >
-                <Ionicons name="pencil-outline" size={15} color="#494551" />
+                <Ionicons name="pencil-outline" size={15} color={t.outlineVariant} />
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -157,7 +161,7 @@ export const TopicChecklist: React.FC<TopicChecklistProps> = ({
                 hitSlop={{ top: 8, bottom: 8, left: 4, right: 8 }}
                 style={{ marginLeft: 8 }}
               >
-                <Ionicons name="trash-outline" size={15} color="rgba(255,100,100,0.5)" />
+                <Ionicons name="trash-outline" size={15} color="rgba(255,100,100,0.55)" />
               </TouchableOpacity>
             </View>
           )}
@@ -170,16 +174,16 @@ export const TopicChecklist: React.FC<TopicChecklistProps> = ({
             value={newTopicText}
             onChangeText={setNewTopicText}
             placeholder="e.g. Brachial Plexus..."
-            placeholderTextColor="#494551"
+            placeholderTextColor={t.outlineVariant}
             autoFocus
             style={{
               flex: 1,
               fontFamily: 'Inter_400Regular',
               fontSize: 14,
-              color: '#e1e3e4',
-              backgroundColor: 'rgba(255,255,255,0.04)',
+              color: t.onSurface,
+              backgroundColor: t.iconBg,
               borderWidth: 1,
-              borderColor: 'rgba(255,255,255,0.08)',
+              borderColor: t.cardBorder,
               borderRadius: 12,
               paddingHorizontal: 12,
               paddingVertical: 8,
@@ -188,13 +192,13 @@ export const TopicChecklist: React.FC<TopicChecklistProps> = ({
             returnKeyType="done"
           />
           <TouchableOpacity onPress={handleAdd} hitSlop={{ top: 8, bottom: 8, left: 8, right: 4 }}>
-            <Ionicons name="checkmark-circle" size={22} color="#cfbcff" />
+            <Ionicons name="checkmark-circle" size={22} color={t.primaryText} />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => { setShowAddInput(false); setNewTopicText(''); }}
             hitSlop={{ top: 8, bottom: 8, left: 4, right: 8 }}
           >
-            <Ionicons name="close-circle" size={22} color="#948e9d" />
+            <Ionicons name="close-circle" size={22} color={t.onSurfaceVariant} />
           </TouchableOpacity>
         </View>
       ) : (
@@ -203,8 +207,8 @@ export const TopicChecklist: React.FC<TopicChecklistProps> = ({
           activeOpacity={0.7}
           style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 14, marginTop: 2 }}
         >
-          <Ionicons name="add-circle-outline" size={18} color="#cfbcff" />
-          <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: '#cfbcff', marginLeft: 8 }}>
+          <Ionicons name="add-circle-outline" size={18} color={t.primaryText} />
+          <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: t.primaryText, marginLeft: 8 }}>
             Add topic
           </Text>
         </TouchableOpacity>

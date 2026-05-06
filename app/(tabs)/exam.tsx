@@ -9,6 +9,7 @@ import Toast from 'react-native-toast-message';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useExamStore, StoredPack } from '../../src/store/examStore';
+import { useThemeStore, getTheme } from '../../src/store/themeStore';
 import { examApi } from '../../src/api/exam';
 import { TopicChecklist } from '../../src/components/exam/TopicChecklist';
 import { Subject, ExamType, ExamPack, VivaQ } from '../../src/types';
@@ -50,21 +51,16 @@ function timeLeft(ts: number): string {
 function TopicsModal({
   visible, onClose, onConfirm, title, subtitle, loading,
 }: {
-  visible: boolean;
-  onClose: () => void;
-  onConfirm: (topics: string[]) => void;
-  title: string;
-  subtitle: string;
-  loading: boolean;
+  visible: boolean; onClose: () => void; onConfirm: (topics: string[]) => void;
+  title: string; subtitle: string; loading: boolean;
 }) {
   const [text, setText] = useState('');
+  const isDark = useThemeStore((s) => s.isDark);
+  const t = getTheme(isDark);
 
   const handleConfirm = () => {
-    const topics = text.split(',').map((t) => t.trim()).filter(Boolean);
-    if (topics.length === 0) {
-      Toast.show({ type: 'info', text1: 'Enter at least one topic' });
-      return;
-    }
+    const topics = text.split(',').map((tp) => tp.trim()).filter(Boolean);
+    if (topics.length === 0) { Toast.show({ type: 'info', text1: 'Enter at least one topic' }); return; }
     onConfirm(topics);
     setText('');
   };
@@ -73,58 +69,29 @@ function TopicsModal({
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', paddingHorizontal: 20 }}>
-          <View style={{ backgroundColor: '#10121e', borderRadius: 28, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', padding: 26 }}>
+          <View style={{ backgroundColor: t.card, borderRadius: 28, borderWidth: 1, borderColor: t.cardBorder, padding: 26 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 20, color: '#e1e3e4', letterSpacing: -0.3 }}>
-                {title}
-              </Text>
+              <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 20, color: t.onSurface, letterSpacing: -0.3 }}>{title}</Text>
               <TouchableOpacity onPress={onClose} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                <Ionicons name="close" size={22} color="#494551" />
+                <Ionicons name="close" size={22} color={t.outlineVariant} />
               </TouchableOpacity>
             </View>
-            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: '#948e9d', marginBottom: 20, lineHeight: 19 }}>
-              {subtitle}
-            </Text>
+            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: t.onSurfaceVariant, marginBottom: 20, lineHeight: 19 }}>{subtitle}</Text>
             <TextInput
               value={text}
               onChangeText={setText}
               placeholder="e.g. Metabolism, Vitamins, DNA Replication"
-              placeholderTextColor="rgba(148,142,157,0.4)"
+              placeholderTextColor={isDark ? 'rgba(148,142,157,0.4)' : 'rgba(90,86,112,0.4)'}
               multiline
-              style={{
-                backgroundColor: '#070810',
-                borderWidth: 1,
-                borderColor: 'rgba(255,255,255,0.08)',
-                borderRadius: 16,
-                paddingHorizontal: 16,
-                paddingVertical: 14,
-                fontFamily: 'Inter_400Regular',
-                fontSize: 14,
-                color: '#e1e3e4',
-                minHeight: 80,
-                textAlignVertical: 'top',
-                marginBottom: 10,
-              }}
+              style={{ backgroundColor: t.innerSurface, borderWidth: 1, borderColor: t.cardBorder, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 14, fontFamily: 'Inter_400Regular', fontSize: 14, color: t.onSurface, minHeight: 80, textAlignVertical: 'top', marginBottom: 10 }}
             />
-            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: '#494551', marginBottom: 20 }}>
-              Separate topics with commas
-            </Text>
+            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: t.outlineVariant, marginBottom: 20 }}>Separate topics with commas</Text>
             <View style={{ flexDirection: 'row', gap: 10 }}>
-              <TouchableOpacity
-                onPress={onClose}
-                style={{ flex: 1, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', borderRadius: 14, paddingVertical: 13, alignItems: 'center' }}
-              >
-                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: '#948e9d' }}>Cancel</Text>
+              <TouchableOpacity onPress={onClose} style={{ flex: 1, borderWidth: 1, borderColor: t.cardBorder, borderRadius: 14, paddingVertical: 13, alignItems: 'center' }}>
+                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: t.onSurfaceVariant }}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handleConfirm}
-                disabled={loading}
-                style={{ flex: 2, backgroundColor: '#cfbcff', borderRadius: 14, paddingVertical: 13, alignItems: 'center', opacity: loading ? 0.7 : 1 }}
-              >
-                {loading
-                  ? <ActivityIndicator size="small" color="#39197c" />
-                  : <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 14, color: '#39197c' }}>Generate</Text>
-                }
+              <TouchableOpacity onPress={handleConfirm} disabled={loading} style={{ flex: 2, backgroundColor: t.primaryContainer, borderRadius: 14, paddingVertical: 13, alignItems: 'center', opacity: loading ? 0.7 : 1 }}>
+                {loading ? <ActivityIndicator size="small" color="#39197c" /> : <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 14, color: '#39197c' }}>Generate</Text>}
               </TouchableOpacity>
             </View>
           </View>
@@ -138,47 +105,30 @@ function TopicsModal({
 function PackCard({ stored, onSelect, active, subjectColor }: {
   stored: StoredPack; onSelect: () => void; active: boolean; subjectColor: string;
 }) {
+  const isDark = useThemeStore((s) => s.isDark);
+  const t = getTheme(isDark);
   const isPending = stored.pack.status === 'pending';
   const isFailed = stored.pack.status === 'failed';
   return (
-    <TouchableOpacity
-      onPress={onSelect}
-      disabled={isPending}
-      activeOpacity={0.8}
-      style={{
-        backgroundColor: active ? `${subjectColor}12` : '#10121e',
-        borderRadius: 18, borderWidth: 1,
-        borderColor: active ? `${subjectColor}30` : isFailed ? '#ffb4ab30' : 'rgba(255,255,255,0.06)',
-        paddingHorizontal: 16, paddingVertical: 14, marginBottom: 8,
-        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-        opacity: isPending ? 0.7 : 1,
-      }}
-    >
+    <TouchableOpacity onPress={onSelect} disabled={isPending} activeOpacity={0.8}
+      style={{ backgroundColor: active ? `${subjectColor}12` : t.card, borderRadius: 18, borderWidth: 1, borderColor: active ? `${subjectColor}30` : isFailed ? '#ffb4ab30' : t.cardBorder, paddingHorizontal: 16, paddingVertical: 14, marginBottom: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', opacity: isPending ? 0.7 : 1 }}>
       <View style={{ flex: 1 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-          <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: active ? subjectColor : '#e1e3e4' }}>
+          <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: active ? subjectColor : t.onSurface }}>
             {stored.examType.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
           </Text>
           {isPending && <ActivityIndicator size="small" color={subjectColor} style={{ marginLeft: 2 }} />}
         </View>
         {(stored.topics ?? []).length > 0 && (
-          <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: '#948e9d', marginBottom: 2 }} numberOfLines={1}>
-            {(stored.topics ?? []).join(', ')}
-          </Text>
+          <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: t.onSurfaceVariant, marginBottom: 2 }} numberOfLines={1}>{(stored.topics ?? []).join(', ')}</Text>
         )}
-        <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: isFailed ? '#ffb4ab' : '#494551' }}>
+        <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: isFailed ? '#ffb4ab' : t.outlineVariant }}>
           {isFailed ? 'Generation failed — tap to retry' : isPending ? 'Generating in background…' : timeLeft(stored.generatedAt)}
         </Text>
       </View>
       {!isPending && !isFailed && (
-        <View style={{
-          paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999,
-          backgroundColor: active ? `${subjectColor}20` : 'rgba(255,255,255,0.05)',
-          borderWidth: 1, borderColor: active ? `${subjectColor}30` : 'rgba(255,255,255,0.07)',
-        }}>
-          <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: active ? subjectColor : '#494551', letterSpacing: 0.5 }}>
-            {active ? 'VIEWING' : 'TAP'}
-          </Text>
+        <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: active ? `${subjectColor}20` : t.iconBg, borderWidth: 1, borderColor: active ? `${subjectColor}30` : t.cardBorder }}>
+          <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: active ? subjectColor : t.outlineVariant, letterSpacing: 0.5 }}>{active ? 'VIEWING' : 'TAP'}</Text>
         </View>
       )}
     </TouchableOpacity>
@@ -187,8 +137,9 @@ function PackCard({ stored, onSelect, active, subjectColor }: {
 
 // ── Section label ────────────────────────────────────────────────────────────
 function SectionLabel({ children }: { children: string }) {
+  const t = getTheme(useThemeStore((s) => s.isDark));
   return (
-    <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, color: '#948e9d', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 12 }}>
+    <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, color: t.onSurfaceVariant, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 12 }}>
       {children}
     </Text>
   );
@@ -198,10 +149,12 @@ function SectionLabel({ children }: { children: string }) {
 function PackContent({ pack, subjectColor }: { pack: ExamPack; subjectColor: string }) {
   const [expandedMCQ, setExpandedMCQ] = useState<number | null>(null);
   const [revealedAnswers, setRevealedAnswers] = useState<Record<number, boolean>>({});
+  const isDark = useThemeStore((s) => s.isDark);
+  const t = getTheme(isDark);
 
   const rowStyle = {
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: t.iconBg,
+    borderWidth: 1, borderColor: t.cardBorder,
     borderRadius: 16, padding: 14, marginBottom: 8,
   };
 
@@ -213,7 +166,7 @@ function PackContent({ pack, subjectColor }: { pack: ExamPack; subjectColor: str
           {(pack.mcqs ?? []).map((q, i) => (
             <View key={i} style={rowStyle}>
               <TouchableOpacity onPress={() => setExpandedMCQ(expandedMCQ === i ? null : i)} activeOpacity={0.8}>
-                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: '#e1e3e4', lineHeight: 20, marginBottom: 6 }}>
+                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: t.onSurface, lineHeight: 20, marginBottom: 6 }}>
                   {i + 1}. {q.question}
                 </Text>
               </TouchableOpacity>
@@ -229,7 +182,7 @@ function PackContent({ pack, subjectColor }: { pack: ExamPack; subjectColor: str
                           backgroundColor: isAnswer ? `${subjectColor}25` : 'rgba(255,255,255,0.04)',
                           borderWidth: 1, borderColor: isAnswer ? `${subjectColor}40` : 'rgba(255,255,255,0.07)',
                         }}>
-                          <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 10, color: isAnswer ? subjectColor : '#494551' }}>{letter}</Text>
+                          <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 10, color: isAnswer ? subjectColor : t.outlineVariant }}>{letter}</Text>
                         </View>
                         <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: isAnswer ? subjectColor : '#948e9d', flex: 1, lineHeight: 18 }}>
                           {opt.replace(/^[A-D]\.\s*/, '')}
@@ -240,7 +193,7 @@ function PackContent({ pack, subjectColor }: { pack: ExamPack; subjectColor: str
                 </>
               )}
               {expandedMCQ !== i && (
-                <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: '#494551' }}>Tap to see options & answer</Text>
+                <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: t.outlineVariant }}>Tap to see options & answer</Text>
               )}
             </View>
           ))}
@@ -252,11 +205,11 @@ function PackContent({ pack, subjectColor }: { pack: ExamPack; subjectColor: str
           <SectionLabel>Short Questions (10 × 5 marks)</SectionLabel>
           {(pack.shortQuestions ?? []).map((q, i) => (
             <View key={i} style={rowStyle}>
-              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: '#e1e3e4', lineHeight: 20, marginBottom: 8 }}>
+              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: t.onSurface, lineHeight: 20, marginBottom: 8 }}>
                 {i + 1}. {q.question}
               </Text>
-              <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginBottom: 8 }} />
-              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: '#c8cdd0', lineHeight: 20 }}>
+              <View style={{ height: 1, backgroundColor: t.separator, marginBottom: 8 }} />
+              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: t.onSurface, lineHeight: 20 }}>
                 {q.answer}
               </Text>
             </View>
@@ -267,9 +220,9 @@ function PackContent({ pack, subjectColor }: { pack: ExamPack; subjectColor: str
       {(pack.longQuestions ?? []).length > 0 && (
         <View style={{ marginBottom: 24 }}>
           <SectionLabel>Long Questions — Self Practice (10 × 10 marks)</SectionLabel>
-          <View style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', padding: 4 }}>
+          <View style={{ backgroundColor: t.iconBg, borderRadius: 16, borderWidth: 1, borderColor: t.cardBorder, padding: 4 }}>
             {(pack.longQuestions ?? []).map((q, i) => (
-              <View key={i} style={{ flexDirection: 'row', alignItems: 'flex-start', padding: 12, borderBottomWidth: i < (pack.longQuestions?.length ?? 0) - 1 ? 1 : 0, borderBottomColor: 'rgba(255,255,255,0.05)' }}>
+              <View key={i} style={{ flexDirection: 'row', alignItems: 'flex-start', padding: 12, borderBottomWidth: i < (pack.longQuestions?.length ?? 0) - 1 ? 1 : 0, borderBottomColor: t.separator }}>
                 <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 14, color: subjectColor, marginRight: 10, lineHeight: 21 }}>{i + 1}.</Text>
                 <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: '#c8cdd0', flex: 1, lineHeight: 21 }}>{q}</Text>
               </View>
@@ -283,11 +236,11 @@ function PackContent({ pack, subjectColor }: { pack: ExamPack; subjectColor: str
           <SectionLabel>Quick Review Questions</SectionLabel>
           {(pack.reviewQuestions ?? []).map((q, i) => (
             <View key={i} style={rowStyle}>
-              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: '#e1e3e4', lineHeight: 20, marginBottom: 8 }}>
+              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: t.onSurface, lineHeight: 20, marginBottom: 8 }}>
                 {i + 1}. {q.question}
               </Text>
-              <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginBottom: 8 }} />
-              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: '#c8cdd0', lineHeight: 20 }}>
+              <View style={{ height: 1, backgroundColor: t.separator, marginBottom: 8 }} />
+              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: t.onSurface, lineHeight: 20 }}>
                 {q.answer}
               </Text>
             </View>
@@ -300,7 +253,7 @@ function PackContent({ pack, subjectColor }: { pack: ExamPack; subjectColor: str
           <SectionLabel>Viva Questions</SectionLabel>
           {(pack.vivaQuestions ?? []).map((q, i) => (
             <View key={i} style={rowStyle}>
-              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: '#e1e3e4', lineHeight: 20, marginBottom: 6 }}>
+              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: t.onSurface, lineHeight: 20, marginBottom: 6 }}>
                 {i + 1}. {q.question}
               </Text>
               <TouchableOpacity
@@ -329,6 +282,8 @@ function PackContent({ pack, subjectColor }: { pack: ExamPack; subjectColor: str
 function VivaCards({ questions, subjectColor }: { questions: VivaQ[]; subjectColor: string }) {
   const [index, setIndex] = useState(questions.length > 0 ? questions.length - 1 : 0);
   const [revealedMap, setRevealedMap] = useState<Record<number, boolean>>({});
+  const isDark = useThemeStore((s) => s.isDark);
+  const t = getTheme(isDark);
   const flatRef = useRef<FlatList>(null);
 
   // Auto-scroll to latest when a new question is added
@@ -357,7 +312,7 @@ function VivaCards({ questions, subjectColor }: { questions: VivaQ[]; subjectCol
     <View>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
         <SectionLabel>Viva Practice Cards</SectionLabel>
-        <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: '#494551' }}>
+        <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: t.outlineVariant }}>
           {index + 1} / {questions.length}
         </Text>
       </View>
@@ -378,14 +333,14 @@ function VivaCards({ questions, subjectColor }: { questions: VivaQ[]; subjectCol
           return (
             <View style={{ width: CARD_W, paddingHorizontal: INNER_PAD }}>
               <View style={{
-                backgroundColor: 'rgba(255,255,255,0.03)',
+                backgroundColor: t.iconBg,
                 borderWidth: 1, borderColor: `${subjectColor}20`,
                 borderRadius: 18, padding: 18,
               }}>
                 <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: subjectColor, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 10 }}>
                   Question {itemIdx + 1}
                 </Text>
-                <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 15, color: '#e1e3e4', lineHeight: 22, marginBottom: 14 }}>
+                <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 15, color: t.onSurface, lineHeight: 22, marginBottom: 14 }}>
                   {item.question}
                 </Text>
                 <TouchableOpacity
@@ -398,8 +353,8 @@ function VivaCards({ questions, subjectColor }: { questions: VivaQ[]; subjectCol
                   </Text>
                 </TouchableOpacity>
                 {isRevealed && (
-                  <View style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)' }}>
-                    <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: '#c8cdd0', lineHeight: 22 }}>
+                  <View style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: t.separator }}>
+                    <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: t.onSurface, lineHeight: 22 }}>
                       {item.answer}
                     </Text>
                   </View>
@@ -423,6 +378,8 @@ function VivaCards({ questions, subjectColor }: { questions: VivaQ[]; subjectCol
 // ── Main screen ──────────────────────────────────────────────────────────────
 export default function ExamScreen() {
   const queryClient = useQueryClient();
+  const isDark = useThemeStore((s) => s.isDark);
+  const t = getTheme(isDark);
   const [selectedExamType, setSelectedExamType] = useState<ExamType>('full-pack');
   const [viewingPackIndex, setViewingPackIndex] = useState<number | null>(null);
   const [showTopicsModal, setShowTopicsModal] = useState(false);
@@ -632,17 +589,13 @@ export default function ExamScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#070810' }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: t.bg }} edges={['top']}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
 
         {/* ── Header ── */}
         <View style={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 28 }}>
-          <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: '#948e9d', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 6 }}>
-            AI-Powered
-          </Text>
-          <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 36, color: '#e1e3e4', letterSpacing: -0.5, lineHeight: 40 }}>
-            Exam Mode
-          </Text>
+          <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: t.onSurfaceVariant, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 6 }}>AI-Powered</Text>
+          <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 36, color: t.onSurface, letterSpacing: -0.5, lineHeight: 40 }}>Exam Mode</Text>
         </View>
 
         {/* ── Subject pills ── */}
@@ -652,25 +605,15 @@ export default function ExamScreen() {
               const isActive = selectedSubject === s;
               const color = SUBJECT_COLORS[s];
               return (
-                <TouchableOpacity
-                  key={s}
-                  onPress={() => { if (selectedSubject !== s) { reset(); setSubject(s); setViewingPackIndex(null); } }}
-                  activeOpacity={0.75}
-                  style={{
-                    paddingHorizontal: 18, paddingVertical: 9, borderRadius: 999, marginRight: 8,
-                    backgroundColor: isActive ? color : '#10121e',
-                    borderWidth: 1, borderColor: isActive ? color : 'rgba(255,255,255,0.07)',
-                  }}
-                >
-                  <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: isActive ? '#1a0a3a' : '#948e9d' }}>
-                    {s}
-                  </Text>
+                <TouchableOpacity key={s} onPress={() => { if (selectedSubject !== s) { reset(); setSubject(s); setViewingPackIndex(null); } }} activeOpacity={0.75}
+                  style={{ paddingHorizontal: 18, paddingVertical: 9, borderRadius: 999, marginRight: 8, backgroundColor: isActive ? color : t.card, borderWidth: 1, borderColor: isActive ? color : t.cardBorder }}>
+                  <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: isActive ? '#1a0a3a' : t.onSurfaceVariant }}>{s}</Text>
                 </TouchableOpacity>
               );
             })}
           </ScrollView>
           {selectedSubject && (
-            <View style={{ height: 1.5, marginTop: 12, marginHorizontal: 20, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 1, overflow: 'hidden' }}>
+            <View style={{ height: 1.5, marginTop: 12, marginHorizontal: 20, backgroundColor: t.separator, borderRadius: 1, overflow: 'hidden' }}>
               <View style={{ width: 48, height: '100%', backgroundColor: subjectColor, borderRadius: 1, opacity: 0.6 }} />
             </View>
           )}
@@ -680,23 +623,23 @@ export default function ExamScreen() {
           <>
             {/* ── Daily usage ── */}
             <View style={{ marginHorizontal: 20, marginBottom: 20, flexDirection: 'row', gap: 10 }}>
-              <View style={{ flex: 1, backgroundColor: '#10121e', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)', padding: 14 }}>
-                <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 10, color: '#494551', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>Packs Today</Text>
+              <View style={{ flex: 1, backgroundColor: t.card, borderRadius: 16, borderWidth: 1, borderColor: t.cardBorder, padding: 14 }}>
+                <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 10, color: t.outlineVariant, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>Packs Today</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
-                  <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 22, color: limitReached ? '#ffb4ab' : '#e1e3e4' }}>{packsUsed}</Text>
-                  <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: '#494551' }}>/ {MAX_PACKS}</Text>
+                  <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 22, color: limitReached ? '#ffb4ab' : t.onSurface }}>{packsUsed}</Text>
+                  <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: t.outlineVariant }}>/ {MAX_PACKS}</Text>
                 </View>
-                <View style={{ height: 3, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 2, marginTop: 8, overflow: 'hidden' }}>
+                <View style={{ height: 3, backgroundColor: t.separator, borderRadius: 2, marginTop: 8, overflow: 'hidden' }}>
                   <View style={{ width: `${Math.min((packsUsed / MAX_PACKS) * 100, 100)}%`, height: '100%', backgroundColor: limitReached ? '#ffb4ab' : subjectColor, borderRadius: 2 }} />
                 </View>
               </View>
-              <View style={{ flex: 1, backgroundColor: '#10121e', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)', padding: 14 }}>
-                <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 10, color: '#494551', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>Viva Today</Text>
+              <View style={{ flex: 1, backgroundColor: t.card, borderRadius: 16, borderWidth: 1, borderColor: t.cardBorder, padding: 14 }}>
+                <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 10, color: t.outlineVariant, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>Viva Today</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
-                  <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 22, color: vivaLimitReached ? '#ffb4ab' : '#e1e3e4' }}>{dailyUsage?.vivaUsed ?? 0}</Text>
-                  <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: '#494551' }}>/ {MAX_VIVA}</Text>
+                  <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 22, color: vivaLimitReached ? '#ffb4ab' : t.onSurface }}>{dailyUsage?.vivaUsed ?? 0}</Text>
+                  <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: t.outlineVariant }}>/ {MAX_VIVA}</Text>
                 </View>
-                <View style={{ height: 3, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 2, marginTop: 8, overflow: 'hidden' }}>
+                <View style={{ height: 3, backgroundColor: t.separator, borderRadius: 2, marginTop: 8, overflow: 'hidden' }}>
                   <View style={{ width: `${Math.min(((dailyUsage?.vivaUsed ?? 0) / MAX_VIVA) * 100, 100)}%`, height: '100%', backgroundColor: vivaLimitReached ? '#ffb4ab' : '#4ade80', borderRadius: 2 }} />
                 </View>
               </View>
@@ -704,53 +647,32 @@ export default function ExamScreen() {
 
             {/* ── Exam type selector ── */}
             <View style={{ paddingHorizontal: 20, marginBottom: 20 }}>
-              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: '#948e9d', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>
-                Pack Type
-              </Text>
+              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: t.onSurfaceVariant, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Pack Type</Text>
               <View style={{ flexDirection: 'row', gap: 8 }}>
-                {EXAM_TYPES.map((t) => {
-                  const isActive = selectedExamType === t.value;
+                {EXAM_TYPES.map((et) => {
+                  const isActive = selectedExamType === et.value;
                   return (
-                    <TouchableOpacity
-                      key={t.value} onPress={() => setSelectedExamType(t.value)} activeOpacity={0.8}
-                      style={{ flex: 1, paddingVertical: 12, borderRadius: 16, alignItems: 'center', backgroundColor: isActive ? `${subjectColor}18` : '#10121e', borderWidth: 1, borderColor: isActive ? `${subjectColor}40` : 'rgba(255,255,255,0.07)' }}
-                    >
-                      <Text style={{ fontSize: 16, marginBottom: 4 }}>{t.icon}</Text>
-                      <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, letterSpacing: 0.8, color: isActive ? subjectColor : '#948e9d' }}>{t.label}</Text>
+                    <TouchableOpacity key={et.value} onPress={() => setSelectedExamType(et.value)} activeOpacity={0.8}
+                      style={{ flex: 1, paddingVertical: 12, borderRadius: 16, alignItems: 'center', backgroundColor: isActive ? `${subjectColor}18` : t.card, borderWidth: 1, borderColor: isActive ? `${subjectColor}40` : t.cardBorder }}>
+                      <Text style={{ fontSize: 16, marginBottom: 4 }}>{et.icon}</Text>
+                      <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, letterSpacing: 0.8, color: isActive ? subjectColor : t.onSurfaceVariant }}>{et.label}</Text>
                     </TouchableOpacity>
                   );
                 })}
               </View>
-              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: '#494551', marginTop: 8, textAlign: 'center' }}>
-                {EXAM_TYPES.find((t) => t.value === selectedExamType)?.desc}
+              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: t.outlineVariant, marginTop: 8, textAlign: 'center' }}>
+                {EXAM_TYPES.find((et) => et.value === selectedExamType)?.desc}
               </Text>
             </View>
 
             {/* ── Generate button ── */}
-            <TouchableOpacity
-              onPress={() => { if (!limitReached && !isGenerating) setShowTopicsModal(true); }}
-              disabled={limitReached || isGenerating}
-              activeOpacity={0.85}
-              style={{ marginHorizontal: 20, marginBottom: 20, borderRadius: 28, overflow: 'hidden', opacity: (limitReached || isGenerating) ? 0.55 : 1 }}
-            >
-              <LinearGradient
-                colors={[`${subjectColor}38`, `${subjectColor}18`]}
-                start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                style={{ padding: 22, borderRadius: 28, borderWidth: 1, borderColor: `${subjectColor}30`, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 }}
-              >
+            <TouchableOpacity onPress={() => { if (!limitReached && !isGenerating) setShowTopicsModal(true); }} disabled={limitReached || isGenerating} activeOpacity={0.85}
+              style={{ marginHorizontal: 20, marginBottom: 20, borderRadius: 28, overflow: 'hidden', opacity: (limitReached || isGenerating) ? 0.55 : 1 }}>
+              <LinearGradient colors={[`${subjectColor}38`, `${subjectColor}18`]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                style={{ padding: 22, borderRadius: 28, borderWidth: 1, borderColor: `${subjectColor}30`, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
                 {isGenerating
-                  ? <>
-                      <ActivityIndicator color={subjectColor} />
-                      <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 16, color: '#ffffff', letterSpacing: -0.2 }}>
-                        Generating in background…
-                      </Text>
-                    </>
-                  : <>
-                      <Text style={{ fontSize: 20 }}>🧠</Text>
-                      <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 18, color: '#ffffff', letterSpacing: -0.2 }}>
-                        {limitReached ? 'Daily Limit Reached' : `Generate ${selectedSubject} Pack`}
-                      </Text>
-                    </>
+                  ? <><ActivityIndicator color={subjectColor} /><Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 16, color: isDark ? '#ffffff' : t.onSurface, letterSpacing: -0.2 }}>Generating in background…</Text></>
+                  : <><Text style={{ fontSize: 20 }}>🧠</Text><Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 18, color: isDark ? '#ffffff' : t.onSurface, letterSpacing: -0.2 }}>{limitReached ? 'Daily Limit Reached' : `Generate ${selectedSubject} Pack`}</Text></>
                 }
               </LinearGradient>
             </TouchableOpacity>
@@ -758,27 +680,17 @@ export default function ExamScreen() {
             {/* ── Saved packs ── */}
             {activePacks.length > 0 && (
               <View style={{ paddingHorizontal: 20, marginBottom: 20 }}>
-                <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: '#948e9d', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>
-                  Your Packs (valid 24h)
-                </Text>
+                <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: t.onSurfaceVariant, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Your Packs (valid 24h)</Text>
                 {activePacks.map((sp, i) => (
-                  <PackCard
-                    key={sp.pack._id ?? sp.generatedAt}
-                    stored={sp}
-                    active={viewingPackIndex === i && sp.pack.status === 'done'}
-                    onSelect={() => {
-                      if (sp.pack.status !== 'done') return;
-                      setViewingPackIndex(viewingPackIndex === i ? null : i);
-                    }}
-                    subjectColor={subjectColor}
-                  />
+                  <PackCard key={sp.pack._id ?? sp.generatedAt} stored={sp} active={viewingPackIndex === i && sp.pack.status === 'done'}
+                    onSelect={() => { if (sp.pack.status !== 'done') return; setViewingPackIndex(viewingPackIndex === i ? null : i); }} subjectColor={subjectColor} />
                 ))}
               </View>
             )}
 
             {/* ── Pack content ── */}
             {viewingPack && viewingPack.status === 'done' && (
-              <View style={{ marginHorizontal: 20, marginBottom: 20, backgroundColor: '#10121e', borderRadius: 28, borderWidth: 1, borderColor: `${subjectColor}20`, padding: 22 }}>
+              <View style={{ marginHorizontal: 20, marginBottom: 20, backgroundColor: t.card, borderRadius: 28, borderWidth: 1, borderColor: `${subjectColor}20`, padding: 22 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 20 }}>
                   <View style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: `${subjectColor}18`, borderWidth: 1, borderColor: `${subjectColor}28`, alignItems: 'center', justifyContent: 'center' }}>
                     <Text style={{ fontSize: 18 }}>✨</Text>
@@ -788,7 +700,7 @@ export default function ExamScreen() {
                       {viewingPack.subject} — {activePacks[viewingPackIndex!]?.examType.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
                     </Text>
                     {(activePacks[viewingPackIndex!]?.topics ?? []).length > 0 && (
-                      <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: '#948e9d', marginTop: 2 }} numberOfLines={1}>
+                      <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: t.onSurfaceVariant, marginTop: 2 }} numberOfLines={1}>
                         {(activePacks[viewingPackIndex!]?.topics ?? []).join(', ')}
                       </Text>
                     )}
@@ -799,57 +711,36 @@ export default function ExamScreen() {
             )}
 
             {/* ── Viva Practice ── */}
-            <View style={{ marginHorizontal: 20, marginBottom: 20, backgroundColor: '#10121e', borderRadius: 28, borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)', padding: 22 }}>
+            <View style={{ marginHorizontal: 20, marginBottom: 20, backgroundColor: t.card, borderRadius: 28, borderWidth: 1, borderColor: t.cardBorder, padding: 22 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 18, color: '#e1e3e4', letterSpacing: -0.2 }}>Viva Practice</Text>
+                <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 18, color: t.onSurface, letterSpacing: -0.2 }}>Viva Practice</Text>
                 <Text style={{ fontSize: 18 }}>🎙️</Text>
               </View>
-
               {vivaTopics.length > 0 && (
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-                  <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: '#948e9d', flex: 1 }} numberOfLines={1}>
-                    Topics: {vivaTopics.join(', ')}
-                  </Text>
+                  <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: t.onSurfaceVariant, flex: 1 }} numberOfLines={1}>Topics: {vivaTopics.join(', ')}</Text>
                   <TouchableOpacity onPress={() => { setVivaTopics([]); }} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                    <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, color: '#494551' }}>Change</Text>
+                    <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, color: t.outlineVariant }}>Change</Text>
                   </TouchableOpacity>
                 </View>
               )}
               {!vivaTopics.length && <View style={{ height: 14 }} />}
-
-              <TouchableOpacity
-                onPress={handleAskViva}
-                disabled={isAskingViva || vivaLimitReached}
-                activeOpacity={0.8}
-                style={{
-                  backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)',
-                  borderRadius: 18, paddingVertical: 14, alignItems: 'center',
-                  marginBottom: vivaQuestions.length > 0 ? 20 : 0,
-                  opacity: vivaLimitReached ? 0.45 : 1,
-                }}
-              >
+              <TouchableOpacity onPress={handleAskViva} disabled={isAskingViva || vivaLimitReached} activeOpacity={0.8}
+                style={{ backgroundColor: t.iconBg, borderWidth: 1, borderColor: t.cardBorder, borderRadius: 18, paddingVertical: 14, alignItems: 'center', marginBottom: vivaQuestions.length > 0 ? 20 : 0, opacity: vivaLimitReached ? 0.45 : 1 }}>
                 {isAskingViva
-                  ? <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <ActivityIndicator size="small" color={subjectColor} />
-                      <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: subjectColor }}>Generating…</Text>
-                    </View>
+                  ? <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><ActivityIndicator size="small" color={subjectColor} /><Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: subjectColor }}>Generating…</Text></View>
                   : <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: vivaLimitReached ? '#ffb4ab' : subjectColor }}>
-                      {vivaLimitReached
-                        ? `Daily limit reached (${MAX_VIVA}/day)`
-                        : vivaTopics.length > 0
-                          ? 'Ask Another Viva Question'
-                          : 'Set Topics & Start Viva'}
+                      {vivaLimitReached ? `Daily limit reached (${MAX_VIVA}/day)` : vivaTopics.length > 0 ? 'Ask Another Viva Question' : 'Set Topics & Start Viva'}
                     </Text>
                 }
               </TouchableOpacity>
-
               <VivaCards questions={vivaQuestions} subjectColor={subjectColor} />
             </View>
 
             {/* ── Topics Checklist ── */}
-            <View style={{ marginHorizontal: 20, marginBottom: 20, backgroundColor: '#10121e', borderRadius: 28, borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)', padding: 22 }}>
+            <View style={{ marginHorizontal: 20, marginBottom: 20, backgroundColor: t.card, borderRadius: 28, borderWidth: 1, borderColor: t.cardBorder, padding: 22 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 18, color: '#e1e3e4', letterSpacing: -0.2 }}>High-Yield Topics</Text>
+                <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 18, color: t.onSurface, letterSpacing: -0.2 }}>High-Yield Topics</Text>
                 {topics.length > 0 && (
                   <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: `${subjectColor}18`, borderWidth: 1, borderColor: `${subjectColor}28` }}>
                     <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 10, color: subjectColor, letterSpacing: 1 }}>{completedCount}/{topics.length}</Text>
@@ -861,62 +752,39 @@ export default function ExamScreen() {
           </>
         ) : (
           <View style={{ marginHorizontal: 20, marginTop: 8, paddingBottom: 20 }}>
-            {/* Hero */}
-            <View style={{ backgroundColor: '#10121e', borderRadius: 28, borderWidth: 1, borderColor: 'rgba(207,188,255,0.12)', padding: 24, marginBottom: 16, overflow: 'hidden' }}>
-              <View style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(207,188,255,0.06)' }} />
-              <View style={{ width: 52, height: 52, borderRadius: 18, backgroundColor: 'rgba(207,188,255,0.12)', borderWidth: 1, borderColor: 'rgba(207,188,255,0.2)', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+            <View style={{ backgroundColor: t.card, borderRadius: 28, borderWidth: 1, borderColor: t.cardBorder, padding: 24, marginBottom: 16, overflow: 'hidden' }}>
+              <View style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, borderRadius: 80, backgroundColor: isDark ? 'rgba(207,188,255,0.06)' : 'rgba(181,153,255,0.06)' }} />
+              <View style={{ width: 52, height: 52, borderRadius: 18, backgroundColor: isDark ? 'rgba(207,188,255,0.12)' : 'rgba(181,153,255,0.12)', borderWidth: 1, borderColor: isDark ? 'rgba(207,188,255,0.2)' : 'rgba(181,153,255,0.25)', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
                 <Text style={{ fontSize: 26 }}>🧠</Text>
               </View>
-              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: '#948e9d', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 6 }}>
-                AI-Powered
-              </Text>
-              <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 26, color: '#e1e3e4', letterSpacing: -0.4, lineHeight: 32, marginBottom: 10 }}>
-                Your personal{'\n'}exam coach
-              </Text>
-              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: '#948e9d', lineHeight: 21 }}>
+              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: t.onSurfaceVariant, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 6 }}>AI-Powered</Text>
+              <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 26, color: t.onSurface, letterSpacing: -0.4, lineHeight: 32, marginBottom: 10 }}>Your personal{'\n'}exam coach</Text>
+              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: t.onSurfaceVariant, lineHeight: 21 }}>
                 Pick a subject above to generate topic-specific exam packs — MCQs, short answers, viva questions — all based on your actual syllabus.
               </Text>
             </View>
 
-            {/* Feature cards */}
             {[
-              {
-                icon: '📦', color: '#cfbcff',
-                label: 'Full Pack',
-                desc: '10 MCQs · 10 Short Qs · 10 Long Qs for a complete 100-mark paper',
-              },
-              {
-                icon: '⚡', color: '#fbbf24',
-                label: 'Quick Review',
-                desc: '15 high-yield short Q&As — perfect for last-minute revision before exams',
-              },
-              {
-                icon: '🎙️', color: '#4ade80',
-                label: 'Viva Only Pack',
-                desc: '15 examiner-style viva questions with crisp answers to ace your orals',
-              },
-              {
-                icon: '🔁', color: '#60a5fa',
-                label: 'Viva Practice',
-                desc: 'One question at a time — practice answering without peeking, then reveal the answer',
-              },
+              { icon: '📦', color: '#cfbcff', label: 'Full Pack', desc: '10 MCQs · 10 Short Qs · 10 Long Qs for a complete 100-mark paper' },
+              { icon: '⚡', color: '#fbbf24', label: 'Quick Review', desc: '15 high-yield short Q&As — perfect for last-minute revision before exams' },
+              { icon: '🎙️', color: '#4ade80', label: 'Viva Only Pack', desc: '15 examiner-style viva questions with crisp answers to ace your orals' },
+              { icon: '🔁', color: '#60a5fa', label: 'Viva Practice', desc: 'One question at a time — practice answering without peeking, then reveal the answer' },
             ].map((f) => (
-              <View key={f.label} style={{ backgroundColor: '#10121e', borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)', padding: 16, marginBottom: 10, flexDirection: 'row', alignItems: 'flex-start', gap: 14 }}>
+              <View key={f.label} style={{ backgroundColor: t.card, borderRadius: 20, borderWidth: 1, borderColor: t.cardBorder, padding: 16, marginBottom: 10, flexDirection: 'row', alignItems: 'flex-start', gap: 14 }}>
                 <View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: `${f.color}15`, borderWidth: 1, borderColor: `${f.color}25`, alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <Text style={{ fontSize: 20 }}>{f.icon}</Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: '#e1e3e4', marginBottom: 4 }}>{f.label}</Text>
-                  <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: '#948e9d', lineHeight: 18 }}>{f.desc}</Text>
+                  <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: t.onSurface, marginBottom: 4 }}>{f.label}</Text>
+                  <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: t.onSurfaceVariant, lineHeight: 18 }}>{f.desc}</Text>
                 </View>
               </View>
             ))}
 
-            {/* Tip */}
-            <View style={{ marginTop: 6, backgroundColor: 'rgba(207,188,255,0.05)', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(207,188,255,0.1)', padding: 14, flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
+            <View style={{ marginTop: 6, backgroundColor: isDark ? 'rgba(207,188,255,0.05)' : 'rgba(181,153,255,0.07)', borderRadius: 16, borderWidth: 1, borderColor: t.cardBorder, padding: 14, flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
               <Text style={{ fontSize: 16 }}>💡</Text>
-              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: '#948e9d', lineHeight: 18, flex: 1 }}>
-                <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#cfbcff' }}>Pro tip: </Text>
+              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: t.onSurfaceVariant, lineHeight: 18, flex: 1 }}>
+                <Text style={{ fontFamily: 'Inter_600SemiBold', color: t.primaryText }}>Pro tip: </Text>
                 Enter specific topics like "Krebs cycle, Glycolysis" instead of just "Biochemistry" to get laser-focused exam questions.
               </Text>
             </View>

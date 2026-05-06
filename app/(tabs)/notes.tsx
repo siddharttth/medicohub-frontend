@@ -22,6 +22,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import Toast from 'react-native-toast-message';
 import { notesApi, UploadNoteType } from '../../src/api/notes';
 import { useAuthStore } from '../../src/store/authStore';
+import { useThemeStore, getTheme } from '../../src/store/themeStore';
 import { NoteRequest } from '../../src/types';
 import { LoadingSpinner } from '../../src/components/ui/LoadingSpinner';
 import { Subject, NoteType, Note } from '../../src/types';
@@ -58,7 +59,7 @@ const UPLOAD_NOTE_TYPES: { label: string; value: UploadNoteType; icon: string }[
   { label: 'PYQ', value: 'PYQ', icon: '📝' },
 ];
 
-const SUBJECT_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+const SUBJECT_COLORS_DARK: Record<string, { bg: string; text: string; border: string }> = {
   Anatomy:      { bg: 'rgba(207,188,255,0.12)', text: '#cfbcff', border: 'rgba(207,188,255,0.18)' },
   Physiology:   { bg: 'rgba(74,222,128,0.12)',  text: '#4ade80', border: 'rgba(74,222,128,0.18)' },
   Biochemistry: { bg: 'rgba(96,165,250,0.12)',  text: '#60a5fa', border: 'rgba(96,165,250,0.18)' },
@@ -69,46 +70,43 @@ const SUBJECT_COLORS: Record<string, { bg: string; text: string; border: string 
   Medicine:     { bg: 'rgba(167,139,250,0.12)', text: '#a78bfa', border: 'rgba(167,139,250,0.18)' },
 };
 
-const getSubjectColor = (s: string) =>
-  SUBJECT_COLORS[s] ?? { bg: 'rgba(207,188,255,0.12)', text: '#cfbcff', border: 'rgba(207,188,255,0.18)' };
+const SUBJECT_COLORS_LIGHT: Record<string, { bg: string; text: string; border: string }> = {
+  Anatomy:      { bg: 'rgba(94,53,177,0.08)',  text: '#5E35B1', border: 'rgba(94,53,177,0.18)' },
+  Physiology:   { bg: 'rgba(22,163,74,0.08)',  text: '#16A34A', border: 'rgba(22,163,74,0.18)' },
+  Biochemistry: { bg: 'rgba(37,99,235,0.08)',  text: '#2563EB', border: 'rgba(37,99,235,0.18)' },
+  Pathology:    { bg: 'rgba(194,65,12,0.08)',  text: '#C2410C', border: 'rgba(194,65,12,0.18)' },
+  Pharmacology: { bg: 'rgba(190,24,93,0.08)',  text: '#BE185D', border: 'rgba(190,24,93,0.18)' },
+  Microbiology: { bg: 'rgba(8,145,178,0.08)',  text: '#0891B2', border: 'rgba(8,145,178,0.18)' },
+  Surgery:      { bg: 'rgba(180,83,9,0.08)',   text: '#B45309', border: 'rgba(180,83,9,0.18)' },
+  Medicine:     { bg: 'rgba(109,40,217,0.08)', text: '#6D28D9', border: 'rgba(109,40,217,0.18)' },
+};
+
+const getSubjectColor = (s: string, isDark: boolean) => {
+  const map = isDark ? SUBJECT_COLORS_DARK : SUBJECT_COLORS_LIGHT;
+  const fallback = isDark
+    ? { bg: 'rgba(207,188,255,0.12)', text: '#cfbcff', border: 'rgba(207,188,255,0.18)' }
+    : { bg: 'rgba(94,53,177,0.08)', text: '#5E35B1', border: 'rgba(94,53,177,0.18)' };
+  return map[s] ?? fallback;
+};
 
 type PickedFile = { uri: string; name: string; mimeType: string; size?: number };
 
 // ─── Filter chip ────────────────────────────────────────────────────────────
 function FilterChip({
-  label,
-  selected,
-  onPress,
-  activeColor,
+  label, selected, onPress, activeColor,
 }: {
-  label: string;
-  selected: boolean;
-  onPress: () => void;
-  activeColor?: string;
+  label: string; selected: boolean; onPress: () => void; activeColor?: string;
 }) {
+  const isDark = useThemeStore((s) => s.isDark);
+  const t = getTheme(isDark);
   const color = activeColor ?? '#cfbcff';
   return (
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.75}
-      style={{
-        paddingHorizontal: 14,
-        paddingVertical: 8,
-        borderRadius: 999,
-        marginRight: 7,
-        backgroundColor: selected ? color : '#10121e',
-        borderWidth: 1,
-        borderColor: selected ? color : 'rgba(255,255,255,0.1)',
-      }}
+      style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, marginRight: 7, backgroundColor: selected ? color : t.card, borderWidth: 1, borderColor: selected ? color : t.cardBorder }}
     >
-      <Text
-        style={{
-          fontFamily: 'Inter_600SemiBold',
-          fontSize: 11,
-          letterSpacing: 0.6,
-          color: selected ? '#0d0d1a' : '#948e9d',
-        }}
-      >
+      <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, letterSpacing: 0.6, color: selected ? '#0d0d1a' : t.onSurfaceVariant }}>
         {label}
       </Text>
     </TouchableOpacity>
@@ -132,7 +130,9 @@ function NoteCard({
   const starScale = useRef(new Animated.Value(1)).current;
   const cardScale = useRef(new Animated.Value(1)).current;
   const [flipped, setFlipped] = useState(false);
-  const subjectColor = getSubjectColor(item.subject);
+  const isDark = useThemeStore((s) => s.isDark);
+  const t = getTheme(isDark);
+  const subjectColor = getSubjectColor(item.subject, isDark);
   const typeInfo = NOTE_TYPE_ICONS[item.noteType] ?? NOTE_TYPE_ICONS.pdf;
 
   const handleStar = () => {
@@ -165,203 +165,83 @@ function NoteCard({
       <TouchableOpacity
         activeOpacity={0.9}
         onPress={handleFlip}
-        onPressIn={() =>
-          Animated.spring(cardScale, { toValue: 0.97, useNativeDriver: true, speed: 40, bounciness: 0 }).start()
-        }
-        onPressOut={() =>
-          Animated.spring(cardScale, { toValue: 1, useNativeDriver: true, speed: 20, bounciness: 6 }).start()
-        }
-        style={{
-          backgroundColor: '#10121e',
-          borderRadius: 28,
-          borderWidth: 1,
-          borderColor: flipped ? `${subjectColor.text}40` : `${subjectColor.text}20`,
-          padding: 22,
-          minHeight: 180,
-        }}
+        onPressIn={() => Animated.spring(cardScale, { toValue: 0.97, useNativeDriver: true, speed: 40, bounciness: 0 }).start()}
+        onPressOut={() => Animated.spring(cardScale, { toValue: 1, useNativeDriver: true, speed: 20, bounciness: 6 }).start()}
+        style={{ backgroundColor: t.card, borderRadius: 28, borderWidth: 1, borderColor: flipped ? `${subjectColor.text}40` : `${subjectColor.text}20`, padding: 22, minHeight: 180 }}
       >
         <Animated.View style={{ opacity: fadeAnim, transform: [{ translateX: slideAnim }] }}>
         {flipped ? (
-          /* ── BACK FACE (description + tags) ── */
           <View>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
               <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: subjectColor.text, letterSpacing: 1.5, textTransform: 'uppercase' }}>About this note</Text>
             </View>
             {item.description ? (
-              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: '#e1e3e4', lineHeight: 22, marginBottom: 14 }}>
-                {item.description}
-              </Text>
+              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: t.onSurface, lineHeight: 22, marginBottom: 14 }}>{item.description}</Text>
             ) : (
-              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: '#948e9d', marginBottom: 14 }}>No description provided.</Text>
+              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: t.onSurfaceVariant, marginBottom: 14 }}>No description provided.</Text>
             )}
             {(item.tags ?? []).length > 0 && (
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
                 {(item.tags ?? []).map((tag) => (
-                  <View key={tag} style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' }}>
-                    <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: '#948e9d', letterSpacing: 0.5 }}>#{tag}</Text>
+                  <View key={tag} style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: t.iconBg, borderWidth: 1, borderColor: t.cardBorder }}>
+                    <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: t.onSurfaceVariant, letterSpacing: 0.5 }}>#{tag}</Text>
                   </View>
                 ))}
               </View>
             )}
-            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: '#494551' }}>Tap to flip back</Text>
+            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: t.outlineVariant }}>Tap to flip back</Text>
           </View>
         ) : (
-          /* ── FRONT FACE ── */
           <View>
-        {/* Top row: icon + subject badge + download */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-            <View
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 12,
-                backgroundColor: 'rgba(255,255,255,0.05)',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Ionicons name={typeInfo.icon as any} size={20} color={typeInfo.color} />
-            </View>
-            <View
-              style={{
-                paddingHorizontal: 10,
-                paddingVertical: 5,
-                borderRadius: 8,
-                backgroundColor: subjectColor.bg,
-                borderWidth: 1,
-                borderColor: subjectColor.border,
-              }}
-            >
-              <Text
-                style={{
-                  fontFamily: 'Inter_700Bold',
-                  fontSize: 9,
-                  letterSpacing: 1.5,
-                  textTransform: 'uppercase',
-                  color: subjectColor.text,
-                }}
-              >
-                {item.subject}
-              </Text>
-            </View>
-          </View>
-
-          <TouchableOpacity
-            onPress={onDownload}
-            disabled={isDownloading}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 12,
-              backgroundColor: 'rgba(207,188,255,0.1)',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderWidth: 1,
-              borderColor: 'rgba(207,188,255,0.15)',
-            }}
-          >
-            {isDownloading ? (
-              <ActivityIndicator size="small" color="#cfbcff" />
-            ) : (
-              <Ionicons name="arrow-down-outline" size={18} color="#cfbcff" />
-            )}
-          </TouchableOpacity>
-        </View>
-
-        {/* Title + author */}
-        <View style={{ marginBottom: 16 }}>
-          <Text
-            style={{
-              fontFamily: 'NotoSerif_700Bold',
-              fontSize: 20,
-              color: '#e1e3e4',
-              letterSpacing: -0.3,
-              lineHeight: 26,
-              marginBottom: 6,
-            }}
-            numberOfLines={2}
-          >
-            {item.title}
-          </Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-            <Ionicons name="person-outline" size={12} color="#948e9d" />
-            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: '#948e9d' }}>
-              by {item.author?.name ?? 'Senior'}
-            </Text>
-          </View>
-
-          {/* Tags */}
-          {(item.tags ?? []).length > 0 && (
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
-              {(item.tags ?? []).map((tag) => (
-                <View
-                  key={tag}
-                  style={{
-                    paddingHorizontal: 10,
-                    paddingVertical: 4,
-                    borderRadius: 999,
-                    backgroundColor: 'rgba(255,255,255,0.05)',
-                    borderWidth: 1,
-                    borderColor: 'rgba(255,255,255,0.06)',
-                  }}
-                >
-                  <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: '#948e9d', letterSpacing: 0.5 }}>
-                    #{tag}
-                  </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: t.iconBg, alignItems: 'center', justifyContent: 'center' }}>
+                  <Ionicons name={typeInfo.icon as any} size={20} color={typeInfo.color} />
                 </View>
-              ))}
+                <View style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, backgroundColor: subjectColor.bg, borderWidth: 1, borderColor: subjectColor.border }}>
+                  <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 9, letterSpacing: 1.5, textTransform: 'uppercase', color: subjectColor.text }}>{item.subject}</Text>
+                </View>
+              </View>
+              <TouchableOpacity onPress={onDownload} disabled={isDownloading} style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: isDark ? 'rgba(207,188,255,0.1)' : 'rgba(181,153,255,0.1)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: isDark ? 'rgba(207,188,255,0.15)' : 'rgba(181,153,255,0.2)' }}>
+                {isDownloading ? <ActivityIndicator size="small" color={t.primaryText} /> : <Ionicons name="arrow-down-outline" size={18} color={t.primaryText} />}
+              </TouchableOpacity>
             </View>
-          )}
-        </View>
 
-        {/* Bottom: stats + star */}
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            paddingTop: 14,
-            borderTopWidth: 1,
-            borderTopColor: 'rgba(255,255,255,0.05)',
-          }}
-        >
-          <View style={{ flexDirection: 'row', gap: 16 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-              <Ionicons
-                name={item.ratingCount && item.ratingCount > 0 ? 'star' : 'star-outline'}
-                size={16}
-                color={item.ratingCount && item.ratingCount > 0 ? '#fb923c' : '#948e9d'}
-              />
-              <Text
-                style={{
-                  fontFamily: 'Inter_700Bold',
-                  fontSize: 12,
-                  color: item.ratingCount && item.ratingCount > 0 ? '#e1e3e4' : '#948e9d',
-                }}
-              >
-                {item.ratingCount ?? 0}
-              </Text>
+            <View style={{ marginBottom: 16 }}>
+              <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 20, color: t.onSurface, letterSpacing: -0.3, lineHeight: 26, marginBottom: 6 }} numberOfLines={2}>{item.title}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                <Ionicons name="person-outline" size={12} color={t.onSurfaceVariant} />
+                <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: t.onSurfaceVariant }}>by {item.author?.name ?? 'Senior'}</Text>
+              </View>
+              {(item.tags ?? []).length > 0 && (
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+                  {(item.tags ?? []).map((tag) => (
+                    <View key={tag} style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: t.iconBg, borderWidth: 1, borderColor: t.cardBorder }}>
+                      <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 10, color: t.onSurfaceVariant, letterSpacing: 0.5 }}>#{tag}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-              <Ionicons name="arrow-down-circle-outline" size={16} color="#948e9d" />
-              <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 12, color: '#948e9d' }}>
-                {item.downloads ?? 0}
-              </Text>
+
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 14, borderTopWidth: 1, borderTopColor: t.separator }}>
+              <View style={{ flexDirection: 'row', gap: 16 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                  <Ionicons name={item.ratingCount && item.ratingCount > 0 ? 'star' : 'star-outline'} size={16} color={item.ratingCount && item.ratingCount > 0 ? '#fb923c' : t.onSurfaceVariant} />
+                  <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 12, color: item.ratingCount && item.ratingCount > 0 ? t.onSurface : t.onSurfaceVariant }}>{item.ratingCount ?? 0}</Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                  <Ionicons name="arrow-down-circle-outline" size={16} color={t.onSurfaceVariant} />
+                  <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 12, color: t.onSurfaceVariant }}>{item.downloads ?? 0}</Text>
+                </View>
+              </View>
+              <TouchableOpacity onPress={handleStar} disabled={isRating} activeOpacity={0.7}>
+                <Animated.View style={{ transform: [{ scale: starScale }] }}>
+                  <Ionicons name={item.hasRated ? 'star' : 'star-outline'} size={22} color={item.hasRated ? t.primaryText : t.outlineVariant} />
+                </Animated.View>
+              </TouchableOpacity>
             </View>
           </View>
-
-          <TouchableOpacity onPress={handleStar} disabled={isRating} activeOpacity={0.7}>
-            <Animated.View style={{ transform: [{ scale: starScale }] }}>
-              <Ionicons
-                name={item.hasRated ? 'star' : 'star-outline'}
-                size={22}
-                color={item.hasRated ? '#cfbcff' : '#494551'}
-              />
-            </Animated.View>
-          </TouchableOpacity>
-        </View>
-        </View>
         )}
         </Animated.View>
       </TouchableOpacity>
@@ -373,6 +253,8 @@ function NoteCard({
 export default function NotesScreen() {
   const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.user);
+  const isDark = useThemeStore((s) => s.isDark);
+  const t = getTheme(isDark);
   const [selectedSubjects, setSelectedSubjects] = useState<Subject[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<NoteType[]>([]);
 
@@ -576,52 +458,39 @@ export default function NotesScreen() {
     },
   });
 
-  // ── Request form card (reused in requests tab) ──────────────────────────────
+  // ── Request form card ─────────────────────────────────────────────────────
+  const phColor = isDark ? 'rgba(148,142,157,0.4)' : 'rgba(90,86,112,0.4)';
   const RequestFormCard = (
-    <View
-      style={{
-        backgroundColor: '#10121e',
-        borderRadius: 28,
-        borderWidth: 1,
-        borderColor: 'rgba(207,188,255,0.15)',
-        paddingHorizontal: 24,
-        paddingVertical: 26,
-        marginBottom: 28,
-        shadowColor: '#cfbcff',
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.1,
-        shadowRadius: 20,
-      }}
-    >
-      <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 20, lineHeight: 27, color: '#e1e3e4', marginBottom: 6 }}>Need something specific?</Text>
-      <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, lineHeight: 20, color: '#948e9d', marginBottom: 22 }}>Request a note and others will fulfill it.</Text>
+    <View style={{ backgroundColor: t.card, borderRadius: 28, borderWidth: 1, borderColor: t.cardBorder, paddingHorizontal: 24, paddingVertical: 26, marginBottom: 28 }}>
+      <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 20, lineHeight: 27, color: t.onSurface, marginBottom: 6 }}>Need something specific?</Text>
+      <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, lineHeight: 20, color: t.onSurfaceVariant, marginBottom: 22 }}>Request a note and others will fulfill it.</Text>
       {showRequestForm ? (
         <>
           <TextInput
             value={requestTopic}
             onChangeText={setRequestTopic}
             placeholder="e.g. Brachial Plexus, Krebs Cycle..."
-            placeholderTextColor="rgba(148,142,157,0.4)"
-            style={{ backgroundColor: '#070810', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', borderRadius: 16, paddingHorizontal: 16, paddingVertical: 14, fontFamily: 'Inter_400Regular', fontSize: 14, color: '#e1e3e4', marginBottom: 16 }}
+            placeholderTextColor={phColor}
+            style={{ backgroundColor: t.innerSurface, borderWidth: 1, borderColor: t.cardBorder, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 14, fontFamily: 'Inter_400Regular', fontSize: 14, color: t.onSurface, marginBottom: 16 }}
           />
           <View style={{ flexDirection: 'row', gap: 10, marginBottom: 18 }}>
-            {REQUEST_NOTE_TYPES.map((t) => (
-              <TouchableOpacity key={t.value} onPress={() => setRequestNoteType(t.value)} style={{ flex: 1, paddingVertical: 9, borderRadius: 12, alignItems: 'center', backgroundColor: requestNoteType === t.value ? '#cfbcff' : 'transparent', borderWidth: 1, borderColor: requestNoteType === t.value ? '#cfbcff' : 'rgba(255,255,255,0.08)' }}>
-                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: requestNoteType === t.value ? '#39197c' : '#948e9d' }}>{t.label}</Text>
+            {REQUEST_NOTE_TYPES.map((nt) => (
+              <TouchableOpacity key={nt.value} onPress={() => setRequestNoteType(nt.value)} style={{ flex: 1, paddingVertical: 9, borderRadius: 12, alignItems: 'center', backgroundColor: requestNoteType === nt.value ? t.primaryContainer : 'transparent', borderWidth: 1, borderColor: requestNoteType === nt.value ? t.primaryContainer : t.cardBorder }}>
+                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: requestNoteType === nt.value ? '#39197c' : t.onSurfaceVariant }}>{nt.label}</Text>
               </TouchableOpacity>
             ))}
           </View>
           <View style={{ flexDirection: 'row', gap: 12 }}>
-            <TouchableOpacity onPress={() => { setShowRequestForm(false); setRequestTopic(''); }} style={{ flex: 1, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', borderRadius: 14, paddingVertical: 12, alignItems: 'center' }}>
-              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: '#948e9d' }}>Cancel</Text>
+            <TouchableOpacity onPress={() => { setShowRequestForm(false); setRequestTopic(''); }} style={{ flex: 1, borderWidth: 1, borderColor: t.cardBorder, borderRadius: 14, paddingVertical: 12, alignItems: 'center' }}>
+              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: t.onSurfaceVariant }}>Cancel</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => requestMutation.mutate()} disabled={requestMutation.isPending || !requestTopic.trim()} style={{ flex: 1, backgroundColor: '#cfbcff', borderRadius: 14, paddingVertical: 12, alignItems: 'center', opacity: requestTopic.trim() ? 1 : 0.4 }}>
+            <TouchableOpacity onPress={() => requestMutation.mutate()} disabled={requestMutation.isPending || !requestTopic.trim()} style={{ flex: 1, backgroundColor: t.primaryContainer, borderRadius: 14, paddingVertical: 12, alignItems: 'center', opacity: requestTopic.trim() ? 1 : 0.4 }}>
               <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 13, color: '#39197c' }}>{requestMutation.isPending ? 'Sending…' : 'Send Request'}</Text>
             </TouchableOpacity>
           </View>
         </>
       ) : (
-        <TouchableOpacity onPress={() => setShowRequestForm(true)} style={{ backgroundColor: '#cfbcff', borderRadius: 16, paddingVertical: 16, alignItems: 'center' }}>
+        <TouchableOpacity onPress={() => setShowRequestForm(true)} style={{ backgroundColor: t.primaryContainer, borderRadius: 16, paddingVertical: 16, alignItems: 'center' }}>
           <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 13, color: '#39197c' }}>Request Custom Note</Text>
         </TouchableOpacity>
       )}
@@ -629,191 +498,112 @@ export default function NotesScreen() {
   );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#070810' }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: t.bg }} edges={['top']}>
 
       {/* ── Header ── */}
       <View style={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 0 }}>
-        {/* Title row */}
         <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 24 }}>
           <View>
-            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: '#948e9d', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 6 }}>
-              Resource Hub
-            </Text>
-            <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 36, color: '#e1e3e4', letterSpacing: -0.5, lineHeight: 40 }}>
-              Senior Notes
-            </Text>
+            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: t.onSurfaceVariant, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 6 }}>Resource Hub</Text>
+            <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 36, color: t.onSurface, letterSpacing: -0.5, lineHeight: 40 }}>Senior Notes</Text>
           </View>
-          <TouchableOpacity
-            onPress={() => setShowUpload(true)}
-            activeOpacity={0.85}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              backgroundColor: '#cfbcff',
-              paddingHorizontal: 16,
-              paddingVertical: 8,
-              borderRadius: 999,
-              gap: 6,
-              marginBottom: 4, // subtle lift to align better with text baseline
-              shadowColor: '#cfbcff',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 12,
-              elevation: 4,
-            }}
-          >
+          <TouchableOpacity onPress={() => setShowUpload(true)} activeOpacity={0.85}
+            style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: t.primaryContainer, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999, gap: 6, marginBottom: 4, shadowColor: t.primaryContainer, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 4 }}>
             <Ionicons name="arrow-up-outline" size={16} color="#39197c" />
             <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 12, color: '#39197c' }}>Upload</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Underline tab switcher */}
-        <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)' }}>
+        {/* Tab switcher */}
+        <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: t.separator }}>
           {(['notes', 'requests'] as const).map((tab) => (
-            <TouchableOpacity
-              key={tab}
-              onPress={() => setActiveTab(tab)}
-              activeOpacity={0.7}
-              style={{
-                paddingBottom: 13,
-                marginRight: 28,
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 7,
-              }}
-            >
-              <Text style={{
-                fontFamily: activeTab === tab ? 'Inter_700Bold' : 'Inter_400Regular',
-                fontSize: 14,
-                color: activeTab === tab ? '#e1e3e4' : '#494551',
-                letterSpacing: 0.2,
-              }}>
+            <TouchableOpacity key={tab} onPress={() => setActiveTab(tab)} activeOpacity={0.7}
+              style={{ paddingBottom: 13, marginRight: 28, flexDirection: 'row', alignItems: 'center', gap: 7 }}>
+              <Text style={{ fontFamily: activeTab === tab ? 'Inter_700Bold' : 'Inter_400Regular', fontSize: 14, color: activeTab === tab ? t.onSurface : t.outlineVariant, letterSpacing: 0.2 }}>
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
               </Text>
               {tab === 'requests' && pendingRequests.length > 0 && (
-                <View style={{ backgroundColor: 'rgba(207,188,255,0.15)', borderRadius: 8, minWidth: 18, height: 18, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5, borderWidth: 1, borderColor: 'rgba(207,188,255,0.2)' }}>
-                  <Text style={{ fontSize: 9, fontFamily: 'Inter_700Bold', color: '#cfbcff' }}>{pendingRequests.length}</Text>
+                <View style={{ backgroundColor: isDark ? 'rgba(207,188,255,0.15)' : 'rgba(181,153,255,0.15)', borderRadius: 8, minWidth: 18, height: 18, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5, borderWidth: 1, borderColor: t.cardBorder }}>
+                  <Text style={{ fontSize: 9, fontFamily: 'Inter_700Bold', color: t.primaryText }}>{pendingRequests.length}</Text>
                 </View>
               )}
               {activeTab === tab && (
-                <View
-                  style={{
-                    position: 'absolute',
-                    left: 0,
-                    right: 0,
-                    bottom: -1,
-                    height: 2,
-                    borderRadius: 1,
-                    backgroundColor: '#cfbcff',
-                  }}
-                />
+                <View style={{ position: 'absolute', left: 0, right: 0, bottom: -1, height: 2, borderRadius: 1, backgroundColor: t.primaryContainer }} />
               )}
             </TouchableOpacity>
           ))}
         </View>
       </View>
 
-      {/* ── Collapsible: search + filters (notes tab only) ── */}
+      {/* ── Collapsible: search + filters ── */}
       {activeTab === 'notes' && (
         <Animated.View style={{ overflow: 'hidden', height: collapsibleHeightAnim, opacity: collapsibleOpacity, minHeight: 0 }}>
           <View onLayout={(e) => {
             const h = e.nativeEvent.layout.height;
             if (h > 0 && h !== measuredContentHeight.current) {
               measuredContentHeight.current = h;
-              if (collapsibleIsExpanded.current) {
-                collapsibleHeightAnim.setValue(h);
-              }
+              if (collapsibleIsExpanded.current) collapsibleHeightAnim.setValue(h);
             }
           }}>
-          {/* Search bar */}
-          <View style={{ paddingHorizontal: 20, marginTop: 16, marginBottom: 12 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#10121e', borderRadius: 18, paddingHorizontal: 14, paddingVertical: 11, borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' }}>
-              <Ionicons name="search-outline" size={16} color="#494551" />
-              <TextInput
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                autoCapitalize="none"
-                autoCorrect={false}
-                clearButtonMode="never"
-                placeholder="Search note titles..."
-                placeholderTextColor="rgba(148,142,157,0.35)"
-                style={{ flex: 1, marginLeft: 10, fontFamily: 'Inter_400Regular', fontSize: 14, color: '#e1e3e4' }}
-              />
-              {searchQuery.length > 0 && (
-                <TouchableOpacity onPress={() => setSearchQuery('')}>
-                  <Ionicons name="close-circle" size={16} color="#494551" />
-                </TouchableOpacity>
-              )}
+            <View style={{ paddingHorizontal: 20, marginTop: 16, marginBottom: 12 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: t.card, borderRadius: 18, paddingHorizontal: 14, paddingVertical: 11, borderWidth: 1, borderColor: t.cardBorder }}>
+                <Ionicons name="search-outline" size={16} color={t.outlineVariant} />
+                <TextInput
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  clearButtonMode="never"
+                  placeholder="Search note titles..."
+                  placeholderTextColor={phColor}
+                  style={{ flex: 1, marginLeft: 10, fontFamily: 'Inter_400Regular', fontSize: 14, color: t.onSurface }}
+                />
+                {searchQuery.length > 0 && (
+                  <TouchableOpacity onPress={() => setSearchQuery('')}>
+                    <Ionicons name="close-circle" size={16} color={t.outlineVariant} />
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
-          </View>
-          {/* Single merged filter row: subjects | divider | types */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingLeft: 20, paddingRight: 12, paddingVertical: 8, alignItems: 'center' }}>
-            {SUBJECTS.map((s) => (
-              <FilterChip
-                key={s}
-                label={s}
-                selected={selectedSubjects.includes(s)}
-                onPress={() => toggleSubject(s)}
-                activeColor={SUBJECT_COLORS[s]?.text}
-              />
-            ))}
-            {/* Divider */}
-            <View style={{ width: 1, height: 18, backgroundColor: 'rgba(255,255,255,0.1)', marginRight: 7 }} />
-            {NOTE_TYPES.map((t) => (
-              <FilterChip
-                key={t.value}
-                label={t.label}
-                selected={selectedTypes.includes(t.value)}
-                onPress={() => toggleType(t.value)}
-              />
-            ))}
-          </ScrollView>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingLeft: 20, paddingRight: 12, paddingVertical: 8, alignItems: 'center' }}>
+              {SUBJECTS.map((s) => (
+                <FilterChip key={s} label={s} selected={selectedSubjects.includes(s)} onPress={() => toggleSubject(s)} activeColor={getSubjectColor(s, isDark).text} />
+              ))}
+              <View style={{ width: 1, height: 18, backgroundColor: t.separator, marginRight: 7 }} />
+              {NOTE_TYPES.map((nt) => (
+                <FilterChip key={nt.value} label={nt.label} selected={selectedTypes.includes(nt.value)} onPress={() => toggleType(nt.value)} />
+              ))}
+            </ScrollView>
           </View>
         </Animated.View>
       )}
 
       {/* ── Content ── */}
       {activeTab === 'requests' ? (
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          onScroll={handleScroll}
-          scrollEventThrottle={16}
-          decelerationRate="normal"
-          overScrollMode="never"
-          bounces={false}
-          contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40 }}
-        >
-          {/* Request form always on top */}
+        <ScrollView showsVerticalScrollIndicator={false} onScroll={handleScroll} scrollEventThrottle={16} decelerationRate="normal" overScrollMode="never" bounces={false} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40 }}>
           {RequestFormCard}
-
-          {/* Existing requests below */}
           {sortedRequests.length > 0 && (
-            <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 10, color: '#948e9d', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 14 }}>
-              Open Requests
-            </Text>
+            <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 10, color: t.onSurfaceVariant, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 14 }}>Open Requests</Text>
           )}
           {sortedRequests.map((req) => (
-            <TouchableOpacity
-              key={req.id}
-              activeOpacity={0.85}
+            <TouchableOpacity key={req.id} activeOpacity={0.85}
               onPress={() => { setFulfillRequestId(req.id); setUploadSubject(req.subject as any); setShowUpload(true); }}
-              style={{ backgroundColor: '#10121e', borderRadius: 24, borderWidth: 1, borderColor: 'rgba(207,188,255,0.12)', padding: 20, marginBottom: 16, flexDirection: 'row', alignItems: 'center' }}
-            >
+              style={{ backgroundColor: t.card, borderRadius: 24, borderWidth: 1, borderColor: t.cardBorder, padding: 20, marginBottom: 16, flexDirection: 'row', alignItems: 'center' }}>
               <View style={{ flex: 1, marginRight: 16 }}>
                 <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-                  <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, backgroundColor: getSubjectColor(req.subject).bg, borderWidth: 1, borderColor: getSubjectColor(req.subject).border }}>
-                    <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 9, letterSpacing: 1.2, textTransform: 'uppercase', color: getSubjectColor(req.subject).text }}>{req.subject}</Text>
+                  <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, backgroundColor: getSubjectColor(req.subject, isDark).bg, borderWidth: 1, borderColor: getSubjectColor(req.subject, isDark).border }}>
+                    <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 9, letterSpacing: 1.2, textTransform: 'uppercase', color: getSubjectColor(req.subject, isDark).text }}>{req.subject}</Text>
                   </View>
-                  <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)' }}>
-                    <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 9, letterSpacing: 1, color: '#948e9d' }}>{req.noteType}</Text>
+                  <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, backgroundColor: t.iconBg, borderWidth: 1, borderColor: t.cardBorder }}>
+                    <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 9, letterSpacing: 1, color: t.onSurfaceVariant }}>{req.noteType}</Text>
                   </View>
                 </View>
-                <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 17, lineHeight: 23, color: '#e1e3e4', marginBottom: 6 }}>{req.topic}</Text>
-                <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: '#948e9d' }}>by {req.requestedBy?.name ?? 'Someone'}</Text>
+                <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 17, lineHeight: 23, color: t.onSurface, marginBottom: 6 }}>{req.topic}</Text>
+                <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: t.onSurfaceVariant }}>by {req.requestedBy?.name ?? 'Someone'}</Text>
               </View>
-              <View style={{ backgroundColor: 'rgba(207,188,255,0.12)', borderRadius: 16, minWidth: 74, paddingVertical: 14, paddingHorizontal: 12, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(207,188,255,0.18)' }}>
-                <Ionicons name="arrow-up-circle-outline" size={20} color="#cfbcff" />
-                <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 9, color: '#cfbcff', marginTop: 4, letterSpacing: 0.5 }}>FULFILL</Text>
+              <View style={{ backgroundColor: isDark ? 'rgba(207,188,255,0.12)' : 'rgba(181,153,255,0.12)', borderRadius: 16, minWidth: 74, paddingVertical: 14, paddingHorizontal: 12, alignItems: 'center', borderWidth: 1, borderColor: t.cardBorder }}>
+                <Ionicons name="arrow-up-circle-outline" size={20} color={t.primaryText} />
+                <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 9, color: t.primaryText, marginTop: 4, letterSpacing: 0.5 }}>FULFILL</Text>
               </View>
             </TouchableOpacity>
           ))}
@@ -834,43 +624,29 @@ export default function NotesScreen() {
           bounces={false}
           contentContainerStyle={{ paddingTop: 12, paddingBottom: 32 }}
           renderItem={({ item }) => (
-            <NoteCard
-              item={item}
-              onDownload={() => downloadMutation.mutate(item.id)}
-              onStar={() => rateMutation.mutate({ id: item.id, rating: 1 })}
-              isDownloading={downloadMutation.isPending && downloadMutation.variables === item.id}
-              isRating={rateMutation.isPending}
-            />
+            <NoteCard item={item} onDownload={() => downloadMutation.mutate(item.id)} onStar={() => rateMutation.mutate({ id: item.id, rating: 1 })} isDownloading={downloadMutation.isPending && downloadMutation.variables === item.id} isRating={rateMutation.isPending} />
           )}
           ListEmptyComponent={
             <View style={{ alignItems: 'center', paddingVertical: 80 }}>
               <Text style={{ fontSize: 44 }}>📭</Text>
-              <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 18, color: '#e1e3e4', marginTop: 14 }}>No notes found</Text>
-              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: '#948e9d', marginTop: 6 }}>Try different filters or request one below</Text>
+              <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 18, color: t.onSurface, marginTop: 14 }}>No notes found</Text>
+              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: t.onSurfaceVariant, marginTop: 6 }}>Try different filters or request one below</Text>
             </View>
           }
         />
       )}
 
       {/* ── Upload Modal ── */}
-      <Modal
-        visible={showUpload}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => { setShowUpload(false); resetUploadForm(); setFulfillRequestId(null); }}
-      >
+      <Modal visible={showUpload} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => { setShowUpload(false); resetUploadForm(); setFulfillRequestId(null); }}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-          <SafeAreaView style={{ flex: 1, backgroundColor: '#070810' }} edges={['top']}>
-            {/* Modal header */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)' }}>
+          <SafeAreaView style={{ flex: 1, backgroundColor: t.bg }} edges={['top']}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: t.separator }}>
               <TouchableOpacity onPress={() => { setShowUpload(false); resetUploadForm(); setFulfillRequestId(null); }}>
-                <Ionicons name="close" size={24} color="#948e9d" />
+                <Ionicons name="close" size={24} color={t.onSurfaceVariant} />
               </TouchableOpacity>
-              <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 18, color: '#e1e3e4' }}>
-                {fulfillRequestId ? 'Fulfill Request' : 'Upload Note'}
-              </Text>
+              <Text style={{ fontFamily: 'NotoSerif_600SemiBold', fontSize: 18, color: t.onSurface }}>{fulfillRequestId ? 'Fulfill Request' : 'Upload Note'}</Text>
               <TouchableOpacity onPress={() => uploadMutation.mutate()} disabled={uploadMutation.isPending || !uploadTitle.trim() || !pickedFile} style={{ opacity: uploadTitle.trim() && pickedFile ? 1 : 0.4 }}>
-                {uploadMutation.isPending ? <ActivityIndicator size="small" color="#cfbcff" /> : <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 14, color: '#cfbcff' }}>Post</Text>}
+                {uploadMutation.isPending ? <ActivityIndicator size="small" color={t.primaryText} /> : <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 14, color: t.primaryText }}>Post</Text>}
               </TouchableOpacity>
             </View>
 
@@ -878,67 +654,67 @@ export default function NotesScreen() {
               {fulfillRequestId && (() => {
                 const req = sortedRequests.find((r) => r.id === fulfillRequestId);
                 return req ? (
-                  <View style={{ backgroundColor: '#10121e', borderRadius: 16, padding: 14, marginBottom: 16, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(207,188,255,0.12)' }}>
+                  <View style={{ backgroundColor: t.card, borderRadius: 16, padding: 14, marginBottom: 16, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: t.cardBorder }}>
                     <Text style={{ fontSize: 18, marginRight: 10 }}>📬</Text>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: '#e1e3e4' }}>{req.topic}</Text>
-                      <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: '#948e9d' }}>{req.subject} · requested by {req.requestedBy?.name}</Text>
+                      <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: t.onSurface }}>{req.topic}</Text>
+                      <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: t.onSurfaceVariant }}>{req.subject} · requested by {req.requestedBy?.name}</Text>
                     </View>
                   </View>
                 ) : null;
               })()}
 
-              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: '#948e9d', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>Title *</Text>
-              <TextInput value={uploadTitle} onChangeText={setUploadTitle} placeholder="e.g. Brachial Plexus Complete Notes" placeholderTextColor="rgba(148,142,157,0.4)" style={{ backgroundColor: '#10121e', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', borderRadius: 16, paddingHorizontal: 16, paddingVertical: 13, fontFamily: 'Inter_400Regular', fontSize: 14, color: '#e1e3e4', marginBottom: 20 }} />
+              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: t.onSurfaceVariant, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>Title *</Text>
+              <TextInput value={uploadTitle} onChangeText={setUploadTitle} placeholder="e.g. Brachial Plexus Complete Notes" placeholderTextColor={phColor} style={{ backgroundColor: t.card, borderWidth: 1, borderColor: t.cardBorder, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 13, fontFamily: 'Inter_400Regular', fontSize: 14, color: t.onSurface, marginBottom: 20 }} />
 
-              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: '#948e9d', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 10 }}>Subject *</Text>
+              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: t.onSurfaceVariant, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 10 }}>Subject *</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
                 {SUBJECTS.map((s) => {
-                  const sc = SUBJECT_COLORS[s]?.text ?? '#cfbcff';
+                  const sc = getSubjectColor(s, isDark).text;
                   const isActive = uploadSubject === s;
                   return (
-                    <TouchableOpacity key={s} onPress={() => setUploadSubject(s)} style={{ marginRight: 8, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999, backgroundColor: isActive ? sc : '#10121e', borderWidth: 1, borderColor: isActive ? sc : 'rgba(255,255,255,0.08)' }}>
-                      <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: isActive ? '#1a0a3a' : '#948e9d' }}>{s}</Text>
+                    <TouchableOpacity key={s} onPress={() => setUploadSubject(s)} style={{ marginRight: 8, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999, backgroundColor: isActive ? sc : t.card, borderWidth: 1, borderColor: isActive ? sc : t.cardBorder }}>
+                      <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: isActive ? '#1a0a3a' : t.onSurfaceVariant }}>{s}</Text>
                     </TouchableOpacity>
                   );
                 })}
               </ScrollView>
 
-              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: '#948e9d', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 10 }}>Note Type *</Text>
+              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: t.onSurfaceVariant, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 10 }}>Note Type *</Text>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
-                {UPLOAD_NOTE_TYPES.map((t) => (
-                  <TouchableOpacity key={t.value} onPress={() => setUploadNoteType(t.value)} style={{ paddingHorizontal: 14, paddingVertical: 9, borderRadius: 14, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: uploadNoteType === t.value ? '#cfbcff' : '#10121e', borderWidth: 1, borderColor: uploadNoteType === t.value ? '#cfbcff' : 'rgba(255,255,255,0.08)' }}>
-                    <Text style={{ fontSize: 13 }}>{t.icon}</Text>
-                    <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: uploadNoteType === t.value ? '#39197c' : '#948e9d' }}>{t.label}</Text>
+                {UPLOAD_NOTE_TYPES.map((nt) => (
+                  <TouchableOpacity key={nt.value} onPress={() => setUploadNoteType(nt.value)} style={{ paddingHorizontal: 14, paddingVertical: 9, borderRadius: 14, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: uploadNoteType === nt.value ? t.primaryContainer : t.card, borderWidth: 1, borderColor: uploadNoteType === nt.value ? t.primaryContainer : t.cardBorder }}>
+                    <Text style={{ fontSize: 13 }}>{nt.icon}</Text>
+                    <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: uploadNoteType === nt.value ? '#39197c' : t.onSurfaceVariant }}>{nt.label}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
 
-              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: '#948e9d', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>Description (optional)</Text>
-              <TextInput value={uploadDesc} onChangeText={setUploadDesc} placeholder="Brief description..." placeholderTextColor="rgba(148,142,157,0.4)" multiline numberOfLines={3} style={{ backgroundColor: '#10121e', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', borderRadius: 16, paddingHorizontal: 16, paddingVertical: 13, fontFamily: 'Inter_400Regular', fontSize: 14, color: '#e1e3e4', textAlignVertical: 'top', minHeight: 80, marginBottom: 20 }} />
+              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: t.onSurfaceVariant, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>Description (optional)</Text>
+              <TextInput value={uploadDesc} onChangeText={setUploadDesc} placeholder="Brief description..." placeholderTextColor={phColor} multiline numberOfLines={3} style={{ backgroundColor: t.card, borderWidth: 1, borderColor: t.cardBorder, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 13, fontFamily: 'Inter_400Regular', fontSize: 14, color: t.onSurface, textAlignVertical: 'top', minHeight: 80, marginBottom: 20 }} />
 
-              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: '#948e9d', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>Tags (optional)</Text>
-              <TextInput value={uploadTags} onChangeText={setUploadTags} placeholder="e.g. upper limb, nerve, anatomy" placeholderTextColor="rgba(148,142,157,0.4)" style={{ backgroundColor: '#10121e', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', borderRadius: 16, paddingHorizontal: 16, paddingVertical: 13, fontFamily: 'Inter_400Regular', fontSize: 14, color: '#e1e3e4', marginBottom: 20 }} />
+              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: t.onSurfaceVariant, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>Tags (optional)</Text>
+              <TextInput value={uploadTags} onChangeText={setUploadTags} placeholder="e.g. upper limb, nerve, anatomy" placeholderTextColor={phColor} style={{ backgroundColor: t.card, borderWidth: 1, borderColor: t.cardBorder, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 13, fontFamily: 'Inter_400Regular', fontSize: 14, color: t.onSurface, marginBottom: 20 }} />
 
-              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: '#948e9d', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 10 }}>File *</Text>
-              <TouchableOpacity onPress={pickFile} activeOpacity={0.7} style={{ borderWidth: 1.5, borderStyle: 'dashed', borderRadius: 20, paddingVertical: 28, alignItems: 'center', justifyContent: 'center', borderColor: pickedFile ? '#cfbcff' : 'rgba(255,255,255,0.1)', backgroundColor: pickedFile ? 'rgba(207,188,255,0.05)' : 'transparent', marginBottom: 8 }}>
+              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: t.onSurfaceVariant, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 10 }}>File *</Text>
+              <TouchableOpacity onPress={pickFile} activeOpacity={0.7} style={{ borderWidth: 1.5, borderStyle: 'dashed', borderRadius: 20, paddingVertical: 28, alignItems: 'center', justifyContent: 'center', borderColor: pickedFile ? t.primaryContainer : t.cardBorder, backgroundColor: pickedFile ? `${t.primaryContainer}0D` : 'transparent', marginBottom: 8 }}>
                 {pickedFile ? (
                   <>
-                    <Ionicons name="document-attach" size={30} color="#cfbcff" />
-                    <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: '#cfbcff', marginTop: 8, maxWidth: '80%', textAlign: 'center' }} numberOfLines={1}>{pickedFile.name}</Text>
-                    {pickedFile.size ? <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: '#948e9d', marginTop: 4 }}>{(pickedFile.size / 1024).toFixed(1)} KB</Text> : null}
+                    <Ionicons name="document-attach" size={30} color={t.primaryText} />
+                    <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: t.primaryText, marginTop: 8, maxWidth: '80%', textAlign: 'center' }} numberOfLines={1}>{pickedFile.name}</Text>
+                    {pickedFile.size ? <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: t.onSurfaceVariant, marginTop: 4 }}>{(pickedFile.size / 1024).toFixed(1)} KB</Text> : null}
                   </>
                 ) : (
                   <>
-                    <Ionicons name="cloud-upload-outline" size={30} color="#494551" />
-                    <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 13, color: '#948e9d', marginTop: 8 }}>Tap to pick a file</Text>
-                    <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: '#494551', marginTop: 4 }}>PDF, Images, Word, CSV</Text>
+                    <Ionicons name="cloud-upload-outline" size={30} color={t.outlineVariant} />
+                    <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 13, color: t.onSurfaceVariant, marginTop: 8 }}>Tap to pick a file</Text>
+                    <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: t.outlineVariant, marginTop: 4 }}>PDF, Images, Word, CSV</Text>
                   </>
                 )}
               </TouchableOpacity>
               {pickedFile && (
                 <TouchableOpacity onPress={() => setPickedFile(null)} style={{ alignItems: 'center', paddingVertical: 4 }}>
-                  <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: '#948e9d' }}>Remove file</Text>
+                  <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: t.onSurfaceVariant }}>Remove file</Text>
                 </TouchableOpacity>
               )}
             </ScrollView>

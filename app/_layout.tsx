@@ -23,6 +23,7 @@ import {
 import { useAuthStore } from '../src/store/authStore';
 import { usersApi } from '../src/api/users';
 import { toastConfig } from '../src/components/ui/Toast';
+import { useThemeStore, getTheme } from '../src/store/themeStore';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,6 +37,9 @@ const queryClient = new QueryClient({
 export default function RootLayout() {
   const hydrate = useAuthStore((s) => s.hydrate);
   const user = useAuthStore((s) => s.user);
+  const hydrateTheme = useThemeStore((s) => s.hydrate);
+  const isDark = useThemeStore((s) => s.isDark);
+  const theme = getTheme(isDark);
   const sessionStart = useRef<number | null>(null);
 
   // Track active time and log to backend when app goes to background
@@ -80,6 +84,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     hydrate();
+    hydrateTheme();
   }, []);
 
   if (!fontsLoaded) return null;
@@ -88,8 +93,8 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
-          <StatusBar style="light" backgroundColor="#070810" />
-          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#070810' } }}>
+          <StatusBar style={theme.statusBar} backgroundColor={theme.bg} />
+          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.bg } }}>
             <Stack.Screen name="index" />
             <Stack.Screen name="(auth)" />
             <Stack.Screen name="(tabs)" />

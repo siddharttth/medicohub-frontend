@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
   KeyboardAvoidingView, Platform, ActivityIndicator,
-  ScrollView,
+  ScrollView, StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -10,6 +10,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 import { useAuth } from '../../src/hooks/useAuth';
+import { useThemeStore, getTheme } from '../../src/store/themeStore';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -17,6 +18,9 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { signIn } = useAuth();
+
+  const isDark = useThemeStore((s) => s.isDark);
+  const t = getTheme(isDark);
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -35,10 +39,12 @@ export default function Login() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#070810' }} edges={['top', 'bottom']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: t.bg }} edges={['top', 'bottom']}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+
       {/* Background glow */}
-      <View style={{ position: 'absolute', top: -80, left: -60, width: 280, height: 280, borderRadius: 140, backgroundColor: 'rgba(207,188,255,0.06)' }} />
-      <View style={{ position: 'absolute', bottom: 60, right: -80, width: 220, height: 220, borderRadius: 110, backgroundColor: 'rgba(96,165,250,0.04)' }} />
+      <View style={{ position: 'absolute', top: -80, left: -60, width: 280, height: 280, borderRadius: 140, backgroundColor: isDark ? 'rgba(207,188,255,0.06)' : 'rgba(181,153,255,0.08)' }} />
+      <View style={{ position: 'absolute', bottom: 60, right: -80, width: 220, height: 220, borderRadius: 110, backgroundColor: isDark ? 'rgba(96,165,250,0.04)' : 'rgba(96,165,250,0.05)' }} />
 
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView
@@ -47,61 +53,61 @@ export default function Login() {
           showsVerticalScrollIndicator={false}
         >
           {/* Logo mark */}
-          <View style={{ width: 52, height: 52, borderRadius: 16, backgroundColor: 'rgba(207,188,255,0.12)', borderWidth: 1, borderColor: 'rgba(207,188,255,0.2)', alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
+          <View style={{ width: 52, height: 52, borderRadius: 16, backgroundColor: isDark ? 'rgba(207,188,255,0.12)' : 'rgba(181,153,255,0.12)', borderWidth: 1, borderColor: isDark ? 'rgba(207,188,255,0.2)' : 'rgba(181,153,255,0.25)', alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
             <Text style={{ fontSize: 24 }}>🩺</Text>
           </View>
 
           {/* Headline */}
-          <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: '#948e9d', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>
+          <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: t.onSurfaceVariant, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>
             Welcome back
           </Text>
-          <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 34, color: '#e1e3e4', letterSpacing: -0.5, lineHeight: 40, marginBottom: 8 }}>
+          <Text style={{ fontFamily: 'NotoSerif_700Bold', fontSize: 34, color: t.onSurface, letterSpacing: -0.5, lineHeight: 40, marginBottom: 8 }}>
             Sign in to{'\n'}MedicoHub
           </Text>
-          <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: '#948e9d', lineHeight: 20, marginBottom: 40 }}>
+          <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: t.onSurfaceVariant, lineHeight: 20, marginBottom: 40 }}>
             Continue your medical journey where you left off.
           </Text>
 
           {/* Email */}
           <View style={{ marginBottom: 14 }}>
-            <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: '#948e9d', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>
+            <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: t.onSurfaceVariant, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>
               Email
             </Text>
-            <View style={{ backgroundColor: '#10121e', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', borderRadius: 16, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16 }}>
-              <Ionicons name="mail-outline" size={16} color="#494551" style={{ marginRight: 10 }} />
+            <View style={{ backgroundColor: t.card, borderWidth: 1, borderColor: t.cardBorder, borderRadius: 16, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16 }}>
+              <Ionicons name="mail-outline" size={16} color={t.outlineVariant} style={{ marginRight: 10 }} />
               <TextInput
                 value={email}
                 onChangeText={setEmail}
                 placeholder="you@college.edu"
-                placeholderTextColor="rgba(148,142,157,0.4)"
+                placeholderTextColor={isDark ? 'rgba(148,142,157,0.4)' : 'rgba(90,86,112,0.35)'}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
-                style={{ flex: 1, fontFamily: 'Inter_400Regular', fontSize: 15, color: '#e1e3e4', paddingVertical: 16 }}
+                style={{ flex: 1, fontFamily: 'Inter_400Regular', fontSize: 15, color: t.onSurface, paddingVertical: 16 }}
               />
             </View>
           </View>
 
           {/* Password */}
           <View style={{ marginBottom: 32 }}>
-            <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: '#948e9d', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>
+            <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: t.onSurfaceVariant, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>
               Password
             </Text>
-            <View style={{ backgroundColor: '#10121e', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', borderRadius: 16, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16 }}>
-              <Ionicons name="lock-closed-outline" size={16} color="#494551" style={{ marginRight: 10 }} />
+            <View style={{ backgroundColor: t.card, borderWidth: 1, borderColor: t.cardBorder, borderRadius: 16, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16 }}>
+              <Ionicons name="lock-closed-outline" size={16} color={t.outlineVariant} style={{ marginRight: 10 }} />
               <TextInput
                 value={password}
                 onChangeText={setPassword}
                 placeholder="••••••••"
-                placeholderTextColor="rgba(148,142,157,0.4)"
+                placeholderTextColor={isDark ? 'rgba(148,142,157,0.4)' : 'rgba(90,86,112,0.35)'}
                 secureTextEntry={!showPassword}
-                style={{ flex: 1, fontFamily: 'Inter_400Regular', fontSize: 15, color: '#e1e3e4', paddingVertical: 16 }}
+                style={{ flex: 1, fontFamily: 'Inter_400Regular', fontSize: 15, color: t.onSurface, paddingVertical: 16 }}
               />
               <TouchableOpacity onPress={() => setShowPassword((s) => !s)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color="#494551" />
+                <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color={t.outlineVariant} />
               </TouchableOpacity>
             </View>
-            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: 'rgba(148,142,157,0.5)', marginTop: 8 }}>
+            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: t.outlineVariant, marginTop: 8 }}>
               8+ chars with uppercase, lowercase, and number
             </Text>
           </View>
@@ -132,9 +138,9 @@ export default function Login() {
 
           {/* Register link */}
           <TouchableOpacity onPress={() => router.push('/(auth)/onboarding')} activeOpacity={0.7} style={{ alignItems: 'center', paddingVertical: 12 }}>
-            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: '#948e9d' }}>
+            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: t.onSurfaceVariant }}>
               New here?{' '}
-              <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#cfbcff' }}>Create an account</Text>
+              <Text style={{ fontFamily: 'Inter_600SemiBold', color: t.primaryText }}>Create an account</Text>
             </Text>
           </TouchableOpacity>
         </ScrollView>

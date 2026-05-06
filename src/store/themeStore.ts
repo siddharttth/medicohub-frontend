@@ -12,13 +12,13 @@ interface ThemeState {
 }
 
 export const useThemeStore = create<ThemeState>((set, get) => ({
-  isDark: true,
+  isDark: false,
   isHydrated: false,
 
   hydrate: async () => {
     try {
       const stored = await AsyncStorage.getItem(STORAGE_KEY);
-      const isDark = stored === null ? true : stored === 'dark';
+      const isDark = stored === null ? false : stored === 'dark';
       set({ isDark, isHydrated: true });
     } catch {
       set({ isHydrated: true });

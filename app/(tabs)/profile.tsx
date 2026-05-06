@@ -330,8 +330,8 @@ export default function ProfileScreen() {
                 value={!isDark}
                 onValueChange={(isLight) => setDark(!isLight)}
                 thumbColor={isDark ? '#cfbcff' : '#B599FF'}
-                trackColor={{ false: '#2d1060', true: 'rgba(181,153,255,0.35)' }}
-                ios_backgroundColor={isDark ? '#2d1060' : 'rgba(181,153,255,0.2)'}
+                trackColor={{ false: isDark ? '#2d1060' : '#D8D4EE', true: isDark ? 'rgba(181,153,255,0.35)' : 'rgba(181,153,255,0.45)' }}
+                ios_backgroundColor={isDark ? '#2d1060' : '#D8D4EE'}
               />
             </View>
 

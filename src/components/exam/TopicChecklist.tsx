@@ -122,7 +122,7 @@ export const TopicChecklist: React.FC<TopicChecklistProps> = ({
                 }}
               >
                 {item.completed && (
-                  <Ionicons name="checkmark" size={13} color="#39197c" />
+                  <Ionicons name="checkmark" size={13} color={isDark ? '#39197c' : '#FFFFFF'} />
                 )}
               </TouchableOpacity>
 

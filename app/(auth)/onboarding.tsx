@@ -55,7 +55,8 @@ export default function Onboarding() {
     setIsLoading(true);
     try {
       await register(form);
-      router.replace('/(tabs)');
+      // OTP sent — navigate to OTP verification screen
+      router.push({ pathname: '/(auth)/verify-otp', params: { email: form.email } });
     } catch (e: any) {
       const msg = e?.response?.data?.message ?? e?.message ?? 'Registration failed. Try again.';
       Alert.alert('Error', msg);

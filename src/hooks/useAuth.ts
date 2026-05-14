@@ -5,8 +5,14 @@ import { OnboardingData } from '../types';
 export const useAuth = () => {
   const { user, accessToken, isLoading, isHydrated, login, logout } = useAuthStore();
 
+  // register now just sends OTP — returns { email }
   const register = async (data: OnboardingData) => {
-    const response = await authApi.register(data);
+    return authApi.register(data);
+  };
+
+  // Called after OTP is verified — stores tokens and logs user in
+  const completeRegistration = async (email: string, otp: string) => {
+    const response = await authApi.verifyOtp(email, otp);
     await login(
       { accessToken: response.accessToken, refreshToken: response.refreshToken },
       response.user
@@ -39,6 +45,7 @@ export const useAuth = () => {
     isHydrated,
     isAuthenticated: !!accessToken,
     register,
+    completeRegistration,
     signIn,
     signOut,
   };
